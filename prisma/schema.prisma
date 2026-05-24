@@ -1,0 +1,404 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users & Auth ────────────────────────────────────────────
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  role         Role      @default(EMPLOYEE)
+  phone        String?
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  transactions   Transaction[]
+  drinkLogs      DrinkLog[]
+  donutLogs      DonutLog[]
+  employeeHours  EmployeeHour[]
+  cleaningLogs   CleaningLog[]
+  maintenanceLogs MaintenanceLog[] @relation("MaintenanceCreator")
+  maintenanceResolver MaintenanceLog[] @relation("MaintenanceResolver")
+  inventoryOrders InventoryOrder[]
+
+  @@map("users")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  OWNER
+}
+
+// ─── Products ────────────────────────────────────────────────
+
+model ProductCategory {
+  id        Int              @id @default(autoincrement())
+  name      String
+  type      ProductType
+  fohBoh    FohBoh           @default(BOTH) @map("foh_boh")
+  products  Product[]
+
+  @@map("product_categories")
+}
+
+enum ProductType {
+  DONUT
+  DRINK
+  DOGEL
+  SANDWICH
+  OTHER
+}
+
+enum FohBoh {
+  FOH
+  BOH
+  BOTH
+}
+
+model Product {
+  id          Int              @id @default(autoincrement())
+  name        String
+  categoryId  Int              @map("category_id")
+  description String?
+  price       Float            @default(0)
+  cost        Float            @default(0)
+  active      Boolean          @default(true)
+  category    ProductCategory  @relation(fields: [categoryId], references: [id])
+
+  ingredients     ProductIngredient[]
+  transactionLines TransactionLine[]
+  donutLogs       DonutLog[]
+  parSheetLines   ParSheetLine[]
+  overboardLines  OverboardLine[]
+
+  @@map("products")
+}
+
+model ProductIngredient {
+  id              Int           @id @default(autoincrement())
+  productId       Int           @map("product_id")
+  inventoryItemId Int           @map("inventory_item_id")
+  quantityUsed    Float         @default(0) @map("quantity_used")
+
+  product       Product       @relation(fields: [productId], references: [id])
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@map("product_ingredients")
+}
+
+// ─── Sales & Logging ────────────────────────────────────────
+
+model Transaction {
+  id            Int              @id @default(autoincrement())
+  userId        Int              @map("user_id")
+  totalAmount   Float            @map("total_amount") @default(0)
+  paymentMethod PaymentMethod?   @map("payment_method")
+  notes         String?
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  user  User              @relation(fields: [userId], references: [id])
+  lines TransactionLine[]
+
+  @@map("transactions")
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  OTHER
+}
+
+model TransactionLine {
+  id            Int        @id @default(autoincrement())
+  transactionId Int        @map("transaction_id")
+  productId     Int?       @map("product_id")
+  productName   String     @map("product_name")
+  quantity      Int        @default(1)
+  unitPrice     Float      @map("unit_price") @default(0)
+  total         Float      @default(0)
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  product     Product?    @relation(fields: [productId], references: [id])
+
+  @@map("transaction_lines")
+}
+
+model DrinkLog {
+  id             Int        @id @default(autoincrement())
+  userId         Int        @map("user_id")
+  drinkType      String     @map("drink_type")
+  size           String?
+  milkType       String?    @map("milk_type")
+  espressoShots  Int        @default(0) @map("espresso_shots")
+  dialSetting    String?    @map("dial_setting")
+  waste          Int        @default(0)
+  notes          String?
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("drink_logs")
+}
+
+model DonutLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  productId Int?     @map("product_id")
+  made      Int      @default(0)
+  sold      Int      @default(0)
+  wasted    Int      @default(0)
+  period    ShiftPeriod @default(AM)
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@map("donut_logs")
+}
+
+enum ShiftPeriod {
+  AM
+  PM
+}
+
+// ─── Inventory ──────────────────────────────────────────────
+
+model InventoryItem {
+  id          Int       @id @default(autoincrement())
+  name        String
+  category    FohBoh
+  unit        String
+  unitCost    Float     @map("unit_cost") @default(0)
+  parLevel    Float     @map("par_level") @default(0)
+  currentStock Float    @default(0) @map("current_stock")
+  minStock    Float     @map("min_stock") @default(0)
+  reorderQty  Float     @map("reorder_qty") @default(0)
+  supplier    String?
+  active      Boolean   @default(true)
+
+  productIngredients ProductIngredient[]
+  orderLines        InventoryOrderLine[]
+
+  @@map("inventory_items")
+}
+
+model InventoryOrder {
+  id         Int              @id @default(autoincrement())
+  status     OrderStatus      @default(DRAFT)
+  createdBy  Int              @map("created_by")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  receivedAt DateTime?        @map("received_at")
+  notes      String?
+
+  creator User                @relation(fields: [createdBy], references: [id])
+  lines   InventoryOrderLine[]
+
+  @@map("inventory_orders")
+}
+
+enum OrderStatus {
+  DRAFT
+  ORDERED
+  RECEIVED
+  PARTIAL
+}
+
+model InventoryOrderLine {
+  id              Int           @id @default(autoincrement())
+  orderId         Int           @map("order_id")
+  inventoryItemId Int           @map("inventory_item_id")
+  qtyOrdered      Float         @map("qty_ordered") @default(0)
+  qtyReceived     Float         @map("qty_received") @default(0)
+  unitCost        Float         @map("unit_cost") @default(0)
+
+  order         InventoryOrder @relation(fields: [orderId], references: [id])
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  @@map("inventory_order_lines")
+}
+
+model PrepStockItem {
+  id             Int      @id @default(autoincrement())
+  name           String
+  category       String
+  quantity       Float    @default(0)
+  unit           String
+  shelfLifeHours Int      @map("shelf_life_hours") @default(0)
+  preparedAt     DateTime @map("prepared_at")
+  expiresAt      DateTime @map("expires_at")
+  active         Boolean  @default(true)
+
+  @@map("prep_stock_items")
+}
+
+// ─── Prediction & Par ───────────────────────────────────────
+
+model HolidaySchedule {
+  id           Int          @id @default(autoincrement())
+  date         DateTime
+  name         String
+  impactLevel  ImpactLevel  @map("impact_level") @default(MEDIUM)
+  notes        String?
+
+  @@map("holiday_schedules")
+}
+
+enum ImpactLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model WeatherCache {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @unique
+  tempHigh     Float     @map("temp_high") @default(0)
+  tempLow      Float     @map("temp_low") @default(0)
+  precipitation Float    @default(0)
+  conditions   String?
+  fetchedAt    DateTime  @map("fetched_at") @default(now())
+
+  @@map("weather_cache")
+}
+
+model ParSheet {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @unique
+  generatedBy Int?     @map("generated_by")
+  notes       String?
+  lines       ParSheetLine[]
+
+  @@map("par_sheets")
+}
+
+model ParSheetLine {
+  id         Int      @id @default(autoincrement())
+  parSheetId Int      @map("par_sheet_id")
+  productId  Int      @map("product_id")
+  parLevel   Int      @map("par_level") @default(0)
+  onHand     Int      @map("on_hand") @default(0)
+  toMake     Int      @map("to_make") @default(0)
+  actualSold Int?     @map("actual_sold")
+  predicted  Int      @default(0)
+
+  parSheet ParSheet @relation(fields: [parSheetId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("par_sheet_lines")
+}
+
+model PredictionModel {
+  id            Int    @id @default(autoincrement())
+  productId     Int    @map("product_id")
+  dayOfWeek     Int    @map("day_of_week")
+  avgSold       Float  @map("avg_sold") @default(0)
+  weatherFactor Float  @map("weather_factor") @default(1.0)
+  holidayFactor Float  @map("holiday_factor") @default(1.0)
+
+  @@map("prediction_models")
+}
+
+// ─── Operations ─────────────────────────────────────────────
+
+model OverboardSchedule {
+  id     Int              @id @default(autoincrement())
+  date   DateTime
+  status OverboardStatus  @default(SCHEDULED)
+  notes  String?
+  lines  OverboardLine[]
+
+  @@map("overboard_schedules")
+}
+
+enum OverboardStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETE
+}
+
+model OverboardLine {
+  id             Int    @id @default(autoincrement())
+  overboardId    Int    @map("overboard_id")
+  productId      Int    @map("product_id")
+  quantity       Int    @default(0)
+  fillings       String?
+  toppings       String?
+
+  overboard OverboardSchedule @relation(fields: [overboardId], references: [id])
+  product   Product           @relation(fields: [productId], references: [id])
+
+  @@map("overboard_lines")
+}
+
+model CleaningTask {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  frequency   TaskFrequency
+  assignedTo  Int?          @map("assigned_to")
+  location    String?
+  active      Boolean       @default(true)
+  logs        CleaningLog[]
+
+  @@map("cleaning_tasks")
+}
+
+enum TaskFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model CleaningLog {
+  id          Int       @id @default(autoincrement())
+  taskId      Int       @map("task_id")
+  completedBy Int       @map("completed_by")
+  completedAt DateTime  @map("completed_at") @default(now())
+  notes       String?
+
+  task CleaningTask @relation(fields: [taskId], references: [id])
+  user User         @relation(fields: [completedBy], references: [id])
+
+  @@map("cleaning_logs")
+}
+
+model MaintenanceLog {
+  id         Int      @id @default(autoincrement())
+  equipment  String
+  issue      String
+  resolved   Boolean  @default(false)
+  resolvedBy Int?     @map("resolved_by")
+  resolvedAt DateTime? @map("resolved_at")
+  createdBy  Int      @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+  notes      String?
+
+  creator  User  @relation("MaintenanceCreator", fields: [createdBy], references: [id])
+  resolver User? @relation("MaintenanceResolver", fields: [resolvedBy], references: [id])
+
+  @@map("maintenance_logs")
+}
+
+model EmployeeHour {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  clockIn   DateTime  @map("clock_in")
+  clockOut  DateTime?  @map("clock_out")
+  totalHours Float?    @map("total_hours")
+  date      DateTime
+  notes     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("employee_hours")
+}

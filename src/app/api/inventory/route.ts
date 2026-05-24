@@ -1,0 +1,72 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const inventorySchema = z.object({
+  name: z.string().min(1),
+  category: z.enum(["FOH", "BOH"]),
+  unit: z.string().min(1),
+  unitCost: z.number().min(0),
+  parLevel: z.number().min(0),
+  currentStock: z.number().min(0),
+  minStock: z.number().min(0),
+  reorderQty: z.number().min(0),
+  supplier: z.string().optional(),
+});
+
+export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const category = searchParams.get("category");
+  const lowStock = searchParams.get("lowStock");
+
+  const where: Record<string, unknown> = { active: true };
+  if (category) where.category = category;
+  if (lowStock === "true") where.currentStock = { lte: prisma.inventoryItem.fields.minStock };
+
+  const items = await prisma.inventoryItem.findMany({
+    where,
+    orderBy: { name: "asc" },
+  });
+
+  return NextResponse.json(items);
+}
+
+export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const role = (session.user as { role?: string }).role;
+  if (role !== "MANAGER" && role !== "OWNER")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const body = await request.json();
+  const parsed = inventorySchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+
+  const item = await prisma.inventoryItem.create({ data: parsed.data });
+  return NextResponse.json(item, { status: 201 });
+}
+
+export async function PUT(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const role = (session.user as { role?: string }).role;
+  if (role !== "MANAGER" && role !== "OWNER")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const body = await request.json();
+  const { id, ...data } = body;
+
+  const item = await prisma.inventoryItem.update({
+    where: { id },
+    data,
+  });
+
+  return NextResponse.json(item);
+}

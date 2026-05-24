@@ -1,0 +1,60 @@
+# Task Spec: Foundation (Phase 1)
+
+## Files to Create/Modify
+- Scaffold Next.js project into /workspace
+- `prisma/schema.prisma` — Full database schema
+- `src/lib/prisma.ts` — Prisma client singleton
+- `src/lib/auth.ts` — NextAuth configuration
+- `src/app/(auth)/login/page.tsx` — Login page
+- `src/app/(auth)/layout.tsx` — Auth layout
+- `src/app/api/auth/[...nextauth]/route.ts` — Auth API
+- `src/app/(dashboard)/layout.tsx` — Dashboard layout with role-based nav
+- `src/app/(dashboard)/page.tsx` — Role redirect
+- `src/app/(dashboard)/employee/page.tsx` — Employee dashboard shell
+- `src/app/(dashboard)/manager/page.tsx` — Manager dashboard shell
+- `src/app/(dashboard)/owner/page.tsx` — Owner dashboard shell
+- `src/app/qr-sign/page.tsx` — QR code sign (public)
+- `src/app/entry/drinks/page.tsx` — Drink entry form
+- `src/app/entry/donuts/page.tsx` — Donut entry form
+- `src/app/entry/sales/page.tsx` — Sales entry form
+- `src/app/entry/dogels/page.tsx` — Dogel entry form
+- `src/app/entry/sandwiches/page.tsx` — Sandwich entry form
+- `src/app/entry/layout.tsx` — Mobile entry layout
+- `src/app/api/sales/route.ts` — Sales API
+- `src/app/api/drinks/route.ts` — Drink logs API
+- `src/app/api/production/route.ts` — Donut logs API
+- `src/app/api/inventory/route.ts` — Inventory CRUD API
+- `src/app/api/hours/route.ts` — Clock in/out API
+- `src/app/api/cleaning/route.ts` — Cleaning tasks API
+- `src/app/api/overboards/route.ts` — Overboard API
+- `src/app/api/prediction/route.ts` — Prediction + par sheet API
+- `src/app/api/weather/route.ts` — Weather cache API
+- `src/app/api/reports/route.ts` — KPI reports API
+- `src/app/(dashboard)/inventory/page.tsx` — Inventory management
+- `src/app/(dashboard)/production/page.tsx` — Par sheets
+- `src/app/(dashboard)/overboards/page.tsx` — Overboard calendar
+- `src/app/(dashboard)/cleaning/page.tsx` — Cleaning schedule
+- `src/app/(dashboard)/hours/page.tsx` — Time tracking
+- `src/components/` — Shared UI components
+- `src/lib/prediction.ts` — Prediction algorithm
+- `src/lib/cogs.ts` — COGS calculator
+- `src/lib/weather.ts` — Weather API client
+
+## Acceptance Criteria
+- [ ] Next.js app runs on port 3000 with production build
+- [ ] MySQL DB connected, all tables migrated
+- [ ] Auth works with 3 roles (employee/manager/owner)
+- [ ] Login page functional
+- [ ] Role-based navigation shows correct items per role
+- [ ] QR sign page shows 5-6 QR codes linking to entry screens
+- [ ] All 5 mobile entry forms render on phone-sized viewport
+- [ ] Employee dashboard shows quick stats and links
+- [ ] Manager dashboard shows KPI cards with charts
+- [ ] Owner dashboard shows financial overview
+- [ ] Inventory page with FoH/BoH split
+- [ ] Prediction generates par sheet from weather + history
+- [ ] Overboard calendar shows 30-day view
+- [ ] Cleaning schedule shows tasks with completion
+- [ ] Hours tracking with clock in/out
+- [ ] Light theme throughout, mobile-first
+- [ ] COGS calculator works from ingredients to products

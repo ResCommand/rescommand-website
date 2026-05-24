@@ -1,70 +1,80 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { Coffee, Cookie, ShoppingBag, Calendar, Sparkles, Clock } from "lucide-react";
+"use client";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
-export default async function EmployeeDashboard() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
-  const userId = Number((session.user as { id?: string })?.id);
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+interface ParLine { product: { name: string }; predicted: number; actual: number }
+interface Cleaning { id: number; task: string; frequency: string; fohBoh: string }
 
-  const [donuts, drinks, sales, hours] = await Promise.all([
-    prisma.donutLog.aggregate({ where: { userId, createdAt: { gte: today } }, _sum: { sold: true } }),
-    prisma.drinkLog.count({ where: { userId, createdAt: { gte: today } } }),
-    prisma.transaction.aggregate({ where: { userId, createdAt: { gte: today } }, _sum: { totalAmount: true } }),
-    prisma.employeeHour.findFirst({ where: { userId, clockOut: null }, orderBy: { clockIn: "desc" } }),
-  ]);
+export default function EmployeePage() {
+  const { data: session } = useSession();
+  const [parLines, setParLines] = useState<ParLine[]>([]);
+  const [cleaning, setCleaning] = useState<Cleaning[]>([]);
+  const name = session?.user?.name?.split(" ")[0] || "there";
 
-  const quickLinks = [
-    { href: "/entry/drinks", label: "Log Drinks", desc: "Coffee, espresso, lattes", emoji: "☕" },
-    { href: "/entry/donuts", label: "Log Donuts", desc: "Made, sold, waste", emoji: "🍩" },
-    { href: "/entry/sales", label: "Log Sales", desc: "Transactions & tickets", emoji: "💰" },
-    { href: "/entry/dogels", label: "Log Dogels", desc: "Plain, everything, etc.", emoji: "🥯" },
-    { href: "/entry/sandwiches", label: "Log Sandwiches", desc: "Bacon, sausage, etc.", emoji: "🥪" },
-    { href: "/overboards", label: "Overboards", desc: "Upcoming schedule", emoji: "📅" },
-    { href: "/cleaning", label: "Cleaning", desc: "Daily tasks", emoji: "✨" },
-    { href: "/hours", label: "My Hours", desc: "Clock in & out", emoji: "⏰" },
+  useEffect(() => {
+    fetch("/api/reports?type=today").then(r => r.json()).then(() => {}).catch(() => {});
+    fetch("/api/prediction").then(r => r.json()).then(d => setParLines(Array.isArray(d) ? d.slice(0, 8) : [])).catch(() => {});
+    fetch("/api/cleaning").then(r => r.json()).then(d => setCleaning(Array.isArray(d) ? d : [])).catch(() => {});
+  }, []);
+
+  const entryLinks = [
+    { href: "/entry/drinks", icon: "☕", label: "Drinks", desc: "Log drinks & dialing" },
+    { href: "/entry/donuts", icon: "🍩", label: "Donuts", desc: "Production & waste" },
+    { href: "/entry/sales", icon: "💰", label: "Sales", desc: "Ring up orders" },
+    { href: "/entry/dogels", icon: "🐶", label: "Dogels", desc: "Dog donuts" },
+    { href: "/entry/sandwiches", icon: "🥪", label: "Sandwiches", desc: "Breakfast items" },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-[#111827]">Welcome back, {session.user?.name?.split(" ")[0]}!</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-        </p>
+      <div className="section">
+        <div className="card" style={{ padding: 24 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 2 }}>Good morning, {name} 👋</h1>
+          <p className="text-gray text-sm">Here&apos;s your shift overview</p>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Donuts Sold", value: donuts._sum.sold || 0 },
-          { label: "Drinks Logged", value: drinks },
-          { label: "Today's Sales", value: `$${(sales._sum.totalAmount || 0).toFixed(2)}` },
-          { label: "Status", value: hours ? "Clocked In" : "Clocked Out" },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-lg border border-[#E5E7EB] p-4">
-            <div className="text-xs font-medium text-[#9CA3AF] uppercase tracking-wide">{s.label}</div>
-            <div className="text-xl font-semibold text-[#111827] mt-1">{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick Entry */}
-      <div>
-        <h2 className="text-base font-semibold text-[#111827] mb-3">Quick Entry</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {quickLinks.map(link => (
-            <Link key={link.href} href={link.href}
-              className="bg-white rounded-lg border border-[#E5E7EB] p-4 hover:shadow-sm transition-shadow group">
-              <div className="text-2xl mb-2">{link.emoji}</div>
-              <div className="text-sm font-medium text-[#111827] group-hover:text-[#1A56DB]">{link.label}</div>
-              <div className="text-xs text-[#9CA3AF] mt-0.5">{link.desc}</div>
-            </Link>
+      <div className="section">
+        <h3 className="section-title">Quick Entry</h3>
+        <div className="quick-entry-grid">
+          {entryLinks.map(l => (
+            <a key={l.href} href={l.href} className="quick-entry-card">
+              <div className="icon">{l.icon}</div>
+              <h3>{l.label}</h3>
+              <p>{l.desc}</p>
+            </a>
           ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h3 className="section-title">Today&apos;s Par Sheet</h3>
+        <div className="card">
+          <table>
+            <thead><tr><th>Product</th><th>Predicted</th><th>Actual</th></tr></thead>
+            <tbody>
+              {parLines.map((l, i) => (
+                <tr key={i}><td>{l.product?.name || "—"}</td><td className="font-semibold">{l.predicted}</td><td>{l.actual || 0}</td></tr>
+              ))}
+              {parLines.length === 0 && <tr><td colSpan={3} className="text-center text-gray" style={{ padding: 24 }}>No par data</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="section">
+        <h3 className="section-title">Cleaning Tasks</h3>
+        <div className="card">
+          {cleaning.slice(0, 6).map(t => (
+            <div key={t.id} className="list-item">
+              <div>
+                <div className="font-medium text-sm">{t.task}</div>
+                <div className="text-xs text-gray">{t.fohBoh === "FOH" ? "Front of House" : "Back of House"}</div>
+              </div>
+              <span className={`badge ${t.frequency === "DAILY" ? "badge-blue" : t.frequency === "WEEKLY" ? "badge-green" : "badge-purple"}`}>{t.frequency}</span>
+            </div>
+          ))}
+          {cleaning.length === 0 && <div className="empty-state">No tasks</div>}
         </div>
       </div>
     </div>

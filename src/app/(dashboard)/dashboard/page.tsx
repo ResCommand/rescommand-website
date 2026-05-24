@@ -8,7 +8,7 @@ interface KPIs {
   donutsSold: number; overboard: number; dozens: number; halfDozens: number;
   drinksSold: number; drinkBreakdown: { name: string; count: number }[];
   dogelsSold: number; sandwichesSold: number;
-  todaySales: number; avgTicket: number;
+  todaySales: number; ticketCount: number; avgTicket: number;
   overboardsSold: number; overboardRevenue: number;
   overboardUpcharges: number; upchargeRevenue: number;
 }
@@ -56,7 +56,8 @@ export default function DashboardPage() {
     { label: "Dogels", value: kpis?.dogelsSold ?? "—", icon: "🐶", color: "stat-icon-yellow" },
     { label: "Sandwiches", value: kpis?.sandwichesSold ?? "—", icon: "🥪", color: "stat-icon-blue" },
     { label: "Today's Sales", value: fmt(kpis?.todaySales), icon: "💰", color: "stat-icon-green" },
-    { label: "Avg Ticket", value: fmt(kpis?.avgTicket), icon: "🧾", color: "stat-icon-purple" },
+    { label: "Tickets", value: kpis?.ticketCount ?? "—", icon: "🧾", color: "stat-icon-blue" },
+    { label: "Avg Ticket", value: fmt(kpis?.avgTicket), icon: "📊", color: "stat-icon-purple" },
     { label: "Overboards Sold", value: kpis?.overboardsSold ?? "—", icon: "🛒", color: "stat-icon-orange" },
     { label: "Overboard Revenue", value: fmt(kpis?.overboardRevenue), icon: "💵", color: "stat-icon-green" },
     { label: "Upcharges Sold", value: kpis?.overboardUpcharges ?? "—", icon: "⬆️", color: "stat-icon-blue" },

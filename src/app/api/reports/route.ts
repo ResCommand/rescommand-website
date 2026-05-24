@@ -102,6 +102,7 @@ export async function GET() {
     dogelsSold,
     sandwichesSold,
     todaySales: parseFloat(totalSales.toFixed(2)),
+    ticketCount: transactions.length,
     salesByHour,
     avgTicket: transactions.length > 0 ? parseFloat((totalSales / transactions.length).toFixed(2)) : 0,
     employeeHours: hours.map((h) => ({ name: h.user.name, hours: h.totalHours || 0 })),

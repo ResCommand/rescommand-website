@@ -314,6 +314,7 @@ model OverboardSchedule {
   id     Int              @id @default(autoincrement())
   date   DateTime
   status OverboardStatus  @default(SCHEDULED)
+  name   String?
   notes  String?
   lines  OverboardLine[]
 
@@ -327,10 +328,14 @@ enum OverboardStatus {
 }
 
 model OverboardLine {
-  id             Int    @id @default(autoincrement())
-  overboardId    Int    @map("overboard_id")
-  productId      Int    @map("product_id")
-  quantity       Int    @default(0)
+  id             Int     @id @default(autoincrement())
+  overboardId    Int     @map("overboard_id")
+  productId      Int     @map("product_id")
+  quantity       Int     @default(0)
+  quantitySold   Int     @default(0) @map("quantity_sold")
+  unitPrice      Float   @map("unit_price") @default(0)
+  upchargePrice  Float   @map("upcharge_price") @default(0)
+  upchargesSold  Int     @default(0) @map("upcharges_sold")
   fillings       String?
   toppings       String?
 

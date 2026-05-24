@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-interface InvItem { id: number; name: string; fohBoh: string; quantity: number; unit: string; minStock: number; unitCost: number }
+interface InvItem { id: number; name: string; fohBoh: string; currentStock: number; quantity: number; unit: string; minStock: number; unitCost: number }
 export default function InventoryPage() {
   const [items, setItems] = useState<InvItem[]>([]);
   const [tab, setTab] = useState<"FOH" | "BOH">("FOH");
@@ -24,7 +24,7 @@ export default function InventoryPage() {
                 <div className="font-medium text-sm">{i.name}</div>
                 {pct < 30 && <span className="badge badge-red">Low</span>}
               </div>
-              <div className="text-xs text-gray mb-2">{i.quantity} {i.unit} · ${i.unitCost?.toFixed(2)}/{i.unit.replace("s","")}</div>
+              <div className="text-xs text-gray mb-2">{i.currentStock ?? i.quantity} {i.unit} · ${(i.unitCost ?? 0).toFixed(2)}/{i.unit.replace(/s$/,"")}</div>
               <div className="progress-bar"><div className={`progress-bar-fill ${color}`} style={{ width: `${pct}%` }} /></div>
             </div>
           );

@@ -2,23 +2,40 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const fmt = (n: number) => `$${n.toFixed(2)}`;
+
 export default async function OwnerPage() {
   const session = await getServerSession(authOptions);
-  const [sales, products, inventory] = await Promise.all([
+  const [transactions, products, inventory] = await Promise.all([
     prisma.transaction.findMany({ where: { createdAt: { gte: new Date(new Date().toISOString().split('T')[0]) } } }),
     prisma.product.count(),
     prisma.inventoryItem.findMany(),
   ]);
 
-  const revenue = sales.reduce((s, d) => s + d.totalAmount, 0);
-  const txCount = sales.length;
+  const todayRevenue = transactions.reduce((s, t) => s + t.totalAmount, 0);
+  const txCount = transactions.length;
   const invValue = inventory.reduce((s, i) => s + (i.unitCost || 0) * (i.currentStock || 0), 0);
 
+  // Overboard revenue
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  const overboardSchedules = await prisma.overboardSchedule.findMany({
+    where: { date: { gte: today, lt: tomorrow } },
+    include: { lines: true },
+  });
+  let overboardRevenue = 0, upchargeRevenue = 0;
+  overboardSchedules.forEach(s => {
+    s.lines.forEach(l => {
+      overboardRevenue += l.quantitySold * l.unitPrice;
+      upchargeRevenue += l.upchargesSold * l.upchargePrice;
+    });
+  });
+
   const cards = [
-    { label: "Today", value: `$${revenue.toFixed(2)}`, sub: `${txCount} transactions` },
-    { label: "This Week", value: `$${revenue.toFixed(2)}`, sub: `${txCount} transactions` },
-    { label: "This Month", value: `$${revenue.toFixed(2)}`, sub: `${txCount} transactions` },
-    { label: "Inventory Value", value: `$${invValue.toFixed(2)}`, sub: `${products} products` },
+    { label: "Today's Revenue", value: fmt(todayRevenue), sub: `${txCount} transactions` },
+    { label: "Overboard Revenue", value: fmt(overboardRevenue), sub: "From overboard sales" },
+    { label: "Upcharge Revenue", value: fmt(upchargeRevenue), sub: "From upcharges" },
+    { label: "Inventory Value", value: fmt(invValue), sub: `${products} products` },
   ];
 
   return (

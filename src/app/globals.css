@@ -125,6 +125,7 @@ tr:hover td { background: #FAFAFA; }
 .badge-yellow { background: #FFFBEB; color: #D97706; }
 .badge-purple { background: #F5F3FF; color: #7C3AED; }
 .badge-gray { background: #F3F4F6; color: #6B7280; }
+.badge-orange { background: #FFF7ED; color: #EA580C; }
 
 /* ===== Tabs ===== */
 .tabs { display: flex; gap: 2px; background: #F3F4F6; padding: 3px; border-radius: 8px; margin-bottom: 20px; }

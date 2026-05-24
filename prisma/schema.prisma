@@ -30,6 +30,7 @@ model User {
   inventoryOrders InventoryOrder[]
   sopsCreated     Sop[]           @relation("SopCreator")
   sopsUpdated     Sop[]           @relation("SopUpdater")
+  dashboardLayout DashboardLayout?
 
   @@map("users")
 }
@@ -438,4 +439,14 @@ model Sop {
   updater User? @relation("SopUpdater", fields: [updatedBy], references: [id])
 
   @@map("sops")
+}
+model DashboardLayout {
+  id       Int    @id @default(autoincrement())
+  userId   Int    @unique @map("user_id")
+  layout   String @db.MediumText
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("dashboard_layouts")
 }

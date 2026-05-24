@@ -1,9 +1,10 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { Settings, GripVertical, Eye, EyeOff, X, RotateCcw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { toast } from "sonner";
 
-interface Cleaning { id: number; task: string; frequency: string; fohBoh: string }
 interface KPIs {
   donutsSold: number; overboard: number; dozens: number; halfDozens: number;
   drinksSold: number; drinkBreakdown: { name: string; count: number }[];
@@ -14,8 +15,38 @@ interface KPIs {
 }
 interface Hourly { hour: string; sales: number }
 interface ParLine { product: { name: string }; predicted: number; actual: number }
+interface Cleaning { id: number; task: string; frequency: string; fohBoh: string }
 
 const fmt = (n: number | string | undefined | null) => n != null ? "$" + Number(n).toFixed(2) : "—";
+
+// All possible metrics with role visibility defaults
+const ALL_METRICS = [
+  { id: "donutsSold", label: "Donuts Sold", icon: "🍩", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.donutsSold },
+  { id: "overboard", label: "Overboard", icon: "📋", color: "stat-icon-red", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboard },
+  { id: "dozens", label: "Dozens", icon: "📦", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.dozens },
+  { id: "halfDozens", label: "Half Dozens", icon: "📦", color: "stat-icon-purple", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.halfDozens },
+  { id: "drinksSold", label: "Drinks", icon: "☕", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.drinksSold },
+  { id: "drinkBreakdown", label: "Drink Breakdown", icon: "🍵", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: () => null, isSection: true },
+  { id: "dogelsSold", label: "Dogels", icon: "🐶", color: "stat-icon-yellow", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.dogelsSold },
+  { id: "sandwichesSold", label: "Sandwiches", icon: "🥪", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.sandwichesSold },
+  { id: "todaySales", label: "Today's Sales", icon: "💰", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => fmt(k.todaySales) },
+  { id: "ticketCount", label: "Tickets", icon: "🧾", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.ticketCount },
+  { id: "avgTicket", label: "Avg Ticket", icon: "📊", color: "stat-icon-purple", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => fmt(k.avgTicket) },
+  { id: "overboardsSold", label: "Overboards Sold", icon: "🛒", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboardsSold },
+  { id: "overboardRevenue", label: "Overboard Revenue", icon: "💵", color: "stat-icon-green", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.overboardRevenue) },
+  { id: "upchargesSold", label: "Upcharges Sold", icon: "⬆️", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboardUpcharges },
+  { id: "upchargeRevenue", label: "Upcharge Revenue", icon: "💲", color: "stat-icon-purple", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.upchargeRevenue) },
+  { id: "salesByHour", label: "Sales by Hour", icon: "📈", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: () => null, isChart: true },
+];
+
+interface LayoutItem { id: string; visible: boolean }
+type Layout = LayoutItem[];
+
+function getDefaultLayout(role: string): Layout {
+  return ALL_METRICS
+    .filter(m => m.roles.includes(role))
+    .map(m => ({ id: m.id, visible: true }));
+}
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -27,6 +58,30 @@ export default function DashboardPage() {
   const [hourly, setHourly] = useState<Hourly[]>([]);
   const [parLines, setParLines] = useState<ParLine[]>([]);
   const [cleaning, setCleaning] = useState<Cleaning[]>([]);
+  const [layout, setLayout] = useState<Layout>([]);
+  const [layoutLoaded, setLayoutLoaded] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Load saved layout
+    const defaultLayout = getDefaultLayout(role);
+    fetch("/api/dashboard-layout").then(r => r.json()).then(saved => {
+      if (Array.isArray(saved) && saved.length > 0) {
+        // Merge: keep order from saved, add any new metrics, remove deleted
+        const savedIds = new Set(saved.map((s: LayoutItem) => s.id));
+        const merged = [
+          ...saved,
+          ...defaultLayout.filter(d => !savedIds.has(d.id)),
+        ].filter(m => defaultLayout.some(d => d.id === m.id));
+        setLayout(merged);
+      } else {
+        setLayout(defaultLayout);
+      }
+      setLayoutLoaded(true);
+    }).catch(() => { setLayout(defaultLayout); setLayoutLoaded(true); });
+  }, [role]);
 
   useEffect(() => {
     if (isManager) {
@@ -39,6 +94,31 @@ export default function DashboardPage() {
     fetch("/api/cleaning").then(r => r.json()).then(d => setCleaning(Array.isArray(d) ? d : [])).catch(() => {});
   }, [isManager]);
 
+  const saveLayout = useCallback(async (newLayout: Layout) => {
+    setLayout(newLayout);
+    try { await fetch("/api/dashboard-layout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newLayout) }); } catch {}
+  }, []);
+
+  function toggleVisibility(id: string) {
+    const newLayout = layout.map(l => l.id === id ? { ...l, visible: !l.visible } : l);
+    saveLayout(newLayout);
+  }
+
+  function moveMetric(fromIdx: number, toIdx: number) {
+    const newLayout = [...layout];
+    const [moved] = newLayout.splice(fromIdx, 1);
+    newLayout.splice(toIdx, 0, moved);
+    saveLayout(newLayout);
+    setDragIdx(null);
+    setDragOverIdx(null);
+  }
+
+  function resetLayout() {
+    const defaultLayout = getDefaultLayout(role);
+    saveLayout(defaultLayout);
+    toast.success("Layout reset to default");
+  }
+
   const entryLinks = [
     { href: "/entry/drinks", icon: "☕", label: "Drinks", desc: "Log drinks & dialing" },
     { href: "/entry/donuts", icon: "🍩", label: "Donuts", desc: "Production & waste" },
@@ -47,46 +127,88 @@ export default function DashboardPage() {
     { href: "/entry/sandwiches", icon: "🥪", label: "Sandwiches", desc: "Breakfast items" },
   ];
 
-  const stats = isManager ? [
-    { label: "Donuts Sold", value: kpis?.donutsSold ?? "—", icon: "🍩", color: "stat-icon-orange" },
-    { label: "Overboard", value: kpis?.overboard ?? "—", icon: "📋", color: "stat-icon-red" },
-    { label: "Dozens", value: kpis?.dozens ?? "—", icon: "📦", color: "stat-icon-blue" },
-    { label: "Half Dozens", value: kpis?.halfDozens ?? "—", icon: "📦", color: "stat-icon-purple" },
-    { label: "Drinks", value: kpis?.drinksSold ?? "—", icon: "☕", color: "stat-icon-green" },
-    { label: "Dogels", value: kpis?.dogelsSold ?? "—", icon: "🐶", color: "stat-icon-yellow" },
-    { label: "Sandwiches", value: kpis?.sandwichesSold ?? "—", icon: "🥪", color: "stat-icon-blue" },
-    { label: "Today's Sales", value: fmt(kpis?.todaySales), icon: "💰", color: "stat-icon-green" },
-    { label: "Tickets", value: kpis?.ticketCount ?? "—", icon: "🧾", color: "stat-icon-blue" },
-    { label: "Avg Ticket", value: fmt(kpis?.avgTicket), icon: "📊", color: "stat-icon-purple" },
-    { label: "Overboards Sold", value: kpis?.overboardsSold ?? "—", icon: "🛒", color: "stat-icon-orange" },
-    { label: "Overboard Revenue", value: fmt(kpis?.overboardRevenue), icon: "💵", color: "stat-icon-green" },
-    { label: "Upcharges Sold", value: kpis?.overboardUpcharges ?? "—", icon: "⬆️", color: "stat-icon-blue" },
-    { label: "Upcharge Revenue", value: fmt(kpis?.upchargeRevenue), icon: "💲", color: "stat-icon-purple" },
-  ] : [];
+  const visibleMetrics = layout.filter(l => l.visible);
+  const getMetric = (id: string) => ALL_METRICS.find(m => m.id === id);
 
   return (
     <div className="space-y-6">
+      {/* Greeting */}
       <div className="card" style={{ padding: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 2 }}>Good morning, {name} 👋</h1>
-        <p className="text-gray text-sm">{isManager ? "Here's today's operations overview" : "Here's your shift overview"}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 2 }}>Good morning, {name} 👋</h1>
+            <p className="text-gray text-sm">{isManager ? "Here's today's operations overview" : "Here's your shift overview"}</p>
+          </div>
+          {isManager && layoutLoaded && (
+            <button onClick={() => setCustomizeOpen(!customizeOpen)} className={`btn ${customizeOpen ? "btn-primary" : "btn-secondary btn-sm"}`}>
+              <Settings size={16} /> {customizeOpen ? "Done" : "Customize"}
+            </button>
+          )}
+        </div>
       </div>
 
-      {isManager && (
-        <div className="section">
-          <h3 className="section-title">Key Metrics</h3>
-          <div className="grid-4">
-            {stats.map(s => (
-              <div key={s.label} className="stat-card">
-                <div className={`stat-icon ${s.color}`}>{s.icon}</div>
-                <div className="stat-value">{s.value}</div>
-                <div className="stat-label">{s.label}</div>
-              </div>
-            ))}
+      {/* Customize panel */}
+      {customizeOpen && (
+        <div className="card" style={{ padding: 20 }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-sm">Arrange &amp; Toggle Metrics</h3>
+            <button onClick={resetLayout} className="btn btn-ghost btn-sm"><RotateCcw size={14} /> Reset</button>
+          </div>
+          <p className="text-xs text-gray mb-3">Drag to reorder. Click the eye to show/hide.</p>
+          <div className="space-y-2">
+            {layout.map((item, idx) => {
+              const metric = getMetric(item.id);
+              if (!metric) return null;
+              return (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={() => setDragIdx(idx)}
+                  onDragOver={e => { e.preventDefault(); setDragOverIdx(idx); }}
+                  onDrop={() => { if (dragIdx !== null && dragIdx !== idx) moveMetric(dragIdx, idx); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 12px", borderRadius: 6,
+                    border: dragOverIdx === idx ? "2px solid #1A56DB" : "1px solid #E5E7EB",
+                    background: dragOverIdx === idx ? "#EFF6FF" : "#fff",
+                    opacity: item.visible ? 1 : 0.5,
+                    cursor: "grab",
+                  }}
+                >
+                  <GripVertical size={16} style={{ color: "#9CA3AF", cursor: "grab" }} />
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{metric.icon} {metric.label}</span>
+                  <button onClick={() => toggleVisibility(item.id)} className="btn-icon" style={{ color: item.visible ? "#059669" : "#9CA3AF" }}>
+                    {item.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {isManager && (
+      {/* Metric cards */}
+      {isManager && layoutLoaded && visibleMetrics.length > 0 && (
+        <div className="section">
+          <h3 className="section-title">Key Metrics</h3>
+          <div className="grid-4">
+            {visibleMetrics.map(item => {
+              const metric = getMetric(item.id);
+              if (!metric || metric.isChart || metric.isSection) return null;
+              return (
+                <div key={item.id} className="stat-card">
+                  <div className={`stat-icon ${metric.color}`}>{metric.icon}</div>
+                  <div className="stat-value">{kpis ? metric.getValue(kpis) : "—"}</div>
+                  <div className="stat-label">{metric.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Sales by Hour chart */}
+      {isManager && layoutLoaded && visibleMetrics.some(l => l.id === "salesByHour") && (
         <div className="section">
           <div className="chart-container">
             <h3>Sales by Hour</h3>
@@ -107,7 +229,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {isManager && kpis?.drinkBreakdown && kpis.drinkBreakdown.length > 0 && (
+      {/* Drink breakdown */}
+      {isManager && kpis?.drinkBreakdown && kpis.drinkBreakdown.length > 0 && layoutLoaded && visibleMetrics.some(l => l.id === "drinkBreakdown") && (
         <div className="section">
           <h3 className="section-title">Drink Breakdown</h3>
           <div className="card">
@@ -121,6 +244,7 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Quick Entry — everyone */}
       <div className="section">
         <h3 className="section-title">Quick Entry</h3>
         <div className="quick-entry-grid">
@@ -134,6 +258,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Par Sheet */}
       <div className="section">
         <h3 className="section-title">Today&apos;s Par Sheet</h3>
         <div className="card">
@@ -149,6 +274,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Cleaning Tasks */}
       <div className="section">
         <h3 className="section-title">Cleaning Tasks</h3>
         <div className="card">

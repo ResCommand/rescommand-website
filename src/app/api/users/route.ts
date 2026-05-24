@@ -10,7 +10,7 @@ const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(["EMPLOYEE", "MANAGER", "OWNER"]),
-  phone: z.string().optional(),
+  phone: z.string().nullable().optional(),
 });
 
 const updateUserSchema = z.object({
@@ -18,7 +18,7 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
   role: z.enum(["EMPLOYEE", "MANAGER", "OWNER"]).optional(),
-  phone: z.string().optional(),
+  phone: z.string().nullable().optional(),
   active: z.boolean().optional(),
 });
 

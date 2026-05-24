@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
-  Clock, Users, DollarSign, Menu, LogOut, QrCode,
+  Clock, Users, DollarSign, Menu, LogOut, QrCode, BookOpen,
 } from "lucide-react";
 
 const allNav = [
@@ -13,6 +13,7 @@ const allNav = [
   { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER"] },
   { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"] },
   { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
+  { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/hours", icon: Clock, label: "Hours", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"] },

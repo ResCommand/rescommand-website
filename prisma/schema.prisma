@@ -28,6 +28,8 @@ model User {
   maintenanceLogs MaintenanceLog[] @relation("MaintenanceCreator")
   maintenanceResolver MaintenanceLog[] @relation("MaintenanceResolver")
   inventoryOrders InventoryOrder[]
+  sopsCreated     Sop[]           @relation("SopCreator")
+  sopsUpdated     Sop[]           @relation("SopUpdater")
 
   @@map("users")
 }
@@ -406,4 +408,34 @@ model EmployeeHour {
   user User @relation(fields: [userId], references: [id])
 
   @@map("employee_hours")
+}
+
+// ─── SOPs ───────────────────────────────────────────────────
+
+enum SopCategory {
+  FOH
+  BOH
+  SAFETY
+  CLEANING
+  OPENING
+  CLOSING
+  GENERAL
+}
+
+model Sop {
+  id          Int         @id @default(autoincrement())
+  title       String
+  category    SopCategory
+  content     String      @db.MediumText
+  version     Int         @default(1)
+  active      Boolean     @default(true)
+  createdBy   Int         @map("created_by")
+  updatedBy   Int?        @map("updated_by")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  creator User @relation("SopCreator", fields: [createdBy], references: [id])
+  updater User? @relation("SopUpdater", fields: [updatedBy], references: [id])
+
+  @@map("sops")
 }

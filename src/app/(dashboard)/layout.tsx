@@ -4,13 +4,12 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
-  Clock, Users, BarChart3, DollarSign, Menu, X, LogOut, QrCode,
+  Clock, Users, DollarSign, Menu, LogOut, QrCode,
 } from "lucide-react";
 
 const allNav = [
-  { href: "/manager", icon: BarChart3, label: "Dashboard", roles: ["MANAGER", "OWNER"] },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/owner", icon: DollarSign, label: "Financials", roles: ["OWNER"] },
-  { href: "/employee", icon: LayoutDashboard, label: "My View", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER"] },
   { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"] },
   { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
@@ -28,7 +27,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
   const nav = allNav.filter(n => n.roles.includes(role));
-
   const initials = session?.user?.name?.split(" ").map(w => w[0]).join("") || "?";
 
   return (

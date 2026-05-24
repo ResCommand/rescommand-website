@@ -1,65 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar } from "lucide-react";
 
-interface OverboardLine { id: number; productId: number; quantity: number; fillings: string | null; toppings: string | null; product: { id: number; name: string } | null }
-interface Overboard { id: number; date: string; status: string; notes: string | null; lines: OverboardLine[] }
-
-const statusStyle: Record<string, string> = {
-  SCHEDULED: "bg-[#F0F8FF] text-[#0066CC]",
-  IN_PROGRESS: "bg-[#FFF8F0] text-[#CC6600]",
-  COMPLETE: "bg-[#F0FFF4] text-[#008844]",
-};
+interface OLine { id: number; quantity: number; fillings: string | null; toppings: string | null; product: { name: string } | null }
+interface Ob { id: number; date: string; status: string; notes: string | null; lines: OLine[] }
+const statusStyle: Record<string, string> = { SCHEDULED: "bg-[#EFF6FF] text-[#1A56DB]", IN_PROGRESS: "bg-[#FFFBEB] text-[#B45309]", COMPLETE: "bg-[#ECFDF5] text-[#059669]" };
 
 export default function OverboardsPage() {
-  const [schedules, setSchedules] = useState<Overboard[]>([]);
+  const [obs, setObs] = useState<Ob[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => { fetch("/api/overboards").then(r => r.json()).then(setSchedules).catch(() => {}).finally(() => setLoading(false)); }, []);
+  useEffect(() => { fetch("/api/overboards").then(r => r.json()).then(setObs).catch(() => {}).finally(() => setLoading(false)); }, []);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Overboard Calendar</h1>
-        <p className="text-[#717171] text-sm mt-1">Upcoming production runs</p>
-      </div>
-      <div className="space-y-4">
-        {schedules.map(ob => (
-          <div key={ob.id} className="bg-white border border-[#DDDDDD] rounded-2xl p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="font-bold text-[#222222]">
-                  {new Date(ob.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                </div>
-                {ob.notes && <div className="text-xs text-[#717171] mt-0.5">{ob.notes}</div>}
-              </div>
-              <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusStyle[ob.status] || "bg-[#F7F7F7] text-[#717171]"}`}>
-                {ob.status.replace("_", " ")}
-              </span>
+    <div className="space-y-6">
+      <div><h1 className="text-xl font-semibold text-[#111827]">Overboard Calendar</h1><p className="text-sm text-[#6B7280] mt-0.5">Upcoming production runs</p></div>
+      <div className="space-y-3">
+        {obs.map(ob => (
+          <div key={ob.id} className="bg-white rounded-lg border border-[#E5E7EB] p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div><div className="text-sm font-semibold text-[#111827]">{new Date(ob.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</div>
+              {ob.notes && <div className="text-xs text-[#9CA3AF]">{ob.notes}</div>}</div>
+              <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${statusStyle[ob.status] || "bg-[#F3F4F6] text-[#6B7280]"}`}>{ob.status.replace("_"," ")}</span>
             </div>
-            {ob.lines.length > 0 && (
-              <div className="space-y-2">
-                {ob.lines.map(line => (
-                  <div key={line.id} className="bg-[#F7F7F7] rounded-xl p-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-[#222222]">{line.product?.name || "Unknown"}</span>
-                      <span className="text-[#717171] font-medium">Qty: {line.quantity}</span>
-                    </div>
-                    {(line.fillings || line.toppings) && (
-                      <div className="text-xs text-[#717171] mt-1">
-                        {line.fillings && `Fillings: ${line.fillings}`}
-                        {line.fillings && line.toppings && " · "}
-                        {line.toppings && `Toppings: ${line.toppings}`}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            {ob.lines.length > 0 && <div className="space-y-1.5">
+              {ob.lines.map(l => (
+                <div key={l.id} className="bg-[#F9FAFB] rounded-md px-3 py-2">
+                  <div className="flex items-center justify-between text-sm"><span className="font-medium text-[#111827]">{l.product?.name}</span><span className="text-[#9CA3AF]">Qty: {l.quantity}</span></div>
+                  {(l.fillings || l.toppings) && <div className="text-xs text-[#9CA3AF] mt-0.5">{l.fillings && `Fillings: ${l.fillings}`}{l.fillings && l.toppings && " · "}{l.toppings && `Toppings: ${l.toppings}`}</div>}
+                </div>
+              ))}
+            </div>}
           </div>
         ))}
-        {schedules.length === 0 && <div className="text-center text-[#717171] py-12 text-sm">No overboards scheduled</div>}
+        {obs.length === 0 && <div className="text-center text-sm text-[#9CA3AF] py-12">No overboards scheduled</div>}
       </div>
     </div>
   );

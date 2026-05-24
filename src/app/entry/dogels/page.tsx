@@ -2,55 +2,25 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-
-interface Product { id: number; name: string }
+interface P { id: number; name: string }
+const inputClass = "w-full px-3 py-2 border border-[#D1D5DB] rounded-md text-sm bg-white";
+const labelClass = "block text-sm font-medium text-[#374151] mb-1";
 
 export default function DogelEntryPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productId, setProductId] = useState("");
+  const [products, setProducts] = useState<P[]>([]);
+  const [pid, setPid] = useState("");
   const [sold, setSold] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => { fetch("/api/products?type=DOGEL").then(r => r.json()).then(setProducts).catch(() => {}); }, []);
-
+  useEffect(() => { fetch("/api/products?type=DOGEL").then(r => r.json()).then(setProducts); }, []);
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setSubmitting(true);
-    try {
-      const res = await fetch("/api/sales", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ totalAmount: 0, paymentMethod: null, notes: "Dogel log", lines: [{ productName: products.find(p => p.id === Number(productId))?.name || "Dogel", quantity: sold, unitPrice: 0, total: 0 }] }),
-      });
-      if (res.ok) { toast.success("Dogels logged! 🥯"); setSold(0); setProductId(""); }
-      else { toast.error("Failed to log"); }
-    } catch { toast.error("Network error"); }
+    try { const r = await fetch("/api/sales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ totalAmount: 0, paymentMethod: null, notes: "Dogel log", lines: [{ productName: products.find(p => p.id === Number(pid))?.name || "Dogel", quantity: sold, unitPrice: 0, total: 0 }] }) });
+      if (r.ok) { toast.success("Logged 🥯"); setSold(0); setPid(""); } else toast.error("Failed"); } catch { toast.error("Error"); }
     setSubmitting(false);
   }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-[#FFFFF0] rounded-xl"><span className="text-lg">🥯</span></div>
-        <h1 className="text-xl font-bold tracking-tight">Log Dogels</h1>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-sm font-semibold text-[#222222] mb-2">Dogel Type</label>
-          <select value={productId} onChange={e => setProductId(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-[#DDDDDD] rounded-xl text-[15px] bg-white focus:border-[#222222] focus:ring-0 transition-colors appearance-none">
-            <option value="">Select type...</option>
-            {products.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-[#222222] mb-2">Quantity Sold</label>
-          <input type="number" min={0} value={sold} onChange={e => setSold(Number(e.target.value))}
-            className="w-full px-4 py-3 border-2 border-[#DDDDDD] rounded-xl text-[15px] focus:border-[#222222] focus:ring-0 transition-colors" />
-        </div>
-        <button type="submit" disabled={submitting || !productId}
-          className="w-full bg-[#FF385C] hover:bg-[#E0304F] disabled:bg-[#FF385C]/40 text-white font-bold py-3.5 rounded-xl text-[16px] transition-colors">
-          {submitting ? "Logging..." : "Log Dogels 🥯"}
-        </button>
-      </form>
-    </div>
-  );
+  return (<div className="space-y-5"><h1 className="text-lg font-semibold text-[#111827]">🥯 Log Dogels</h1><form onSubmit={handleSubmit} className="space-y-4">
+    <div><label className={labelClass}>Type</label><select value={pid} onChange={e => setPid(e.target.value)} className={inputClass}><option value="">Select...</option>{products.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}</select></div>
+    <div><label className={labelClass}>Quantity</label><input type="number" min={0} value={sold} onChange={e => setSold(Number(e.target.value))} className={inputClass} /></div>
+    <button type="submit" disabled={submitting || !pid} className="w-full bg-[#1A56DB] hover:bg-[#1544B0] disabled:bg-[#1A56DB]/40 text-white font-medium py-2.5 rounded-md text-sm transition-colors">{submitting ? "Logging..." : "Log Dogels"}</button>
+  </form></div>);
 }

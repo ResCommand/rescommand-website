@@ -2,53 +2,34 @@
 
 import { QRCodeSVG } from "qrcode.react";
 
-const qrEntries = [
-  { label: "☕ Log Drinks", path: "/entry/drinks", accent: "border-[#FF385C]" },
-  { label: "🍩 Log Donuts", path: "/entry/donuts", accent: "border-[#E0304F]" },
-  { label: "💰 Log Sales", path: "/entry/sales", accent: "border-[#00A699]" },
-  { label: "🥯 Log Dogels", path: "/entry/dogels", accent: "border-[#222222]" },
-  { label: "🥪 Log Sandwiches", path: "/entry/sandwiches", accent: "border-[#717171]" },
-  { label: "⏰ Clock In/Out", path: "/hours", accent: "border-[#FF385C]" },
+const entries = [
+  { label: "Log Drinks", desc: "Coffee, espresso, lattes", path: "/entry/drinks", emoji: "☕" },
+  { label: "Log Donuts", desc: "Made, sold, waste", path: "/entry/donuts", emoji: "🍩" },
+  { label: "Log Sales", desc: "Transactions & tickets", path: "/entry/sales", emoji: "💰" },
+  { label: "Log Dogels", desc: "Plain, everything, etc.", path: "/entry/dogels", emoji: "🥯" },
+  { label: "Log Sandwiches", desc: "Bacon, sausage, etc.", path: "/entry/sandwiches", emoji: "🥪" },
+  { label: "Clock In / Out", desc: "Track your hours", path: "/hours", emoji: "⏰" },
 ];
 
 export default function QRSignPage() {
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-
+  const base = typeof window !== "undefined" ? window.location.origin : "";
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-[#222222] text-white px-6 py-8 text-center">
-        <div className="text-4xl mb-2">🍩</div>
-        <h1 className="text-3xl font-bold tracking-tight">Duffers OS</h1>
-        <p className="text-white/60 text-sm mt-2 font-medium">Scan a code to get started</p>
+    <div className="min-h-screen bg-[#F9FAFB]">
+      <div className="bg-white border-b border-[#E5E7EB] px-6 py-6 text-center">
+        <div className="text-3xl mb-1">🍩</div>
+        <h1 className="text-lg font-semibold text-[#111827]">Duffers OS</h1>
+        <p className="text-sm text-[#9CA3AF]">Scan a code to get started</p>
       </div>
-
-      {/* QR Grid */}
-      <div className="max-w-[900px] mx-auto px-6 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-          {qrEntries.map((entry) => (
-            <div
-              key={entry.path}
-              className={`border-2 ${entry.accent} rounded-2xl p-6 flex flex-col items-center gap-4 bg-white hover:shadow-lg transition-shadow`}
-            >
-              <div className="text-base font-bold text-[#222222] text-center">{entry.label}</div>
-              <div className="bg-white p-3 rounded-xl shadow-sm">
-                <QRCodeSVG
-                  value={`${baseUrl}${entry.path}`}
-                  size={160}
-                  level="M"
-                  bgColor="#FFFFFF"
-                  fgColor="#222222"
-                  includeMargin={false}
-                />
-              </div>
+      <div className="max-w-[800px] mx-auto px-6 py-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {entries.map(e => (
+            <div key={e.path} className="bg-white rounded-lg border border-[#E5E7EB] p-5 flex flex-col items-center gap-3">
+              <div className="text-xl font-medium text-[#111827]">{e.emoji} {e.label}</div>
+              <div className="text-xs text-[#9CA3AF]">{e.desc}</div>
+              <QRCodeSVG value={`${base}${e.path}`} size={140} level="M" bgColor="#FFFFFF" fgColor="#111827" />
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="text-center pb-8 text-xs text-[#717171] font-medium">
-        Duffers OS • {new Date().getFullYear()}
       </div>
     </div>
   );

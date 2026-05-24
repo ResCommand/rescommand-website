@@ -2,82 +2,47 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Clock, LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
-interface HourEntry { id: number; clockIn: string; clockOut: string | null; totalHours: number | null; date: string; user?: { name: string; role: string } }
+interface H { id: number; clockIn: string; clockOut: string | null; totalHours: number | null; date: string; user?: { name: string } }
 
 export default function HoursPage() {
   const { data: session } = useSession();
-  const [hours, setHours] = useState<HourEntry[]>([]);
+  const [hours, setHours] = useState<H[]>([]);
   const [clockedIn, setClockedIn] = useState(false);
-
-  const loadHours = () => {
-    fetch("/api/hours").then(r => r.json()).then(data => { setHours(Array.isArray(data) ? data : []); setClockedIn(Array.isArray(data) && data.some((h: HourEntry) => !h.clockOut)); }).catch(() => {});
-  };
+  const loadHours = () => { fetch("/api/hours").then(r => r.json()).then(d => { const arr = Array.isArray(d) ? d : []; setHours(arr); setClockedIn(arr.some((h: H) => !h.clockOut)); }).catch(() => {}); };
   useEffect(() => { loadHours(); }, []);
 
-  async function clockIn() {
-    try {
-      const res = await fetch("/api/hours", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "clock_in" }) });
-      if (res.ok) { toast.success("Clocked in ⏰"); loadHours(); }
-      else { const d = await res.json(); toast.error(d.error); }
-    } catch { toast.error("Network error"); }
+  async function clock(action: string) {
+    try { const r = await fetch("/api/hours", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }) });
+      if (r.ok) { toast.success(action === "clock_in" ? "Clocked in ⏰" : "Clocked out 👋"); loadHours(); }
+      else { const d = await r.json(); toast.error(d.error); } } catch { toast.error("Error"); }
   }
 
-  async function clockOut() {
-    try {
-      const res = await fetch("/api/hours", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "clock_out" }) });
-      if (res.ok) { toast.success("Clocked out 👋"); loadHours(); }
-      else { const d = await res.json(); toast.error(d.error); }
-    } catch { toast.error("Network error"); }
-  }
-
-  const role = (session?.user as { role?: string })?.role;
-  const isManager = role === "MANAGER" || role === "OWNER";
-  const todayH = hours.filter(h => new Date(h.date).toDateString() === new Date().toDateString()).reduce((s, h) => s + (h.totalHours || 0), 0);
+  const isMgr = ["MANAGER","OWNER"].includes((session?.user as { role?: string })?.role || "");
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{isManager ? "Team Hours" : "My Hours"}</h1>
-        <p className="text-[#717171] text-sm mt-1">Clock in and track time</p>
-      </div>
-
-      {!isManager && (
-        <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6 flex items-center justify-between">
-          <div>
-            <div className="text-sm font-bold text-[#222222]">{clockedIn ? "🟢 Clocked In" : "🔴 Clocked Out"}</div>
-            <div className="text-xs text-[#717171] mt-1">Today: {todayH.toFixed(1)}h</div>
-          </div>
-          {clockedIn ? (
-            <button onClick={clockOut} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-[#222222] text-white hover:bg-[#444444] transition-colors flex items-center gap-2">
-              <LogOut className="h-4 w-4" /> Clock Out
-            </button>
-          ) : (
-            <button onClick={clockIn} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-[#00A699] text-white hover:bg-[#009088] transition-colors flex items-center gap-2">
-              <LogIn className="h-4 w-4" /> Clock In
-            </button>
-          )}
+    <div className="space-y-6">
+      <div><h1 className="text-xl font-semibold text-[#111827]">{isMgr ? "Team Hours" : "My Hours"}</h1><p className="text-sm text-[#6B7280] mt-0.5">Clock in and track time</p></div>
+      {!isMgr && (
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-4 flex items-center justify-between">
+          <div><div className="text-sm font-medium text-[#111827]">{clockedIn ? "🟢 Clocked In" : "🔴 Clocked Out"}</div></div>
+          {clockedIn
+            ? <button onClick={() => clock("clock_out")} className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium bg-[#111827] text-white hover:bg-[#374151]"><LogOut className="h-3.5 w-3.5" />Out</button>
+            : <button onClick={() => clock("clock_in")} className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium bg-[#1A56DB] text-white hover:bg-[#1544B0]"><LogIn className="h-3.5 w-3.5" />In</button>}
         </div>
       )}
-
-      <div className="space-y-3">
+      <div className="bg-white rounded-lg border border-[#E5E7EB] divide-y divide-[#F3F4F6]">
         {hours.map(h => (
-          <div key={h.id} className="bg-white border border-[#DDDDDD] rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              {isManager && h.user && <div className="text-sm font-bold text-[#222222]">{h.user.name}</div>}
-              <div className="text-xs text-[#717171]">
-                {new Date(h.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} → {h.clockOut ? new Date(h.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Now"}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-bold text-[#FF385C]">{h.totalHours ? `${h.totalHours.toFixed(1)}h` : "—"}</div>
-              <div className="text-[11px] text-[#717171]">{new Date(h.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-            </div>
+          <div key={h.id} className="px-4 py-3 flex items-center justify-between">
+            <div>{isMgr && h.user && <div className="text-sm font-medium text-[#111827]">{h.user.name}</div>}
+              <div className="text-xs text-[#9CA3AF]">{new Date(h.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} → {h.clockOut ? new Date(h.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Now"}</div></div>
+            <div className="text-right"><div className="text-sm font-semibold text-[#1A56DB]">{h.totalHours ? `${h.totalHours.toFixed(1)}h` : "—"}</div>
+              <div className="text-[10px] text-[#9CA3AF]">{new Date(h.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div></div>
           </div>
         ))}
-        {hours.length === 0 && <div className="text-center text-[#717171] py-12 text-sm">No hours logged</div>}
+        {hours.length === 0 && <div className="p-8 text-center text-sm text-[#9CA3AF]">No hours logged</div>}
       </div>
     </div>
   );

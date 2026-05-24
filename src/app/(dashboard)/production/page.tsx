@@ -1,49 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClipboardList } from "lucide-react";
 
-interface ParSheetLine { id: number; productId: number; parLevel: number; onHand: number; toMake: number; predicted: number; product: { id: number; name: string } }
-interface ParSheet { id: number; date: string; lines: ParSheetLine[] }
+interface Line { id: number; parLevel: number; onHand: number; toMake: number; predicted: number; product: { name: string } }
+interface Sheet { lines: Line[] }
 
 export default function ProductionPage() {
-  const [sheet, setSheet] = useState<ParSheet | null>(null);
+  const [sheet, setSheet] = useState<Sheet | null>(null);
   const [loading, setLoading] = useState(true);
+  useEffect(() => { fetch("/api/prediction").then(r => r.json()).then(d => setSheet(d)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
-  useEffect(() => {
-    fetch("/api/prediction").then(r => r.json()).then(d => setSheet(d)).catch(() => {}).finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="space-y-6"><h1 className="text-2xl font-bold tracking-tight">Par Sheet</h1><div className="animate-pulse space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="bg-[#F7F7F7] rounded-2xl p-5 h-20" />)}</div></div>;
+  if (loading) return <div className="space-y-6"><h1 className="text-xl font-semibold text-[#111827]">Par Sheet</h1><div className="animate-pulse bg-white rounded-lg border border-[#E5E7EB] p-6 h-64" /></div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Par Sheet</h1>
-          <p className="text-[#717171] text-sm mt-1">Today&apos;s production targets</p>
-        </div>
-        <div className="text-sm text-[#717171] font-medium">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-        </div>
+        <div><h1 className="text-xl font-semibold text-[#111827]">Par Sheet</h1><p className="text-sm text-[#6B7280] mt-0.5">Today&apos;s production targets</p></div>
+        <div className="text-sm text-[#9CA3AF]">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
       </div>
-
-      <div className="bg-white border border-[#DDDDDD] rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-5 gap-0 text-[11px] font-bold text-[#717171] uppercase tracking-wider px-5 py-3 bg-[#F7F7F7] border-b border-[#DDDDDD]">
-          <div>Donut Type</div><div className="text-center">Predicted</div><div className="text-center">Par Level</div><div className="text-center">On Hand</div><div className="text-center">To Make</div>
+      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
+        <div className="grid grid-cols-5 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider px-4 py-2.5 bg-[#F9FAFB] border-b border-[#E5E7EB]">
+          <div>Type</div><div className="text-center">Predicted</div><div className="text-center">Par</div><div className="text-center">On Hand</div><div className="text-center">To Make</div>
         </div>
-        {sheet?.lines.map((line, i) => (
-          <div key={line.id} className={`grid grid-cols-5 gap-0 items-center px-5 py-4 text-sm ${i % 2 === 0 ? "" : "bg-[#FAFAFA]"} ${i < (sheet?.lines.length || 0) - 1 ? "border-b border-[#F0F0F0]" : ""}`}>
-            <div className="font-semibold text-[#222222]">{line.product?.name || "Unknown"}</div>
-            <div className="text-center text-[#717171]">{line.predicted}</div>
-            <div className="text-center"><span className="inline-block bg-[#222222] text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{line.parLevel}</span></div>
-            <div className="text-center font-semibold">{line.onHand}</div>
-            <div className="text-center"><span className="inline-block bg-[#FF385C] text-white px-2.5 py-0.5 rounded-full text-xs font-bold">{line.toMake}</span></div>
+        {sheet?.lines.map((l, i) => (
+          <div key={l.id} className={`grid grid-cols-5 items-center px-4 py-3 text-sm ${i % 2 ? "bg-[#FAFAFA]" : ""}`}>
+            <div className="font-medium text-[#111827]">{l.product?.name}</div>
+            <div className="text-center text-[#6B7280]">{l.predicted}</div>
+            <div className="text-center"><span className="bg-[#111827] text-white text-xs font-semibold px-2 py-0.5 rounded">{l.parLevel}</span></div>
+            <div className="text-center font-medium">{l.onHand}</div>
+            <div className="text-center"><span className="bg-[#1A56DB] text-white text-xs font-semibold px-2 py-0.5 rounded">{l.toMake}</span></div>
           </div>
         ))}
-        {(!sheet?.lines || sheet.lines.length === 0) && (
-          <div className="text-center text-[#717171] py-8 text-sm">No par sheet data</div>
-        )}
+        {(!sheet?.lines || !sheet.lines.length) && <div className="p-8 text-center text-sm text-[#9CA3AF]">No par sheet data</div>}
       </div>
     </div>
   );

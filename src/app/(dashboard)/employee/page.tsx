@@ -3,86 +3,66 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import {
-  Coffee, Cookie, ShoppingBag, Calendar, Sparkles, Clock,
-} from "lucide-react";
+import { Coffee, Cookie, ShoppingBag, Calendar, Sparkles, Clock } from "lucide-react";
 
 export default async function EmployeeDashboard() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-
   const userId = Number((session.user as { id?: string })?.id);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
 
-  const [todayDonuts, todayDrinks, todaySales, myHours] = await Promise.all([
-    prisma.donutLog.aggregate({
-      where: { userId, createdAt: { gte: today } },
-      _sum: { sold: true, made: true },
-    }),
-    prisma.drinkLog.count({
-      where: { userId, createdAt: { gte: today } },
-    }),
-    prisma.transaction.aggregate({
-      where: { userId, createdAt: { gte: today } },
-      _sum: { totalAmount: true },
-    }),
-    prisma.employeeHour.findFirst({
-      where: { userId, clockOut: null },
-      orderBy: { clockIn: "desc" },
-    }),
+  const [donuts, drinks, sales, hours] = await Promise.all([
+    prisma.donutLog.aggregate({ where: { userId, createdAt: { gte: today } }, _sum: { sold: true } }),
+    prisma.drinkLog.count({ where: { userId, createdAt: { gte: today } } }),
+    prisma.transaction.aggregate({ where: { userId, createdAt: { gte: today } }, _sum: { totalAmount: true } }),
+    prisma.employeeHour.findFirst({ where: { userId, clockOut: null }, orderBy: { clockIn: "desc" } }),
   ]);
 
   const quickLinks = [
-    { href: "/entry/drinks", icon: Coffee, label: "Log Drinks", emoji: "☕", color: "bg-[#FFF8F0] hover:bg-[#FFF0E0]" },
-    { href: "/entry/donuts", icon: Cookie, label: "Log Donuts", emoji: "🍩", color: "bg-[#FFF0F5] hover:bg-[#FFE5ED]" },
-    { href: "/entry/sales", icon: ShoppingBag, label: "Log Sales", emoji: "💰", color: "bg-[#F0FFF4] hover:bg-[#E0FFE8]" },
-    { href: "/entry/dogels", icon: ShoppingBag, label: "Log Dogels", emoji: "🥯", color: "bg-[#FFFFF0] hover:bg-[#FFFFE0]" },
-    { href: "/entry/sandwiches", icon: ShoppingBag, label: "Log Sandwiches", emoji: "🥪", color: "bg-[#FFF0F0] hover:bg-[#FFE0E0]" },
-    { href: "/overboards", icon: Calendar, label: "Overboards", emoji: "📅", color: "bg-[#F0F8FF] hover:bg-[#E0F0FF]" },
-    { href: "/cleaning", icon: Sparkles, label: "Cleaning", emoji: "✨", color: "bg-[#F5FFF5] hover:bg-[#EAFFEA]" },
-    { href: "/hours", icon: Clock, label: "My Hours", emoji: "⏰", color: "bg-[#F8F0FF] hover:bg-[#F0E8FF]" },
+    { href: "/entry/drinks", label: "Log Drinks", desc: "Coffee, espresso, lattes", emoji: "☕" },
+    { href: "/entry/donuts", label: "Log Donuts", desc: "Made, sold, waste", emoji: "🍩" },
+    { href: "/entry/sales", label: "Log Sales", desc: "Transactions & tickets", emoji: "💰" },
+    { href: "/entry/dogels", label: "Log Dogels", desc: "Plain, everything, etc.", emoji: "🥯" },
+    { href: "/entry/sandwiches", label: "Log Sandwiches", desc: "Bacon, sausage, etc.", emoji: "🥪" },
+    { href: "/overboards", label: "Overboards", desc: "Upcoming schedule", emoji: "📅" },
+    { href: "/cleaning", label: "Cleaning", desc: "Daily tasks", emoji: "✨" },
+    { href: "/hours", label: "My Hours", desc: "Clock in & out", emoji: "⏰" },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Welcome back, {session.user?.name?.split(" ")[0]} 👋
-        </h1>
-        <p className="text-[#717171] text-sm mt-1">
+        <h1 className="text-xl font-semibold text-[#111827]">Welcome back, {session.user?.name?.split(" ")[0]}!</h1>
+        <p className="text-sm text-[#6B7280] mt-0.5">
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         </p>
       </div>
 
-      {/* Stats row */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Donuts Sold", value: todayDonuts._sum.sold || 0, accent: "text-[#FF385C]" },
-          { label: "Drinks Logged", value: todayDrinks, accent: "text-[#00A699]" },
-          { label: "Today's Sales", value: `$${(todaySales._sum.totalAmount || 0).toFixed(2)}`, accent: "text-[#222222]" },
-          { label: "Clock Status", value: myHours ? "Clocked In" : "Clocked Out", accent: myHours ? "text-[#00A699]" : "text-[#717171]" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white border border-[#DDDDDD] rounded-2xl p-5">
-            <div className="text-xs font-semibold text-[#717171] uppercase tracking-wider mb-2">{stat.label}</div>
-            <div className={`text-2xl font-bold ${stat.accent}`}>{stat.value}</div>
+          { label: "Donuts Sold", value: donuts._sum.sold || 0 },
+          { label: "Drinks Logged", value: drinks },
+          { label: "Today's Sales", value: `$${(sales._sum.totalAmount || 0).toFixed(2)}` },
+          { label: "Status", value: hours ? "Clocked In" : "Clocked Out" },
+        ].map(s => (
+          <div key={s.label} className="bg-white rounded-lg border border-[#E5E7EB] p-4">
+            <div className="text-xs font-medium text-[#9CA3AF] uppercase tracking-wide">{s.label}</div>
+            <div className="text-xl font-semibold text-[#111827] mt-1">{s.value}</div>
           </div>
         ))}
       </div>
 
       {/* Quick Entry */}
       <div>
-        <h2 className="text-lg font-bold mb-4">Quick Entry</h2>
+        <h2 className="text-base font-semibold text-[#111827] mb-3">Quick Entry</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex flex-col items-center gap-2.5 p-5 rounded-2xl border border-[#DDDDDD] transition-all hover:shadow-md ${link.color}`}
-            >
-              <span className="text-2xl">{link.emoji}</span>
-              <span className="text-sm font-semibold text-center text-[#222222]">{link.label}</span>
+          {quickLinks.map(link => (
+            <Link key={link.href} href={link.href}
+              className="bg-white rounded-lg border border-[#E5E7EB] p-4 hover:shadow-sm transition-shadow group">
+              <div className="text-2xl mb-2">{link.emoji}</div>
+              <div className="text-sm font-medium text-[#111827] group-hover:text-[#1A56DB]">{link.label}</div>
+              <div className="text-xs text-[#9CA3AF] mt-0.5">{link.desc}</div>
             </Link>
           ))}
         </div>

@@ -1,173 +1,105 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from "recharts";
-import {
-  Cookie, Coffee, ShoppingBag, Clock, DollarSign, TrendingUp,
-  Package, AlertTriangle,
-} from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-interface KPIData {
-  donutsSold: number;
-  overboard: number;
-  dozens: number;
-  halfDozens: number;
-  drinksSold: number;
-  drinkBreakdown: { name: string; count: number }[];
-  dogelsSold: number;
-  sandwichesSold: number;
-  todaySales: number;
-  salesByHour: { hour: string; sales: number }[];
-  avgTicket: number;
-  employeeHours: { name: string; hours: number }[];
-  cogsPercent: number;
+interface KPI {
+  donutsSold: number; overboard: number; dozens: number; halfDozens: number;
+  drinksSold: number; drinkBreakdown: { name: string; count: number }[];
+  dogelsSold: number; sandwichesSold: number; todaySales: number;
+  salesByHour: { hour: string; sales: number }[]; avgTicket: number;
+  employeeHours: { name: string; hours: number }[]; cogsPercent: number;
 }
 
 export default function ManagerDashboard() {
-  const [data, setData] = useState<KPIData | null>(null);
+  const [data, setData] = useState<KPI | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/reports?range=today")
-      .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+    fetch("/api/reports?range=today").then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white border border-[#DDDDDD] rounded-2xl p-5 animate-pulse">
-              <div className="h-3 bg-[#F7F7F7] rounded w-2/3 mb-3" />
-              <div className="h-7 bg-[#F7F7F7] rounded w-1/2" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="space-y-6"><h1 className="text-xl font-semibold text-[#111827]">Dashboard</h1><div className="grid grid-cols-4 gap-4">{[...Array(8)].map((_, i) => <div key={i} className="bg-white rounded-lg border border-[#E5E7EB] p-4 h-20 animate-pulse" />)}</div></div>;
+  if (!data) return <div>Failed to load</div>;
 
-  if (!data) return <div>Failed to load dashboard</div>;
-
-  const kpiCards = [
-    { label: "Donuts Sold", value: data.donutsSold, icon: Cookie, accent: "bg-[#FFF0F5]" },
-    { label: "Overboard", value: data.overboard, icon: AlertTriangle, accent: "bg-[#FFF5F5]" },
-    { label: "Dozens", value: data.dozens, icon: Package, accent: "bg-[#FFF8F0]" },
-    { label: "Half Dozens", value: data.halfDozens, icon: Package, accent: "bg-[#FFFFF0]" },
-    { label: "Drinks Sold", value: data.drinksSold, icon: Coffee, accent: "bg-[#F0FFF4]" },
-    { label: "Dogels Sold", value: data.dogelsSold, icon: ShoppingBag, accent: "bg-[#FFFFF0]" },
-    { label: "Sandwiches", value: data.sandwichesSold, icon: TrendingUp, accent: "bg-[#FFF0F0]" },
-    { label: "Avg Ticket", value: `$${data.avgTicket.toFixed(2)}`, icon: DollarSign, accent: "bg-[#F0F8FF]" },
+  const kpis = [
+    { label: "Donuts Sold", value: data.donutsSold },
+    { label: "Overboard", value: data.overboard },
+    { label: "Dozens", value: data.dozens },
+    { label: "Half Dozens", value: data.halfDozens },
+    { label: "Drinks Sold", value: data.drinksSold },
+    { label: "Dogels Sold", value: data.dogelsSold },
+    { label: "Sandwiches", value: data.sandwichesSold },
+    { label: "Avg Ticket", value: `$${data.avgTicket.toFixed(2)}` },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-[#717171] text-sm mt-1">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-          </p>
+          <h1 className="text-xl font-semibold text-[#111827]">Dashboard</h1>
+          <p className="text-sm text-[#6B7280] mt-0.5">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</p>
         </div>
         <div className="text-right">
-          <div className="text-3xl font-bold text-[#FF385C]">
-            ${data.todaySales.toFixed(2)}
-          </div>
-          <div className="text-xs font-semibold text-[#717171] uppercase tracking-wider">Today&apos;s Sales</div>
+          <div className="text-2xl font-semibold text-[#111827]">${data.todaySales.toFixed(2)}</div>
+          <div className="text-xs text-[#9CA3AF] font-medium">Today&apos;s Sales</div>
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {kpiCards.map((kpi) => (
-          <div key={kpi.label} className="bg-white border border-[#DDDDDD] rounded-2xl p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`p-1.5 rounded-lg ${kpi.accent}`}>
-                <kpi.icon className="h-3.5 w-3.5 text-[#222222]" />
-              </div>
-              <span className="text-[11px] font-semibold text-[#717171] uppercase tracking-wider">{kpi.label}</span>
-            </div>
-            <div className="text-2xl font-bold text-[#222222]">{kpi.value}</div>
+        {kpis.map(k => (
+          <div key={k.label} className="bg-white rounded-lg border border-[#E5E7EB] p-4">
+            <div className="text-xs font-medium text-[#9CA3AF] uppercase tracking-wide">{k.label}</div>
+            <div className="text-xl font-semibold text-[#111827] mt-1">{k.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6">
-          <h3 className="text-base font-bold mb-4">Sales by Hour</h3>
-          <ResponsiveContainer width="100%" height={280}>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+          <h3 className="text-sm font-semibold text-[#111827] mb-4">Sales by Hour</h3>
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.salesByHour}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F7F7F7" />
-              <XAxis dataKey="hour" tick={{ fontSize: 12, fill: "#717171" }} />
-              <YAxis tick={{ fontSize: 12, fill: "#717171" }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #DDDDDD",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  fontSize: "13px",
-                }}
-              />
-              <Bar dataKey="sales" fill="#FF385C" radius={[6, 6, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+              <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#9CA3AF" }} />
+              <Tooltip contentStyle={{ backgroundColor: "#FFF", border: "1px solid #E5E7EB", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)", fontSize: "13px" }} />
+              <Bar dataKey="sales" fill="#1A56DB" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6">
-          <h3 className="text-base font-bold mb-4">Drink Breakdown</h3>
-          <ResponsiveContainer width="100%" height={280}>
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+          <h3 className="text-sm font-semibold text-[#111827] mb-4">Drink Breakdown</h3>
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.drinkBreakdown} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#F7F7F7" />
-              <XAxis type="number" tick={{ fontSize: 12, fill: "#717171" }} />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: "#717171" }} width={100} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #DDDDDD",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  fontSize: "13px",
-                }}
-              />
-              <Bar dataKey="count" fill="#222222" radius={[0, 6, 6, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+              <XAxis type="number" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#9CA3AF" }} width={90} />
+              <Tooltip contentStyle={{ backgroundColor: "#FFF", border: "1px solid #E5E7EB", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)", fontSize: "13px" }} />
+              <Bar dataKey="count" fill="#6366F1" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Employee Hours */}
-      <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="h-4 w-4 text-[#717171]" />
-          <h3 className="text-base font-bold">Employee Hours Today</h3>
-        </div>
+      <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+        <h3 className="text-sm font-semibold text-[#111827] mb-3">Employee Hours Today</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {data.employeeHours.map((emp) => (
-            <div key={emp.name} className="bg-[#F7F7F7] rounded-xl p-4">
-              <div className="text-sm font-semibold text-[#222222]">{emp.name}</div>
-              <div className="text-xl font-bold text-[#FF385C] mt-1">{emp.hours.toFixed(1)}h</div>
+          {data.employeeHours.map(e => (
+            <div key={e.name} className="bg-[#F9FAFB] rounded-lg p-3">
+              <div className="text-sm font-medium text-[#111827]">{e.name}</div>
+              <div className="text-lg font-semibold text-[#1A56DB]">{e.hours.toFixed(1)}h</div>
             </div>
           ))}
-          {data.employeeHours.length === 0 && (
-            <div className="col-span-4 text-center text-[#717171] py-6 text-sm">No hours logged today</div>
-          )}
+          {data.employeeHours.length === 0 && <div className="col-span-4 text-center text-[#9CA3AF] py-4 text-sm">No hours logged today</div>}
         </div>
       </div>
 
-      {/* COGS */}
-      <div className="bg-white border border-[#DDDDDD] rounded-2xl p-6">
-        <h3 className="text-base font-bold mb-2">COGS Summary</h3>
-        <div className="flex items-baseline gap-3">
-          <div className="text-4xl font-bold text-[#FF385C]">{data.cogsPercent.toFixed(1)}%</div>
-          <div className="text-sm text-[#717171] font-medium">Cost of Goods Sold as % of Revenue</div>
+      <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+        <h3 className="text-sm font-semibold text-[#111827]">COGS</h3>
+        <div className="flex items-baseline gap-2 mt-1">
+          <div className="text-3xl font-semibold text-[#1A56DB]">{data.cogsPercent.toFixed(1)}%</div>
+          <div className="text-sm text-[#9CA3AF]">cost of goods sold / revenue</div>
         </div>
       </div>
     </div>

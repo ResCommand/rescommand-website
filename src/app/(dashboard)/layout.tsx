@@ -21,6 +21,7 @@ import {
   LogOut,
   DollarSign,
   Users,
+  UserCog,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -69,6 +70,7 @@ function DashboardNav() {
     { href: "/overboards", icon: Calendar, label: "Overboards" },
     { href: "/cleaning", icon: Sparkles, label: "Cleaning" },
     { href: "/hours", icon: Clock, label: "Hours" },
+    { href: "/admin/users", icon: Users, label: "Users" },
   ];
 
   const ownerNav = [
@@ -91,7 +93,7 @@ function DashboardNav() {
       <div className="md:hidden flex items-center justify-between p-3 bg-card border-b border-border sticky top-0 z-40">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl">🍩</span>
-          <span className="font-bold text-primary">Duffera Ops</span>
+          <span className="font-bold text-primary">Duffers OS</span>
         </Link>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -131,7 +133,7 @@ function DashboardNav() {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">🍩</span>
             <div>
-              <div className="font-bold text-primary text-sm">Duffera Donuts</div>
+              <div className="font-bold text-primary text-sm">Duffers OS</div>
               <div className="text-xs text-muted-foreground">Operations</div>
             </div>
           </Link>

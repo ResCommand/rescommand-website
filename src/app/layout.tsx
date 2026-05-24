@@ -5,8 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "Duffera Donuts Ops",
-  description: "Operations portal for Duffera Donuts",
+  title: "Duffers OS",
+  description: "Operations portal for Duffers",
 };
 
 export default async function RootLayout({

@@ -18,7 +18,7 @@ export default function QRSignPage() {
     <div className="min-h-screen bg-white p-6">
       <div className="text-center mb-8">
         <div className="text-4xl mb-2">🍩</div>
-        <h1 className="text-3xl font-bold text-amber-900">Duffera Donuts</h1>
+        <h1 className="text-3xl font-bold text-amber-900">Duffers OS</h1>
         <p className="text-amber-700 text-lg mt-1">Scan to Log</p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -42,7 +42,7 @@ export default function QRSignPage() {
         ))}
       </div>
       <div className="text-center mt-8 text-sm text-gray-400">
-        Duffera Donuts Operations • {new Date().getFullYear()}
+        Duffers OS • {new Date().getFullYear()}
       </div>
     </div>
   );

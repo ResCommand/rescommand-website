@@ -48,7 +48,7 @@ export default async function OwnerDashboard() {
       <div>
         <h1 className="text-2xl font-bold">Owner Financials</h1>
         <p className="text-muted-foreground text-sm">
-          Revenue and cost overview for Duffera Donuts
+          Revenue and cost overview for Duffers
         </p>
       </div>
 

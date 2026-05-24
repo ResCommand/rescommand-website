@@ -11,7 +11,7 @@ export default async function LoginPage() {
       <div className="w-full max-w-sm mx-auto p-6">
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🍩</div>
-          <h1 className="text-2xl font-bold text-amber-900">Duffera Donuts</h1>
+          <h1 className="text-2xl font-bold text-amber-900">Duffers OS</h1>
           <p className="text-amber-700 text-sm mt-1">Operations Portal</p>
         </div>
         <form
@@ -29,7 +29,7 @@ export default async function LoginPage() {
               type="email"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="you@dufferadonuts.com"
+              placeholder="you@duffers.com"
             />
           </div>
           <div>

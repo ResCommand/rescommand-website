@@ -12,7 +12,7 @@ export default function EntryLayout({ children }: { children: React.ReactNode })
         </Link>
         <div className="flex items-center gap-2">
           <span className="text-lg">🍩</span>
-          <span className="font-bold text-primary text-sm">Duffera Ops</span>
+          <span className="font-bold text-primary text-sm">Duffers OS</span>
         </div>
       </div>
       <div className="p-4 max-w-lg mx-auto">{children}</div>

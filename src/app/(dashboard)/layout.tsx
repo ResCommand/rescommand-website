@@ -4,11 +4,12 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
-  Clock, Users, DollarSign, Menu, LogOut, QrCode, BookOpen,
+  Clock, Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
 } from "lucide-react";
 
 const allNav = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
+  { href: "/espresso-dial", icon: Coffee, label: "Espresso Dial", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/owner", icon: DollarSign, label: "Financials", roles: ["OWNER"] },
   { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER"] },
   { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"] },

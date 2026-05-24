@@ -1,12 +1,12 @@
 "use client";
 import { QRCodeSVG } from "qrcode.react";
 const codes = [
-  { href: "/entry/drinks", label: "Drinks", desc: "Log drinks & dialing", icon: "☕" },
-  { href: "/entry/donuts", label: "Donuts", desc: "Production & waste", icon: "🍩" },
+  { href: "/entry/espresso", label: "Espresso Dial", desc: "Daily dial-in log", icon: "☕" },
+  { href: "/entry/donuts", label: "Donut Production", desc: "Made, sold, waste", icon: "🍩" },
+  { href: "/entry/waste", label: "Waste Log", desc: "Record waste & reason", icon: "🗑️" },
   { href: "/entry/sales", label: "Sales", desc: "Ring up orders", icon: "💰" },
   { href: "/entry/dogels", label: "Dogels", desc: "Dog donuts", icon: "🐶" },
   { href: "/entry/sandwiches", label: "Sandwiches", desc: "Breakfast items", icon: "🥪" },
-  { href: "/hours", label: "Clock In/Out", desc: "Hours & time tracking", icon: "⏰" },
 ];
 export default function QRSignPage() {
   const base = typeof window !== "undefined" ? window.location.origin : "";

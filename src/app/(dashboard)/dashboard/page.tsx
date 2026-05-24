@@ -119,13 +119,7 @@ export default function DashboardPage() {
     toast.success("Layout reset to default");
   }
 
-  const entryLinks = [
-    { href: "/entry/drinks", icon: "☕", label: "Drinks", desc: "Log drinks & dialing" },
-    { href: "/entry/donuts", icon: "🍩", label: "Donuts", desc: "Production & waste" },
-    { href: "/entry/sales", icon: "💰", label: "Sales", desc: "Ring up orders" },
-    { href: "/entry/dogels", icon: "🐶", label: "Dogels", desc: "Dog donuts" },
-    { href: "/entry/sandwiches", icon: "🥪", label: "Sandwiches", desc: "Breakfast items" },
-  ];
+
 
   const visibleMetrics = layout.filter(l => l.visible);
   const getMetric = (id: string) => ALL_METRICS.find(m => m.id === id);
@@ -243,20 +237,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* Quick Entry — everyone */}
-      <div className="section">
-        <h3 className="section-title">Quick Entry</h3>
-        <div className="quick-entry-grid">
-          {entryLinks.map(l => (
-            <a key={l.href} href={l.href} className="quick-entry-card">
-              <div className="icon">{l.icon}</div>
-              <h3>{l.label}</h3>
-              <p>{l.desc}</p>
-            </a>
-          ))}
-        </div>
-      </div>
 
       {/* Par Sheet */}
       <div className="section">

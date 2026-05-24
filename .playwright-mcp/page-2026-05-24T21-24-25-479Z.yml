@@ -1,0 +1,38 @@
+- generic [ref=e2]:
+  - button "Request edit access" [ref=e4] [cursor=pointer]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - generic [ref=e12]: Request edit access
+  - generic [ref=e13]:
+    - generic [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e20]:
+          - heading "Espresso Dial Log" [level=1] [ref=e22]: Espresso Dial Log
+          - generic [ref=e23]: Every morning, Log the settings for a correctly pulled shot. Helps to keep a good reference for preferred settings.
+        - generic [ref=e27]:
+          - link "Sign in to Google" [ref=e28] [cursor=pointer]:
+            - /url: https://accounts.google.com/Login?continue=https%3A%2F%2Fdocs.google.com%2Fforms%2Fd%2Fe%2F1FAIpQLSfIGt7dS037-SlOtAxOtNZiIw77XRZvso2P8DfqEMot3815Iw%2Fviewform%3Ffbzx%3D-6026193056693650846
+          - text: to save your progress.
+          - button "Learn more" [ref=e29] [cursor=pointer]
+      - list
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - button "Next" [ref=e33] [cursor=pointer]:
+            - generic [ref=e36]: Next
+          - button "Clear form" [ref=e38] [cursor=pointer]:
+            - generic [ref=e41]: Clear form
+        - generic [ref=e42]: Never submit passwords through Google Forms.
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - text: This form was created inside of Duffers Donuts.
+        - paragraph [ref=e45]:
+          - text: Does this form look suspicious?
+          - link "Report" [ref=e46] [cursor=pointer]:
+            - /url: https://docs.google.com/forms/d/1Cc8tVC72sgXr3MxmRGe5Fpxvpn7Io1L3LUs9S8LbWzU/abuse
+      - link "Google Forms" [ref=e48] [cursor=pointer]:
+        - /url: //www.google.com/forms/about/?utm_source=product&utm_medium=forms_logo&utm_campaign=forms
+        - img "Google" [ref=e49]
+        - text: Forms
+  - generic [ref=e53]:
+    - button "help and feedback" [ref=e54] [cursor=pointer]
+    - tooltip [ref=e57]: Help and feedback

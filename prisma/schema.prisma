@@ -31,6 +31,7 @@ model User {
   sopsCreated     Sop[]           @relation("SopCreator")
   sopsUpdated     Sop[]           @relation("SopUpdater")
   dashboardLayout DashboardLayout?
+  espressoDials   EspressoDialLog[]
 
   @@map("users")
 }
@@ -449,4 +450,31 @@ model DashboardLayout {
   user User @relation(fields: [userId], references: [id])
 
   @@map("dashboard_layouts")
+}
+
+model EspressoDialLog {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  date              DateTime @default(now())
+
+  // Regular (Meridian Blend)
+  groundsWeight     Float?   @map("grounds_weight")
+  grinderCoarseness String?  @map("grinder_coarseness")
+  dispenseTime      Float?   @map("dispense_time")
+  pullTime          Float?   @map("pull_time")
+  shotWeight        Float?   @map("shot_weight")
+
+  // Decaf
+  decafGroundsWeight     Float?   @map("decaf_grounds_weight")
+  decafGrinderCoarseness String?  @map("decaf_grinder_coarseness")
+  decafDispenseTime      Float?   @map("decaf_dispense_time")
+  decafPullTime          Float?   @map("decaf_pull_time")
+  decafShotWeight        Float?   @map("decaf_shot_weight")
+
+  notes             String?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("espresso_dial_logs")
 }

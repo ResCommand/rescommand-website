@@ -1,0 +1,80 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - heading "Espresso Dial Log" [level=1] [ref=e12]: Espresso Dial Log
+        - generic [ref=e14]:
+          - generic [ref=e16]:
+            - link "Sign in to Google" [ref=e17] [cursor=pointer]:
+              - /url: https://accounts.google.com/Login?continue=https%3A%2F%2Fdocs.google.com%2Fforms%2Fd%2Fe%2F1FAIpQLSfIGt7dS037-SlOtAxOtNZiIw77XRZvso2P8DfqEMot3815Iw%2Fviewform%3Ffbzx%3D7455094754149936588
+            - text: to save your progress.
+            - button "Learn more" [ref=e18] [cursor=pointer]
+          - generic [ref=e20]: "* Indicates required question"
+      - list [ref=e21]:
+        - listitem [ref=e22]:
+          - heading "Meridian Blend Espresso" [ref=e23]:
+            - generic [ref=e25]: Meridian Blend Espresso
+        - listitem [ref=e26]:
+          - generic [ref=e28]:
+            - heading "Grounds Weight? (grams) Required question" [level=3] [ref=e31]:
+              - generic [ref=e32]: Grounds Weight? (grams)
+              - generic "Required question" [ref=e33]: "*"
+            - generic [ref=e38]:
+              - textbox "Grounds Weight? (grams) Required question" [ref=e39]
+              - generic: Your answer
+        - listitem [ref=e41]:
+          - generic [ref=e43]:
+            - heading "Grinder Coarseness? Required question" [level=3] [ref=e46]:
+              - generic [ref=e47]: Grinder Coarseness?
+              - generic "Required question" [ref=e48]: "*"
+            - generic [ref=e53]:
+              - textbox "Grinder Coarseness? Required question" [ref=e54]
+              - generic: Your answer
+        - listitem [ref=e56]:
+          - generic [ref=e58]:
+            - heading "Dispense Time on Grinder? (seconds) Required question" [level=3] [ref=e61]:
+              - generic [ref=e62]: Dispense Time on Grinder? (seconds)
+              - generic "Required question" [ref=e63]: "*"
+            - generic [ref=e68]:
+              - textbox "Dispense Time on Grinder? (seconds) Required question" [ref=e69]
+              - generic: Your answer
+        - listitem [ref=e71]:
+          - generic [ref=e73]:
+            - heading "Time to Pull a Shot? (seconds) Required question" [level=3] [ref=e76]:
+              - generic [ref=e77]: Time to Pull a Shot? (seconds)
+              - generic "Required question" [ref=e78]: "*"
+            - generic [ref=e83]:
+              - textbox "Time to Pull a Shot? (seconds) Required question" [ref=e84]
+              - generic: Your answer
+        - listitem [ref=e86]:
+          - generic [ref=e88]:
+            - heading "Final Weight of Shot? (Grams) Required question" [level=3] [ref=e91]:
+              - generic [ref=e92]: Final Weight of Shot? (Grams)
+              - generic "Required question" [ref=e93]: "*"
+            - generic [ref=e98]:
+              - textbox "Final Weight of Shot? (Grams) Required question" [ref=e99]
+              - generic: Your answer
+      - generic [ref=e101]:
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - button "Back" [ref=e104] [cursor=pointer]:
+              - generic [ref=e107]: Back
+            - button "Next" [ref=e108] [cursor=pointer]:
+              - generic [ref=e111]: Next
+          - button "Clear form" [ref=e113] [cursor=pointer]:
+            - generic [ref=e116]: Clear form
+        - generic [ref=e117]: Never submit passwords through Google Forms.
+    - generic [ref=e118]:
+      - generic [ref=e119]:
+        - text: This form was created inside of Duffers Donuts.
+        - paragraph [ref=e120]:
+          - text: Does this form look suspicious?
+          - link "Report" [ref=e121] [cursor=pointer]:
+            - /url: https://docs.google.com/forms/d/e/1FAIpQLSfIGt7dS037-SlOtAxOtNZiIw77XRZvso2P8DfqEMot3815Iw/abuse
+      - link "Google Forms" [ref=e123] [cursor=pointer]:
+        - /url: //www.google.com/forms/about/?utm_source=product&utm_medium=forms_logo&utm_campaign=forms
+        - img "Google" [ref=e124]
+        - text: Forms
+  - generic [ref=e128]:
+    - button "help and feedback" [ref=e129] [cursor=pointer]
+    - tooltip [ref=e132]: Help and feedback

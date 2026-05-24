@@ -8,10 +8,10 @@ async function main() {
   const passwordHash = await bcrypt.hash("password123", 10);
 
   const owner = await prisma.user.upsert({
-    where: { email: "owner@dufferadonuts.com" },
+    where: { email: "hello@duffersdonutshop.com" },
     update: {},
     create: {
-      email: "owner@dufferadonuts.com",
+      email: "hello@duffersdonutshop.com",
       name: "Duffera Owner",
       passwordHash,
       role: Role.OWNER,
@@ -20,10 +20,10 @@ async function main() {
   });
 
   const manager = await prisma.user.upsert({
-    where: { email: "manager@dufferadonuts.com" },
+    where: { email: "manager@duffers.com" },
     update: {},
     create: {
-      email: "manager@dufferadonuts.com",
+      email: "manager@duffers.com",
       name: "Store Manager",
       passwordHash,
       role: Role.MANAGER,
@@ -32,10 +32,10 @@ async function main() {
   });
 
   const employee1 = await prisma.user.upsert({
-    where: { email: "employee@dufferadonuts.com" },
+    where: { email: "employee@duffers.com" },
     update: {},
     create: {
-      email: "employee@dufferadonuts.com",
+      email: "employee@duffers.com",
       name: "Jane Employee",
       passwordHash,
       role: Role.EMPLOYEE,
@@ -44,10 +44,10 @@ async function main() {
   });
 
   const employee2 = await prisma.user.upsert({
-    where: { email: "bob@dufferadonuts.com" },
+    where: { email: "bob@duffers.com" },
     update: {},
     create: {
-      email: "bob@dufferadonuts.com",
+      email: "bob@duffers.com",
       name: "Bob Baker",
       passwordHash,
       role: Role.EMPLOYEE,

@@ -4,14 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
-  Coffee,
-  Cookie,
-  ShoppingBag,
-  ClipboardList,
-  Calendar,
-  Sparkles,
-  Clock,
-  TrendingUp,
+  Coffee, Cookie, ShoppingBag, Calendar, Sparkles, Clock,
 } from "lucide-react";
 
 export default async function EmployeeDashboard() {
@@ -41,79 +34,55 @@ export default async function EmployeeDashboard() {
   ]);
 
   const quickLinks = [
-    { href: "/entry/drinks", icon: Coffee, label: "Log Drinks", color: "bg-amber-100 text-amber-800" },
-    { href: "/entry/donuts", icon: Cookie, label: "Log Donuts", color: "bg-orange-100 text-orange-800" },
-    { href: "/entry/sales", icon: ShoppingBag, label: "Log Sales", color: "bg-yellow-100 text-yellow-800" },
-    { href: "/entry/dogels", icon: ShoppingBag, label: "Log Dogels", color: "bg-lime-100 text-lime-800" },
-    { href: "/entry/sandwiches", icon: ClipboardList, label: "Log Sandwiches", color: "bg-red-100 text-red-800" },
-    { href: "/overboards", icon: Calendar, label: "Overboard Schedule", color: "bg-blue-100 text-blue-800" },
-    { href: "/cleaning", icon: Sparkles, label: "Cleaning Tasks", color: "bg-teal-100 text-teal-800" },
-    { href: "/hours", icon: Clock, label: "My Hours", color: "bg-purple-100 text-purple-800" },
+    { href: "/entry/drinks", icon: Coffee, label: "Log Drinks", emoji: "☕", color: "bg-[#FFF8F0] hover:bg-[#FFF0E0]" },
+    { href: "/entry/donuts", icon: Cookie, label: "Log Donuts", emoji: "🍩", color: "bg-[#FFF0F5] hover:bg-[#FFE5ED]" },
+    { href: "/entry/sales", icon: ShoppingBag, label: "Log Sales", emoji: "💰", color: "bg-[#F0FFF4] hover:bg-[#E0FFE8]" },
+    { href: "/entry/dogels", icon: ShoppingBag, label: "Log Dogels", emoji: "🥯", color: "bg-[#FFFFF0] hover:bg-[#FFFFE0]" },
+    { href: "/entry/sandwiches", icon: ShoppingBag, label: "Log Sandwiches", emoji: "🥪", color: "bg-[#FFF0F0] hover:bg-[#FFE0E0]" },
+    { href: "/overboards", icon: Calendar, label: "Overboards", emoji: "📅", color: "bg-[#F0F8FF] hover:bg-[#E0F0FF]" },
+    { href: "/cleaning", icon: Sparkles, label: "Cleaning", emoji: "✨", color: "bg-[#F5FFF5] hover:bg-[#EAFFEA]" },
+    { href: "/hours", icon: Clock, label: "My Hours", emoji: "⏰", color: "bg-[#F8F0FF] hover:bg-[#F0E8FF]" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          Welcome, {session.user?.name?.split(" ")[0]} 👋
+        <h1 className="text-2xl font-bold tracking-tight">
+          Welcome back, {session.user?.name?.split(" ")[0]} 👋
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
+        <p className="text-[#717171] text-sm mt-1">
+          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         </p>
       </div>
 
-      {/* Today's quick stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <TrendingUp className="h-3 w-3" />
-            Donuts Sold
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Donuts Sold", value: todayDonuts._sum.sold || 0, accent: "text-[#FF385C]" },
+          { label: "Drinks Logged", value: todayDrinks, accent: "text-[#00A699]" },
+          { label: "Today's Sales", value: `$${(todaySales._sum.totalAmount || 0).toFixed(2)}`, accent: "text-[#222222]" },
+          { label: "Clock Status", value: myHours ? "Clocked In" : "Clocked Out", accent: myHours ? "text-[#00A699]" : "text-[#717171]" },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white border border-[#DDDDDD] rounded-2xl p-5">
+            <div className="text-xs font-semibold text-[#717171] uppercase tracking-wider mb-2">{stat.label}</div>
+            <div className={`text-2xl font-bold ${stat.accent}`}>{stat.value}</div>
           </div>
-          <div className="text-2xl font-bold">{todayDonuts._sum.sold || 0}</div>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <Coffee className="h-3 w-3" />
-            Drinks Logged
-          </div>
-          <div className="text-2xl font-bold">{todayDrinks}</div>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <ShoppingBag className="h-3 w-3" />
-            Today&apos;s Sales
-          </div>
-          <div className="text-2xl font-bold">
-            ${(todaySales._sum.totalAmount || 0).toFixed(2)}
-          </div>
-        </div>
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <Clock className="h-3 w-3" />
-            Clock Status
-          </div>
-          <div className="text-sm font-bold">
-            {myHours ? "🟢 Clocked In" : "🔴 Clocked Out"}
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Quick entry links */}
+      {/* Quick Entry */}
       <div>
-        <h2 className="text-lg font-semibold mb-3">Quick Entry</h2>
+        <h2 className="text-lg font-bold mb-4">Quick Entry</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {quickLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-border hover:shadow-md transition-shadow ${link.color}`}
+              className={`flex flex-col items-center gap-2.5 p-5 rounded-2xl border border-[#DDDDDD] transition-all hover:shadow-md ${link.color}`}
             >
-              <link.icon className="h-6 w-6" />
-              <span className="text-sm font-medium text-center">{link.label}</span>
+              <span className="text-2xl">{link.emoji}</span>
+              <span className="text-sm font-semibold text-center text-[#222222]">{link.label}</span>
             </Link>
           ))}
         </div>

@@ -1,120 +1,60 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sparkles, Wrench, Check } from "lucide-react";
+import { Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 
-interface CleaningTask {
-  id: number;
-  title: string;
-  description: string | null;
-  frequency: string;
-  location: string | null;
-  logs: { completedBy: number; completedAt: string; user: { name: string } }[];
-}
+interface CleaningTask { id: number; title: string; description: string | null; frequency: string; location: string | null; logs: { completedBy: number; completedAt: string; user: { name: string } }[] }
+
+const freqStyle: Record<string, string> = { DAILY: "bg-[#F0F8FF] text-[#0066CC]", WEEKLY: "bg-[#FFF8F0] text-[#CC6600]", MONTHLY: "bg-[#F8F0FF] text-[#6600CC]" };
 
 export default function CleaningPage() {
   const [tasks, setTasks] = useState<CleaningTask[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadTasks = () => {
-    fetch("/api/cleaning")
-      .then((r) => r.json())
-      .then(setTasks)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  };
-
+  const loadTasks = () => { fetch("/api/cleaning").then(r => r.json()).then(setTasks).catch(() => {}).finally(() => setLoading(false)); };
   useEffect(() => { loadTasks(); }, []);
 
   async function markComplete(taskId: number) {
     try {
-      const res = await fetch("/api/cleaning", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskId }),
-      });
-      if (res.ok) {
-        toast.success("Task marked complete! ✨");
-        loadTasks();
-      }
-    } catch {
-      toast.error("Failed to mark complete");
-    }
+      const res = await fetch("/api/cleaning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId }) });
+      if (res.ok) { toast.success("Done! ✨"); loadTasks(); }
+    } catch { toast.error("Failed"); }
   }
 
-  const freqColors: Record<string, string> = {
-    DAILY: "bg-blue-100 text-blue-800",
-    WEEKLY: "bg-amber-100 text-amber-800",
-    MONTHLY: "bg-purple-100 text-purple-800",
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6" />
-          Cleaning & Maintenance
-        </h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Cleaning & Maintenance</h1>
+        <p className="text-[#717171] text-sm mt-1">Daily tasks and upkeep</p>
       </div>
-
-      {/* Cleaning Tasks */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Cleaning Tasks</h2>
-        {loading ? (
-          <div className="animate-pulse space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-card rounded-xl border border-border p-4 h-20" />
-            ))}
-          </div>
-        ) : (
-          tasks.map((task) => {
-            const done = task.logs.length > 0;
-            return (
-              <Card key={task.id} className={done ? "opacity-60" : ""}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{task.title}</span>
-                      {done && <Check className="h-4 w-4 text-green-600" />}
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge className={freqColors[task.frequency] || ""} variant="outline">
-                        {task.frequency}
-                      </Badge>
-                      {task.location && (
-                        <Badge variant="outline" className="text-xs">
-                          {task.location}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    {done ? (
-                      <span className="text-xs text-green-600">
-                        ✅ Done by {task.logs[0].user.name}
-                      </span>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => markComplete(task.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        Mark Done ✨
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
+        {tasks.map(task => {
+          const done = task.logs.length > 0;
+          return (
+            <div key={task.id} className={`bg-white border rounded-2xl p-5 transition-shadow hover:shadow-md ${done ? "border-[#00A699]/30 opacity-70" : "border-[#DDDDDD]"}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="font-semibold text-[#222222]">{task.title}</span>
+                  {done && <Check className="h-4 w-4 text-[#00A699]" />}
+                </div>
+                <div className="flex gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${freqStyle[task.frequency] || ""}`}>{task.frequency}</span>
+                  {task.location && <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold text-[#717171] bg-[#F7F7F7]">{task.location}</span>}
+                </div>
+              </div>
+              {task.description && <p className="text-sm text-[#717171] mb-3">{task.description}</p>}
+              {done ? (
+                <span className="text-xs text-[#00A699] font-semibold">✅ Done by {task.logs[0].user.name}</span>
+              ) : (
+                <button onClick={() => markComplete(task.id)}
+                  className="mt-1 px-5 py-2 rounded-xl text-sm font-bold bg-[#00A699] text-white hover:bg-[#009088] transition-colors">
+                  Mark Done ✨
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

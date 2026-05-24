@@ -3,45 +3,51 @@
 import { QRCodeSVG } from "qrcode.react";
 
 const qrEntries = [
-  { label: "☕ Log Drinks", path: "/entry/drinks", color: "bg-amber-50 border-amber-200" },
-  { label: "🍩 Log Donuts", path: "/entry/donuts", color: "bg-orange-50 border-orange-200" },
-  { label: "💰 Log Sales", path: "/entry/sales", color: "bg-yellow-50 border-yellow-200" },
-  { label: "🐕 Log Dogels", path: "/entry/dogels", color: "bg-lime-50 border-lime-200" },
-  { label: "🥪 Log Sandwiches", path: "/entry/sandwiches", color: "bg-red-50 border-red-200" },
-  { label: "📋 All Entry", path: "/employee", color: "bg-blue-50 border-blue-200" },
+  { label: "☕ Log Drinks", path: "/entry/drinks", accent: "border-[#FF385C]" },
+  { label: "🍩 Log Donuts", path: "/entry/donuts", accent: "border-[#E0304F]" },
+  { label: "💰 Log Sales", path: "/entry/sales", accent: "border-[#00A699]" },
+  { label: "🥯 Log Dogels", path: "/entry/dogels", accent: "border-[#222222]" },
+  { label: "🥪 Log Sandwiches", path: "/entry/sandwiches", accent: "border-[#717171]" },
+  { label: "⏰ Clock In/Out", path: "/hours", accent: "border-[#FF385C]" },
 ];
 
 export default function QRSignPage() {
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="text-center mb-8">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="bg-[#222222] text-white px-6 py-8 text-center">
         <div className="text-4xl mb-2">🍩</div>
-        <h1 className="text-3xl font-bold text-amber-900">Duffers OS</h1>
-        <p className="text-amber-700 text-lg mt-1">Scan to Log</p>
+        <h1 className="text-3xl font-bold tracking-tight">Duffers OS</h1>
+        <p className="text-white/60 text-sm mt-2 font-medium">Scan a code to get started</p>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        {qrEntries.map((entry) => (
-          <div
-            key={entry.path}
-            className={`border-2 rounded-2xl p-6 flex flex-col items-center gap-4 ${entry.color}`}
-          >
-            <div className="text-lg font-bold text-gray-800 text-center">
-              {entry.label}
+
+      {/* QR Grid */}
+      <div className="max-w-[900px] mx-auto px-6 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+          {qrEntries.map((entry) => (
+            <div
+              key={entry.path}
+              className={`border-2 ${entry.accent} rounded-2xl p-6 flex flex-col items-center gap-4 bg-white hover:shadow-lg transition-shadow`}
+            >
+              <div className="text-base font-bold text-[#222222] text-center">{entry.label}</div>
+              <div className="bg-white p-3 rounded-xl shadow-sm">
+                <QRCodeSVG
+                  value={`${baseUrl}${entry.path}`}
+                  size={160}
+                  level="M"
+                  bgColor="#FFFFFF"
+                  fgColor="#222222"
+                  includeMargin={false}
+                />
+              </div>
             </div>
-            <QRCodeSVG
-              value={`${baseUrl}${entry.path}`}
-              size={180}
-              level="M"
-              bgColor="#FFFFFF"
-              fgColor="#3D2B1F"
-              includeMargin
-            />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-      <div className="text-center mt-8 text-sm text-gray-400">
+
+      <div className="text-center pb-8 text-xs text-[#717171] font-medium">
         Duffers OS • {new Date().getFullYear()}
       </div>
     </div>

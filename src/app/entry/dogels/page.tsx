@@ -2,11 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingBag } from "lucide-react";
 
 interface Product { id: number; name: string }
 
@@ -16,58 +11,45 @@ export default function DogelEntryPage() {
   const [sold, setSold] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/products?type=DOGEL").then(r => r.json()).then(setProducts).catch(() => {});
-  }, []);
+  useEffect(() => { fetch("/api/products?type=DOGEL").then(r => r.json()).then(setProducts).catch(() => {}); }, []);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
+    e.preventDefault(); setSubmitting(true);
     try {
       const res = await fetch("/api/sales", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          totalAmount: 0,
-          paymentMethod: null,
-          notes: "Dogel log",
-          lines: [{ productName: products.find(p => p.id === Number(productId))?.name || "Dogel", quantity: sold, unitPrice: 0, total: 0 }],
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ totalAmount: 0, paymentMethod: null, notes: "Dogel log", lines: [{ productName: products.find(p => p.id === Number(productId))?.name || "Dogel", quantity: sold, unitPrice: 0, total: 0 }] }),
       });
-      if (res.ok) {
-        toast.success("Dogels logged! 🥯");
-        setSold(0);
-        setProductId("");
-      } else {
-        toast.error("Failed to log");
-      }
+      if (res.ok) { toast.success("Dogels logged! 🥯"); setSold(0); setProductId(""); }
+      else { toast.error("Failed to log"); }
     } catch { toast.error("Network error"); }
     setSubmitting(false);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">🐕</span>
-        <h1 className="text-xl font-bold">Log Dogels</h1>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-[#FFFFF0] rounded-xl"><span className="text-lg">🥯</span></div>
+        <h1 className="text-xl font-bold tracking-tight">Log Dogels</h1>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <Label>Dogel Type</Label>
-          <Select value={productId} onValueChange={(v) => v !== null && setProductId(v)}>
-            <SelectTrigger className="mt-1"><SelectValue placeholder="Select type..." /></SelectTrigger>
-            <SelectContent>
-              {products.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <label className="block text-sm font-semibold text-[#222222] mb-2">Dogel Type</label>
+          <select value={productId} onChange={e => setProductId(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-[#DDDDDD] rounded-xl text-[15px] bg-white focus:border-[#222222] focus:ring-0 transition-colors appearance-none">
+            <option value="">Select type...</option>
+            {products.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
+          </select>
         </div>
         <div>
-          <Label htmlFor="sold">Quantity Sold</Label>
-          <Input id="sold" type="number" min={0} value={sold} onChange={e => setSold(Number(e.target.value))} className="mt-1" />
+          <label className="block text-sm font-semibold text-[#222222] mb-2">Quantity Sold</label>
+          <input type="number" min={0} value={sold} onChange={e => setSold(Number(e.target.value))}
+            className="w-full px-4 py-3 border-2 border-[#DDDDDD] rounded-xl text-[15px] focus:border-[#222222] focus:ring-0 transition-colors" />
         </div>
-        <Button type="submit" className="w-full bg-lime-600 hover:bg-lime-700 text-white" disabled={submitting || !productId}>
+        <button type="submit" disabled={submitting || !productId}
+          className="w-full bg-[#FF385C] hover:bg-[#E0304F] disabled:bg-[#FF385C]/40 text-white font-bold py-3.5 rounded-xl text-[16px] transition-colors">
           {submitting ? "Logging..." : "Log Dogels 🥯"}
-        </Button>
+        </button>
       </form>
     </div>
   );

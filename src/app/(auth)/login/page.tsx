@@ -32,60 +32,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-amber-50">
-      <div className="w-full max-w-sm mx-auto p-6">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🍩</div>
-          <h1 className="text-2xl font-bold text-amber-900">Duffers OS</h1>
-          <p className="text-amber-700 text-sm mt-1">Operations Portal</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#FF385C]">
+      <div className="w-full max-w-[420px] mx-auto px-6">
+        <div className="text-center mb-10">
+          <div className="text-6xl mb-4">🍩</div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Duffers OS</h1>
+          <p className="text-white/80 text-sm mt-2 font-medium">Sign in to your account</p>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-lg p-6 space-y-4"
-        >
+        <div className="bg-white rounded-2xl shadow-xl p-8">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+            <div className="bg-[#FFF0F0] border border-[#FFD4D4] text-[#C13515] rounded-xl px-4 py-3 text-sm mb-5 font-medium">
               {error}
             </div>
           )}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="hello@duffersdonutshop.com"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="••••••••"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-[#222222] mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-[#DDDDDD] rounded-xl text-[15px] focus:border-[#222222] focus:ring-0 transition-colors placeholder:text-[#717171]"
+                placeholder="hello@duffersdonutshop.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-[#222222] mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-[#DDDDDD] rounded-xl text-[15px] focus:border-[#222222] focus:ring-0 transition-colors placeholder:text-[#717171]"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#FF385C] hover:bg-[#E0304F] disabled:bg-[#FF385C]/50 text-white font-bold py-3.5 px-5 rounded-xl text-[16px] transition-colors"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+        </div>
+        <p className="text-center text-white/60 text-xs mt-6">
+          Duffers Donut Shop • Operations Portal
+        </p>
       </div>
     </div>
   );

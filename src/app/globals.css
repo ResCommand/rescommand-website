@@ -49,38 +49,39 @@
 }
 
 :root {
-  --background: #FFF8F0;
-  --foreground: #3D2B1F;
+  /* Airbnb-inspired: warm off-white bg, deep charcoal text, signature rose accent */
+  --background: #FFFFFF;
+  --foreground: #222222;
   --card: #FFFFFF;
-  --card-foreground: #3D2B1F;
+  --card-foreground: #222222;
   --popover: #FFFFFF;
-  --popover-foreground: #3D2B1F;
-  --primary: #B45309;
+  --popover-foreground: #222222;
+  --primary: #FF385C;
   --primary-foreground: #FFFFFF;
-  --secondary: #FEF3C7;
-  --secondary-foreground: #78350F;
-  --muted: #FEF3C7;
-  --muted-foreground: #92400E;
-  --accent: #FDE68A;
-  --accent-foreground: #78350F;
-  --destructive: #DC2626;
-  --border: #F5E6D3;
-  --input: #F5E6D3;
-  --ring: #D97706;
-  --chart-1: #F59E0B;
-  --chart-2: #D97706;
-  --chart-3: #B45309;
-  --chart-4: #92400E;
-  --chart-5: #78350F;
-  --radius: 0.625rem;
-  --sidebar: #FFFBF5;
-  --sidebar-foreground: #3D2B1F;
-  --sidebar-primary: #B45309;
+  --secondary: #F7F7F7;
+  --secondary-foreground: #222222;
+  --muted: #F7F7F7;
+  --muted-foreground: #717171;
+  --accent: #FF385C;
+  --accent-foreground: #FFFFFF;
+  --destructive: #C13515;
+  --border: #DDDDDD;
+  --input: #DDDDDD;
+  --ring: #FF385C;
+  --chart-1: #FF385C;
+  --chart-2: #FF385C;
+  --chart-3: #00A699;
+  --chart-4: #222222;
+  --chart-5: #717171;
+  --radius: 0.75rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #222222;
+  --sidebar-primary: #FF385C;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #FEF3C7;
-  --sidebar-accent-foreground: #78350F;
-  --sidebar-border: #F5E6D3;
-  --sidebar-ring: #D97706;
+  --sidebar-accent: #F7F7F7;
+  --sidebar-accent-foreground: #222222;
+  --sidebar-border: #DDDDDD;
+  --sidebar-ring: #FF385C;
 }
 
 @layer base {
@@ -89,8 +90,44 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* Airbnb-style typography */
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Smooth transitions on interactive elements */
+button, a, input, select {
+  transition: all 0.15s ease;
+}
+
+/* Airbnb-style focus rings */
+input:focus, select:focus, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FF385C;
+  border-color: #FF385C;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDDDDD;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #717171;
 }

@@ -23,7 +23,8 @@ export async function GET() {
 const sopSchema = z.object({
   title: z.string().min(1),
   category: z.enum(["FOH", "BOH", "SAFETY", "CLEANING", "OPENING", "CLOSING", "GENERAL"]),
-  content: z.string().min(1),
+  content: z.string().default("<p></p>"),
+  fileUrl: z.string().nullable().optional(),
 });
 
 export async function POST(req: Request) {

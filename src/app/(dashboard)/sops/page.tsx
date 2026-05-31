@@ -1,12 +1,12 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, BookOpen, X } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, X, Upload, FileText, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import RichTextEditor from "@/components/RichTextEditor";
 
 interface Sop {
-  id: number; title: string; category: string; content: string;
+  id: number; title: string; category: string; content: string; fileUrl: string | null;
   version: number; active: boolean;
   creator: { name: string }; updater: { name: string } | null;
   createdAt: string; updatedAt: string;
@@ -33,6 +33,9 @@ export default function SopsPage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("GENERAL");
   const [content, setContent] = useState("");
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isMgr = ["MANAGER", "OWNER"].includes((session?.user as { role?: string })?.role || "");
@@ -44,10 +47,10 @@ export default function SopsPage() {
   useEffect(() => { load(); }, []);
 
   function openCreate() {
-    setEditing(null); setTitle(""); setCategory("GENERAL"); setContent(""); setDialogOpen(true);
+    setEditing(null); setTitle(""); setCategory("GENERAL"); setContent(""); setFileUrl(null); setFileName(""); setDialogOpen(true);
   }
   function openEdit(s: Sop) {
-    setEditing(s); setTitle(s.title); setCategory(s.category); setContent(s.content); setDialogOpen(true);
+    setEditing(s); setTitle(s.title); setCategory(s.category); setContent(s.content); setFileUrl(s.fileUrl); setFileName(s.fileUrl ? s.fileUrl.split("/").pop() || "" : ""); setDialogOpen(true);
   }
   function openView(s: Sop) {
     setSelectedSop(s);
@@ -55,15 +58,15 @@ export default function SopsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !content.trim() || content === "<p></p>") {
-      toast.error("Title and content are required");
+    if (!title.trim() || ((!content.trim() || content === "<p></p>") && !fileUrl)) {
+      toast.error("Title and content (or a PDF) are required");
       return;
     }
     setSaving(true);
     try {
       const body = editing
-        ? { id: editing.id, title, category, content }
-        : { title, category, content };
+        ? { id: editing.id, title, category, content: content || "<p></p>", fileUrl }
+        : { title, category, content: content || "<p></p>", fileUrl };
       const r = await fetch("/api/sops", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,13 +122,16 @@ export default function SopsPage() {
             <h3 className="section-title">{catLabels[g.category]}</h3>
             <div className="card">
               {g.items.map(s => (
-                <div key={s.id} className="list-item" style={{ cursor: "pointer" }} onClick={() => openView(s)}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="font-medium text-sm">{s.title}</div>
-                    <div className="text-xs text-gray mt-1">
-                      v{s.version} · by {s.updater?.name || s.creator?.name || "Unknown"} · {new Date(s.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </div>
-                  </div>
+<div key={s.id} className="list-item" style={{ cursor: "pointer" }} onClick={() => openView(s)}>
+	                  <div style={{ flex: 1, minWidth: 0 }}>
+	                    <div className="font-medium text-sm" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+	                      {s.fileUrl && <FileText size={14} style={{ color: "#DC2626", flexShrink: 0 }} />}
+	                      {s.title}
+	                    </div>
+	                    <div className="text-xs text-gray mt-1">
+	                      v{s.version} · by {s.updater?.name || s.creator?.name || "Unknown"} · {new Date(s.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+	                    </div>
+	                  </div>
                   <div className="flex items-center gap-2">
                     <span className={`badge ${catStyle[s.category] || "badge-gray"}`}>{catLabels[s.category]}</span>
                     {isMgr && (
@@ -163,12 +169,28 @@ export default function SopsPage() {
               </div>
               <button onClick={() => setSelectedSop(null)} className="btn-icon"><X size={18} /></button>
             </div>
-            <div className="modal-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
-              <div
-                className="sop-viewer"
-                style={{ lineHeight: 1.7, fontSize: 14, color: "#374151" }}
-                dangerouslySetInnerHTML={{ __html: selectedSop.content }}
-              />
+            <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+              {selectedSop.fileUrl && (
+                <div style={{ marginBottom: 16 }}>
+                  <iframe
+                    src={selectedSop.fileUrl}
+                    style={{ width: "100%", height: "60vh", border: "1px solid #E5E7EB", borderRadius: 6 }}
+                    title={selectedSop.title}
+                  />
+                  <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                    <a href={selectedSop.fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <ExternalLink size={14} /> Open in new tab
+                    </a>
+                  </div>
+                </div>
+              )}
+              {(!selectedSop.fileUrl || (selectedSop.content && selectedSop.content !== "<p></p>")) && (
+                <div
+                  className="sop-viewer"
+                  style={{ lineHeight: 1.7, fontSize: 14, color: "#374151" }}
+                  dangerouslySetInnerHTML={{ __html: selectedSop.content }}
+                />
+              )}
             </div>
             <div className="modal-footer" style={{ justifyContent: "space-between" }}>
               <div className="text-xs text-gray">
@@ -200,7 +222,48 @@ export default function SopsPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="form-label">Content *</label>
+                  <label className="form-label">Attach PDF (optional)</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <label className="btn btn-secondary btn-sm" style={{ cursor: uploading ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <Upload size={14} /> {uploading ? "Uploading..." : "Choose PDF"}
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          if (f.size > 10 * 1024 * 1024) { toast.error("Max 10MB"); return; }
+                          setUploading(true);
+                          try {
+                            const fd = new FormData();
+                            fd.append("file", f);
+                            const r = await fetch("/api/upload", { method: "POST", body: fd });
+                            if (r.ok) {
+                              const d = await r.json();
+                              setFileUrl(d.url);
+                              setFileName(f.name);
+                              toast.success("PDF uploaded");
+                            } else {
+                              const d = await r.json();
+                              toast.error(d.error || "Upload failed");
+                            }
+                          } catch { toast.error("Upload error"); }
+                          setUploading(false);
+                        }}
+                      />
+                    </label>
+                    {fileUrl && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <FileText size={14} style={{ color: "#DC2626" }} />
+                        <span className="text-sm">{fileName}</span>
+                        <button type="button" onClick={() => { setFileUrl(null); setFileName(""); }} className="btn-icon" style={{ color: "#DC2626" }} title="Remove PDF"><X size={12} /></button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="form-label">Content{fileUrl ? " (optional — PDF attached)" : " *"}</label>
                   <RichTextEditor
                     content={content}
                     onChange={(html) => setContent(html)}

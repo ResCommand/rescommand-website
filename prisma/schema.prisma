@@ -542,6 +542,7 @@ model Sop {
   title       String
   category    SopCategory
   content     String      @db.MediumText
+  fileUrl     String?     @map("file_url")
   version     Int         @default(1)
   active      Boolean     @default(true)
   createdBy   Int         @map("created_by")

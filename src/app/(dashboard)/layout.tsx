@@ -1,11 +1,11 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
   Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
-  ShoppingCart, ChefHat,
+  ShoppingCart, ChefHat, Bell,
 } from "lucide-react";
 
 const allNav = [
@@ -19,6 +19,7 @@ const allNav = [
   { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
+  { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"] },
   { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"] },
 ];

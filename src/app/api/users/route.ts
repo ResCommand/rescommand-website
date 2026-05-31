@@ -11,6 +11,7 @@ const createUserSchema = z.object({
   password: z.string().min(6),
   role: z.enum(["EMPLOYEE", "MANAGER", "OWNER"]),
   phone: z.string().nullable().optional(),
+  categoryId: z.number().nullable().optional(),
 });
 
 const updateUserSchema = z.object({
@@ -20,6 +21,7 @@ const updateUserSchema = z.object({
   role: z.enum(["EMPLOYEE", "MANAGER", "OWNER"]).optional(),
   phone: z.string().nullable().optional(),
   active: z.boolean().optional(),
+  categoryId: z.number().nullable().optional(),
 });
 
 // GET /api/users — list all users
@@ -40,6 +42,8 @@ export async function GET() {
       phone: true,
       active: true,
       createdAt: true,
+      categoryId: true,
+      category: { select: { id: true, name: true, color: true } },
     },
     orderBy: { name: "asc" },
   });
@@ -73,6 +77,7 @@ export async function POST(request: Request) {
       passwordHash,
       role: parsed.data.role,
       phone: parsed.data.phone,
+      categoryId: parsed.data.categoryId,
     },
     select: {
       id: true,
@@ -82,6 +87,8 @@ export async function POST(request: Request) {
       phone: true,
       active: true,
       createdAt: true,
+      categoryId: true,
+      category: { select: { id: true, name: true, color: true } },
     },
   });
 
@@ -123,6 +130,8 @@ export async function PUT(request: Request) {
       phone: true,
       active: true,
       createdAt: true,
+      categoryId: true,
+      category: { select: { id: true, name: true, color: true } },
     },
   });
 

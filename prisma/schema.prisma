@@ -9,6 +9,23 @@ datasource db {
 
 // ─── Users & Auth ────────────────────────────────────────────
 
+enum Role {
+  EMPLOYEE
+  MANAGER
+  OWNER
+}
+
+model EmployeeCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String   @default("#6B7280")
+  sortOrder Int      @default(0) @map("sort_order")
+  active    Boolean  @default(true)
+  members   User[]
+
+  @@map("employee_categories")
+}
+
 model User {
   id           Int       @id @default(autoincrement())
   email        String    @unique
@@ -17,33 +34,32 @@ model User {
   role         Role      @default(EMPLOYEE)
   phone        String?
   active       Boolean   @default(true)
+  categoryId   Int?      @map("category_id")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  transactions   Transaction[]
-  drinkLogs      DrinkLog[]
-  donutLogs      DonutLog[]
-  employeeHours  EmployeeHour[]
-  cleaningLogs   CleaningLog[]
-  maintenanceLogs MaintenanceLog[] @relation("MaintenanceCreator")
-  maintenanceResolver MaintenanceLog[] @relation("MaintenanceResolver")
+  category          EmployeeCategory?   @relation(fields: [categoryId], references: [id])
+  transactions      Transaction[]
+  drinkLogs         DrinkLog[]
+  donutLogs         DonutLog[]
+  employeeHours     EmployeeHour[]
+  cleaningLogs      CleaningLog[]
+  maintenanceLogs   MaintenanceLog[]    @relation("MaintenanceCreator")
+  maintenanceResolver MaintenanceLog[]  @relation("MaintenanceResolver")
   inventoryOrders   InventoryOrder[]
-  sopsCreated       Sop[]           @relation("SopCreator")
-  sopsUpdated       Sop[]           @relation("SopUpdater")
+  sopsCreated       Sop[]              @relation("SopCreator")
+  sopsUpdated       Sop[]              @relation("SopUpdater")
   dashboardLayout   DashboardLayout?
   espressoDials     EspressoDialLog[]
   inventoryCounts   InventoryCount[]
-  orderRequests     OrderRequest[]  @relation("OrderRequester")
-  orderReviews      OrderRequest[]  @relation("OrderRequestReviewer")
+  orderRequests     OrderRequest[]     @relation("OrderRequester")
+  orderReviews      OrderRequest[]     @relation("OrderRequestReviewer")
   batchCompletions  BatchCompletion[]
+  sentNotifications Notification[]     @relation("NotificationSender")
+  notificationReads NotificationRead[]
+  notificationRecipients NotificationRecipient[]
 
   @@map("users")
-}
-
-enum Role {
-  EMPLOYEE
-  MANAGER
-  OWNER
 }
 
 // ─── Products ────────────────────────────────────────────────
@@ -216,9 +232,11 @@ model InventoryItem {
   suggestedCadence String?   @map("suggested_cadence") // e.g. "2-3 cases/week"
   sku              String?
   notes            String?
-  inventorySection InventorySection @default(KITCHEN_REGULAR) @map("inventory_section")
+  inventorySection   String     @default("kitchen_regular") @map("inventory_section")
+  inventorySectionId Int?       @map("inventory_section_id")
 
   vendor            Vendor?               @relation(fields: [vendorId], references: [id])
+  section           InventorySection?     @relation(fields: [inventorySectionId], references: [id])
   productIngredients ProductIngredient[]
   orderLines        InventoryOrderLine[]
   countLines        InventoryCountLine[]
@@ -294,11 +312,18 @@ model InventoryCountLine {
 
 // ─── Order Requests ──────────────────────────────────────────
 
-enum InventorySection {
-  KITCHEN_REGULAR
-  KITCHEN_INFREQUENT
-  PACKAGING
-  BARISTA
+// ─── Inventory Sections (DB-driven, replaces enum) ──────────────
+
+model InventorySection {
+  id        Int              @id @default(autoincrement())
+  name      String           // Display name: "Kitchen — Regular Orders"
+  slug      String           @unique  // Internal key: "kitchen_regular"
+  icon      String           @default("📦")  // Emoji icon
+  sortOrder Int              @default(0) @map("sort_order")
+  active    Boolean          @default(true)
+  items     InventoryItem[]
+
+  @@map("inventory_sections")
 }
 
 enum OrderRequestStatus {
@@ -331,20 +356,6 @@ model OrderRequest {
   reviewer      User?         @relation("OrderRequestReviewer", fields: [reviewedBy], references: [id])
 
   @@map("order_requests")
-}
-
-model PrepStockItem {
-  id             Int      @id @default(autoincrement())
-  name           String
-  category       String
-  quantity       Float    @default(0)
-  unit           String
-  shelfLifeHours Int      @map("shelf_life_hours") @default(0)
-  preparedAt     DateTime @map("prepared_at")
-  expiresAt      DateTime @map("expires_at")
-  active         Boolean  @default(true)
-
-  @@map("prep_stock_items")
 }
 
 // ─── Prediction & Par ───────────────────────────────────────
@@ -583,10 +594,24 @@ model EspressoDialLog {
 
 // ─── Recipes ────────────────────────────────────────────────────
 
+model RecipeCategory {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  icon      String   @default("📋")
+  color     String   @default("#F9FAFB")   // Background color
+  sortOrder Int      @default(0) @map("sort_order")
+  active    Boolean  @default(true)
+  recipes   Recipe[]
+
+  @@map("recipe_categories")
+}
+
 model Recipe {
   id          Int      @id @default(autoincrement())
   name        String
   category    String   @default("general")
+  categoryId  Int?     @map("category_id")
   description String?
   ingredients Json     // Array of { name, amount, unit }
   instructions String?
@@ -595,6 +620,8 @@ model Recipe {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+
+  recipeCategory RecipeCategory? @relation(fields: [categoryId], references: [id])
 
   @@map("recipes")
 }
@@ -620,4 +647,70 @@ model BatchCompletion {
 
   @@unique([date, batchIndex])
   @@map("batch_completions")
+}
+
+model TrayOverride {
+  id         Int      @id @default(autoincrement())
+  date       DateTime
+  flavor    String    // Flavor name: "M&M", "Vanilla", etc.
+  trays     Float     @default(0)
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@unique([date, flavor])
+  @@map("tray_overrides")
+}
+
+model PrepItem {
+  id             Int      @id @default(autoincrement())
+  name           String
+  category       String
+  categoryColor  String   @default("#F3F4F6") @map("category_color")
+  amount         String
+  shelfLifeHours Int      @default(0) @map("shelf_life_hours")
+  sortOrder      Int      @default(0) @map("sort_order")
+  active         Boolean  @default(true)
+
+  @@map("prep_items")
+}
+
+// ─── Notifications ────────────────────────────────────────────
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  title      String
+  message    String
+  priority   String   @default("normal")  // "low", "normal", "high", "urgent"
+  sentBy     Int      @map("sent_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sender     User              @relation("NotificationSender", fields: [sentBy], references: [id])
+  reads      NotificationRead[]
+  recipients NotificationRecipient[]
+
+  @@map("notifications")
+}
+
+model NotificationRead {
+  id             Int      @id @default(autoincrement())
+  notificationId Int      @map("notification_id")
+  userId         Int      @map("user_id")
+  readAt         DateTime @default(now()) @map("read_at")
+
+  notification Notification @relation(fields: [notificationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([notificationId, userId])
+  @@map("notification_reads")
+}
+
+model NotificationRecipient {
+  id             Int      @id @default(autoincrement())
+  notificationId Int      @map("notification_id")
+  userId         Int      @map("user_id")
+
+  notification Notification @relation(fields: [notificationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@unique([notificationId, userId])
+  @@map("notification_recipients")
 }

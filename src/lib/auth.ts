@@ -57,6 +57,10 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  // Trust the Caddy reverse proxy — it terminates TLS and forwards as HTTP.
+  // Without this, NextAuth treats the scheme as "http" and Secure cookies
+  // won't be sent back, breaking auth behind the proxy.
+  useSecureCookies: true,
   cookies: {
     sessionToken: {
       name: "next-auth.session-token",

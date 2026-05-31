@@ -27,10 +27,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for auth token
+  // Check for auth token — NextAuth JWT strategy reads from the
+  // next-auth.session-token cookie. Behind a reverse proxy (Caddy),
+  // we must pass the secure cookie name because the proxy terminates TLS.
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
+    // The cookie name NextAuth uses for JWT sessions
+    cookieName: "next-auth.session-token",
   });
 
   if (!token) {

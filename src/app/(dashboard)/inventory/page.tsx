@@ -1,35 +1,529 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
-interface InvItem { id: number; name: string; fohBoh: string; currentStock: number; quantity: number; unit: string; minStock: number; unitCost: number }
+interface Vendor {
+  id: number;
+  name: string;
+  role: string | null;
+  mainUse: string | null;
+  cadence: string | null;
+  _count: { inventoryItems: number };
+}
+
+interface InvItem {
+  id: number;
+  name: string;
+  category: string;
+  unit: string;
+  unitCost: number;
+  parLevel: number;
+  currentStock: number;
+  minStock: number;
+  reorderQty: number;
+  packSize: string | null;
+  suggestedCadence: string | null;
+  sku: string | null;
+  notes: string | null;
+  inventorySection: string;
+  vendor: { id: number; name: string } | null;
+}
+
+const SECTION_LABELS: Record<string, string> = {
+  KITCHEN_REGULAR: "🍳 Kitchen — Regular Orders",
+  KITCHEN_INFREQUENT: "🧂 Kitchen — Infrequent Orders",
+  PACKAGING: "📦 Packaging & Supplies",
+  BARISTA: "☕ Barista & Coffee",
+};
+const SECTION_ORDER = ["KITCHEN_REGULAR", "KITCHEN_INFREQUENT", "PACKAGING", "BARISTA"];
+
+function getMonday(d: Date): Date {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function formatDateISO(d: Date): string {
+  return d.toISOString().split("T")[0];
+}
+
 export default function InventoryPage() {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [items, setItems] = useState<InvItem[]>([]);
-  const [tab, setTab] = useState<"FOH" | "BOH">("FOH");
-  useEffect(() => { fetch("/api/inventory").then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : [])).catch(() => {}); }, []);
-  const filtered = items.filter(i => i.fohBoh === tab);
-  return (
-    <div className="space-y-6">
-      <div className="page-header"><h1>Inventory</h1><p className="text-sm text-gray">Track stock levels and orders</p></div>
-      <div className="tabs">
-        <button className={`tab ${tab === "FOH" ? "active" : ""}`} onClick={() => setTab("FOH")}>Front of House</button>
-        <button className={`tab ${tab === "BOH" ? "active" : ""}`} onClick={() => setTab("BOH")}>Back of House</button>
+  const [activeVendor, setActiveVendor] = useState<number | "ALL">("ALL");
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(SECTION_ORDER));
+
+  // Weekly count state
+  const [lines, setLines] = useState<Map<number, number>>(new Map());
+  const [date, setDate] = useState<string>(formatDateISO(getMonday(new Date())));
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [parEdits, setParEdits] = useState<Map<number, number>>(new Map()); // local par overrides
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/inventory/vendors").then((r) => r.json()),
+      fetch("/api/inventory").then((r) => r.json()),
+    ])
+      .then(([v, i]) => {
+        const vendorArr = Array.isArray(v) ? v : [];
+        const itemArr = Array.isArray(i) ? i : [];
+        setVendors(vendorArr);
+        setItems(itemArr);
+        // Initialize on-hand from current stock
+        const m = new Map<number, number>();
+        itemArr.forEach((item: InvItem) => m.set(item.id, item.currentStock));
+        setLines(m);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = items
+    .filter((i) => activeVendor === "ALL" || i.vendor?.id === activeVendor)
+    .filter((i) => !search || i.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      const sa = SECTION_ORDER.indexOf(a.inventorySection || "KITCHEN_REGULAR");
+      const sb = SECTION_ORDER.indexOf(b.inventorySection || "KITCHEN_REGULAR");
+      if (sa !== sb) return sa - sb;
+      return a.name.localeCompare(b.name);
+    });
+
+  const getPar = (item: InvItem) => parEdits.get(item.id) ?? item.parLevel;
+
+  const lowStockCount = items.filter((i) => {
+    const onHand = lines.get(i.id) ?? i.currentStock;
+    const par = getPar(i);
+    return par > 0 && onHand <= i.minStock && i.minStock > 0;
+  }).length;
+
+  const totalToOrder = filtered.reduce((sum, i) => {
+    const par = getPar(i);
+    if (par === 0) return sum;
+    const onHand = lines.get(i.id) ?? i.currentStock;
+    return sum + Math.max(0, par - onHand);
+  }, 0);
+
+  const toggleSection = (section: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
+      return next;
+    });
+  };
+
+  const updateLine = (id: number, value: string) => {
+    const num = parseFloat(value) || 0;
+    setLines((prev) => new Map(prev).set(id, num));
+    setSaved(false);
+  };
+
+  const updatePar = async (id: number, value: string) => {
+    const num = Math.max(0, parseFloat(value) || 0);
+    setParEdits((prev) => new Map(prev).set(id, num));
+    setSaved(false);
+    try {
+      await fetch("/api/inventory", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, parLevel: num }),
+      });
+    } catch {
+      // silent — will reflect on next load
+    }
+  };
+
+  const save = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/inventory/counts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date,
+          lines: items.map((item) => ({
+            inventoryItemId: item.id,
+            onHand: lines.get(item.id) ?? item.currentStock,
+          })),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save count");
+      }
+      setSaved(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Build grouped sections
+  const sections = SECTION_ORDER
+    .map((key) => ({
+      key,
+      label: SECTION_LABELS[key] || key,
+      items: filtered.filter((i) => (i.inventorySection || "KITCHEN_REGULAR") === key),
+    }))
+    .filter((sec) => sec.items.length > 0);
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="page-header"><h1>Inventory</h1></div>
+        <div className="empty-state">Loading...</div>
       </div>
-      <div className="grid-3">
-        {filtered.map(i => {
-          const pct = i.minStock > 0 ? Math.min((i.quantity / i.minStock) * 100, 100) : 0;
-          const color = pct < 30 ? "red" : pct < 70 ? "yellow" : "green";
-          return (
-            <div key={i.id} className="card" style={{ padding: 16 }}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-medium text-sm">{i.name}</div>
-                {pct < 30 && <span className="badge badge-red">Low</span>}
+    );
+  }
+
+  return (
+    <div className="page-container">
+      <div className="page-header">
+        <div className="page-header-row">
+          <div>
+            <h1>Inventory</h1>
+            <p className="text-sm text-gray">
+              {items.length} items across {vendors.length} vendors
+              {lowStockCount > 0 && (
+                <span className="text-red" style={{ marginLeft: 8 }}>
+                  {lowStockCount} low stock
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+            <Link href="/inventory/items" className="btn btn-secondary btn-sm">
+              ⚙️ Manage Items
+            </Link>
+            <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
+              🛒 Order Requests
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Count date + status bar — stacked on mobile */}
+      <div className="inv-count-bar">
+        <div className="inv-count-bar-row">
+          <div className="form-group" style={{ marginBottom: 0, flex: "0 0 auto" }}>
+            <label className="form-label">Count Date</label>
+            <input
+              type="date"
+              className="form-input"
+              value={date}
+              onChange={(e) => { setDate(e.target.value); setSaved(false); }}
+              style={{ width: 155 }}
+            />
+          </div>
+          <div className="stat-card" style={{ padding: "8px 12px", margin: 0, flex: "1 1 auto", minWidth: 0 }}>
+            <div className="flex items-center gap-2" style={{ flexWrap: "nowrap" }}>
+              <div>
+                <div className="text-xs text-gray">Items</div>
+                <div className="font-semibold text-sm">{filtered.length}</div>
               </div>
-              <div className="text-xs text-gray mb-2">{i.currentStock ?? i.quantity} {i.unit} · ${(i.unitCost ?? 0).toFixed(2)}/{i.unit.replace(/s$/,"")}</div>
-              <div className="progress-bar"><div className={`progress-bar-fill ${color}`} style={{ width: `${pct}%` }} /></div>
+              <div style={{ width: 1, height: 24, background: "#E5E7EB" }} />
+              <div>
+                <div className="text-xs text-gray">To Order</div>
+                <div className="font-semibold text-sm" style={{ color: totalToOrder > 0 ? "#EA580C" : "#059669" }}>
+                  {totalToOrder}
+                </div>
+              </div>
+              <div style={{ width: 1, height: 24, background: "#E5E7EB" }} />
+              <div>
+                {saved ? (
+                  <span className="badge badge-green" style={{ fontSize: 11, padding: "2px 8px" }}>✓ Saved</span>
+                ) : (
+                  <span className="badge badge-yellow" style={{ fontSize: 11, padding: "2px 8px" }}>Unsaved</span>
+                )}
+              </div>
             </div>
-          );
-        })}
-        {filtered.length === 0 && <div className="empty-state">No items</div>}
+          </div>
+        </div>
+        <button
+          className="btn btn-primary btn-sm"
+          onClick={save}
+          disabled={saving}
+          style={{ width: "100%", maxWidth: 220 }}
+        >
+          {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
+        </button>
+      </div>
+
+      {error && (
+        <div style={{ background: "#FEF2F2", color: "#DC2626", padding: 10, borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
+          {error}
+        </div>
+      )}
+
+      {/* Vendor tabs */}
+      <div className="inv-vendor-tabs">
+        <button
+          className={`tab ${activeVendor === "ALL" ? "active" : ""}`}
+          onClick={() => setActiveVendor("ALL")}
+        >
+          All ({items.length})
+        </button>
+        {vendors.map((v) => (
+          <button
+            key={v.id}
+            className={`tab ${activeVendor === v.id ? "active" : ""}`}
+            onClick={() => setActiveVendor(v.id)}
+          >
+            {v.name} ({v._count.inventoryItems})
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="form-group" style={{ maxWidth: 320 }}>
+        <input
+          type="text"
+          className="form-input"
+          placeholder="Search items..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* Collapsible sections */}
+      {sections.map((section) => {
+        const isCollapsed = collapsed.has(section.key);
+        const sectionToOrder = section.items.reduce((sum, i) => {
+          const par = getPar(i);
+          if (par === 0) return sum;
+          const onHand = lines.get(i.id) ?? i.currentStock;
+          return sum + Math.max(0, par - onHand);
+        }, 0);
+        return (
+<div key={section.key} className="inv-section-block">
+	            {/* Section header */}
+	            <div
+	              className="inv-section-header"
+	              onClick={() => toggleSection(section.key)}
+	            >
+	              <div className="flex items-center gap-2" style={{ flexWrap: "wrap", minWidth: 0 }}>
+	                <span
+	                  style={{
+	                    fontSize: 11,
+	                    color: "#6B7280",
+	                    transition: "transform 0.2s",
+	                    display: "inline-block",
+	                    transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+	                  }}
+	                >
+	                  ▼
+	                </span>
+	                <h2 className="inv-section-title">
+	                  {section.label}
+	                </h2>
+	                <span style={{ fontSize: 12, color: "#6B7280" }}>
+	                  {section.items.length}
+	                </span>
+	                {!isCollapsed && sectionToOrder > 0 && (
+	                  <span className="badge badge-orange">{sectionToOrder} to order</span>
+	                )}
+	              </div>
+	              {isCollapsed && sectionToOrder > 0 && (
+	                <span className="badge badge-orange" style={{ marginTop: 2, marginLeft: 8, flexShrink: 0 }}>to order</span>
+	              )}
+	            </div>
+
+            {/* Section content (collapsible) */}
+            {!isCollapsed && (
+              <div className="card" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, marginTop: -1 }}>
+                {/* Desktop table — hidden on mobile */}
+                <div className="table-wrapper inv-table-desktop">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Vendor</th>
+                        <th>Pack Size</th>
+                        <th>Unit Cost</th>
+                        <th style={{ width: 110 }}>On Hand</th>
+                        <th>Par Level</th>
+                        <th>To Order</th>
+                        <th>Cadence</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {section.items.map((item) => {
+                        const par = getPar(item);
+                        const onHand = lines.get(item.id) ?? item.currentStock;
+                        const toOrder = par > 0 ? Math.max(0, par - onHand) : 0;
+                        const isLow = par > 0 && onHand <= item.minStock && item.minStock > 0;
+                        const dimmed = par === 0;
+                        return (
+                          <tr key={item.id} style={{ opacity: dimmed ? 0.45 : 1 }}>
+                            <td>
+                              <div className="font-medium text-sm">{item.name}</div>
+                              {item.sku && <div className="text-xs text-gray">SKU: {item.sku}</div>}
+                            </td>
+                            <td>
+                              <span className="badge badge-blue">{item.vendor?.name || "—"}</span>
+                            </td>
+                            <td className="text-sm">{item.packSize || "—"}</td>
+                            <td className="text-sm">
+                              {item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                className="form-input"
+                                style={{
+                                  width: 90,
+                                  padding: "5px 8px",
+                                  fontSize: 13,
+                                  borderColor: isLow ? "#DC2626" : undefined,
+                                  background: isLow ? "#FEF2F2" : undefined,
+                                }}
+                                min="0"
+                                step="0.5"
+                                value={onHand}
+                                onChange={(e) => updateLine(item.id, e.target.value)}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                className="form-input"
+                                style={{
+                                  width: 70,
+                                  padding: "5px 8px",
+                                  fontSize: 13,
+                                  borderColor: par === 0 ? "#D1D5DB" : undefined,
+                                  color: par === 0 ? "#9CA3AF" : undefined,
+                                }}
+                                min="0"
+                                step="0.5"
+                                value={par}
+                                onChange={(e) => updatePar(item.id, e.target.value)}
+                                title={par === 0 ? "Set par level above 0 to track this item" : ""}
+                              />
+                              <span className="text-xs text-gray" style={{ marginLeft: 2 }}>{item.unit}</span>
+                            </td>
+                            <td>
+                              {toOrder > 0 ? (
+                                <span className="badge badge-orange">{toOrder} {item.unit}</span>
+                              ) : dimmed ? (
+                                <span className="text-xs text-gray" style={{ fontStyle: "italic" }}>off</span>
+                              ) : (
+                                <span className="text-xs text-gray">—</span>
+                              )}
+                            </td>
+                            <td className="text-xs text-gray" style={{ maxWidth: 140 }}>
+                              {item.suggestedCadence || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile card list — hidden on desktop */}
+<div className="inv-cards-mobile">
+	                  {section.items.map((item) => {
+	                    const par = getPar(item);
+	                    const onHand = lines.get(item.id) ?? item.currentStock;
+	                    const toOrder = par > 0 ? Math.max(0, par - onHand) : 0;
+	                    const isLow = par > 0 && onHand <= item.minStock && item.minStock > 0;
+	                    const dimmed = par === 0;
+	                    return (
+	                      <div
+	                        key={item.id}
+	                        className="inv-card"
+	                        style={{ opacity: dimmed ? 0.45 : 1, borderBottom: "1px solid #F1F3F5" }}
+	                      >
+	                        <div className="flex items-center justify-between mb-1" style={{ gap: 4 }}>
+	                          <div className="font-medium text-sm" style={{ flex: 1, marginRight: 4, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+	                          <span className="badge badge-blue" style={{ fontSize: 10, padding: "1px 6px", flexShrink: 0 }}>
+	                            {item.vendor?.name || "—"}
+	                          </span>
+	                        </div>
+	                        <div className="flex items-center justify-between" style={{ gap: 6 }}>
+	                          <div className="flex items-center" style={{ gap: 6 }}>
+	                            <div>
+	                              <label className="text-xs text-gray" style={{ display: "block" }}>On Hand</label>
+	                              <input
+	                                type="number"
+	                                className="form-input"
+	                                style={{
+	                                  width: 64, padding: "4px 4px", fontSize: 14,
+	                                  borderColor: isLow ? "#DC2626" : undefined,
+	                                  background: isLow ? "#FEF2F2" : undefined,
+	                                }}
+	                                min="0" step="0.5"
+	                                value={onHand}
+	                                onChange={(e) => updateLine(item.id, e.target.value)}
+	                              />
+	                            </div>
+	                            <div>
+	                              <label className="text-xs text-gray" style={{ display: "block" }}>Par</label>
+	                              <input
+	                                type="number"
+	                                className="form-input"
+	                                style={{
+	                                  width: 52, padding: "4px 4px", fontSize: 14,
+	                                  color: par === 0 ? "#9CA3AF" : undefined,
+	                                }}
+	                                min="0" step="0.5"
+	                                value={par}
+	                                onChange={(e) => updatePar(item.id, e.target.value)}
+	                              />
+	                            </div>
+	                          </div>
+	                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+	                            {toOrder > 0 ? (
+	                              <span className="badge badge-orange" style={{ fontSize: 11 }}>
+	                                +{toOrder} {item.unit}
+	                              </span>
+	                            ) : dimmed ? (
+	                              <span className="text-xs text-gray" style={{ fontStyle: "italic" }}>off</span>
+	                            ) : (
+	                              <span className="text-xs text-gray">✓</span>
+	                            )}
+	                            {item.unitCost > 0 && (
+	                              <div className="text-xs text-gray" style={{ marginTop: 2 }}>
+	                                ${item.unitCost.toFixed(2)}
+	                              </div>
+	                            )}
+	                          </div>
+	                        </div>
+	                      </div>
+	                    );
+	                  })}
+	                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {sections.length === 0 && (
+        <div className="card">
+          <div className="empty-state">No items found</div>
+        </div>
+      )}
+
+      {/* Bottom save button (mobile convenience) */}
+      <div style={{ marginTop: 16, display: "flex", gap: 12, justifyContent: "stretch" }}>
+        <button
+          className="btn btn-primary"
+          onClick={save}
+          disabled={saving}
+          style={{ width: "100%", maxWidth: 220 }}
+        >
+          {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
+        </button>
       </div>
     </div>
   );

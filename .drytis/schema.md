@@ -16,9 +16,13 @@
 - **DonutLog**: id, user_id, product_id, made, sold, wasted, period (AM/PM), created_at
 
 ## Inventory
-- **InventoryItem**: id, name, category (FOH/BOH), unit, unit_cost, par_level, current_stock, min_stock, reorder_qty, supplier, active
+- **Vendor**: id, name, role, mainUse, cadence, contactInfo, active, createdAt, updatedAt
+- **InventoryItem**: id, name, category (FOH/BOH), unit, unit_cost, par_level, current_stock, min_stock, reorder_qty, supplier, active, vendor_id (FK), pack_size, suggested_cadence, sku, notes
 - **InventoryOrder**: id, status (DRAFT/ORDERED/RECEIVED/PARTIAL), created_by, created_at, received_at, notes
 - **InventoryOrderLine**: id, order_id, inventory_item_id, qty_ordered, qty_received, unit_cost
+- **InventoryCount**: id, date (unique), counted_by, notes, created_at
+- **InventoryCountLine**: id, count_id, inventory_item_id, on_hand, amount_to_order
+- **OrderRequest**: id, inventory_item_id, qty_requested, requested_by, notes, status (PENDING/APPROVED/ORDERED/FULFILLED/CANCELLED), reviewed_by, reviewed_at, created_at, updated_at
 - **PrepStockItem**: id, name, category, quantity, unit, shelf_life_hours, prepared_at, expires_at, active
 
 ## Prediction & Par

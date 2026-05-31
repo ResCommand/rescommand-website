@@ -1,269 +1,1016 @@
-import { PrismaClient, Role } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create demo users
-  const passwordHash = await bcrypt.hash("password123", 10);
+  console.log("Seeding vendors...");
 
-  const owner = await prisma.user.upsert({
-    where: { email: "hello@duffersdonutshop.com" },
-    update: {},
-    create: {
-      email: "hello@duffersdonutshop.com",
-      name: "Duffera Owner",
-      passwordHash,
-      role: Role.OWNER,
-      active: true,
-    },
-  });
-
-  const manager = await prisma.user.upsert({
-    where: { email: "manager@duffers.com" },
-    update: {},
-    create: {
-      email: "manager@duffers.com",
-      name: "Store Manager",
-      passwordHash,
-      role: Role.MANAGER,
-      active: true,
-    },
-  });
-
-  const employee1 = await prisma.user.upsert({
-    where: { email: "employee@duffers.com" },
-    update: {},
-    create: {
-      email: "employee@duffers.com",
-      name: "Jane Employee",
-      passwordHash,
-      role: Role.EMPLOYEE,
-      active: true,
-    },
-  });
-
-  const employee2 = await prisma.user.upsert({
-    where: { email: "bob@duffers.com" },
-    update: {},
-    create: {
-      email: "bob@duffers.com",
-      name: "Bob Baker",
-      passwordHash,
-      role: Role.EMPLOYEE,
-      active: true,
-    },
-  });
-
-  // Create product categories
-  const donutCat = await prisma.productCategory.upsert({
-    where: { id: 1 },
-    update: {},
-    create: { name: "Donuts", type: "DONUT", fohBoh: "BOTH" },
-  });
-
-  const drinkCat = await prisma.productCategory.upsert({
-    where: { id: 2 },
-    update: {},
-    create: { name: "Drinks", type: "DRINK", fohBoh: "FOH" },
-  });
-
-  const dogelCat = await prisma.productCategory.upsert({
-    where: { id: 3 },
-    update: {},
-    create: { name: "Dogels", type: "DOGEL", fohBoh: "BOTH" },
-  });
-
-  const sandwichCat = await prisma.productCategory.upsert({
-    where: { id: 4 },
-    update: {},
-    create: { name: "Breakfast Sandwiches", type: "SANDWICH", fohBoh: "BOTH" },
-  });
-
-  // Create products
-  const donutNames = [
-    "Glazed", "Chocolate Frosted", "Boston Cream", "Jelly Filled",
-    "Old Fashioned", "Maple Bacon", "Apple Cider", "Blueberry Cake",
-  ];
-
-  for (const name of donutNames) {
-    await prisma.product.upsert({
-      where: { id: donutNames.indexOf(name) + 1 },
+  // ─── Vendors ──────────────────────────────────────────────────
+  const vendors = await Promise.all([
+    prisma.vendor.upsert({
+      where: { name: "US Foods" },
       update: {},
       create: {
-        name,
-        categoryId: donutCat.id,
-        price: 1.75,
-        cost: 0.45,
-        active: true,
+        name: "US Foods",
+        role: "Primary broadline vendor",
+        mainUse: "Donut ingredients, dairy, drink items, sandwich ingredients, supplies",
+        cadence: "Weekly / near-weekly",
+        contactInfo: "US Foods ordering",
       },
-    });
-  }
-
-  const drinkTypes = [
-    "Drip Coffee", "Americano", "Latte", "Cappuccino",
-    "Cold Brew", "Iced Coffee", "Tea", "Hot Chocolate",
-  ];
-
-  for (const name of drinkTypes) {
-    await prisma.product.upsert({
-      where: { id: donutNames.length + drinkTypes.indexOf(name) + 1 },
+    }),
+    prisma.vendor.upsert({
+      where: { name: "Senn Brothers" },
       update: {},
       create: {
-        name,
-        categoryId: drinkCat.id,
-        price: name === "Drip Coffee" || name === "Tea" ? 2.5 : 4.5,
-        cost: name === "Drip Coffee" || name === "Tea" ? 0.5 : 1.2,
-        active: true,
+        name: "Senn Brothers",
+        role: "Produce vendor",
+        mainUse: "Lemons, strawberries, blueberries, jalapenos, other produce",
+        cadence: "Weekly / near-weekly",
+        contactInfo: "Senn Brothers ordering",
       },
-    });
-  }
-
-  // Dogels
-  await prisma.product.upsert({
-    where: { id: 20 },
-    update: {},
-    create: { name: "Plain Dogel", categoryId: dogelCat.id, price: 3.5, cost: 0.8, active: true },
-  });
-  await prisma.product.upsert({
-    where: { id: 21 },
-    update: {},
-    create: { name: "Everything Dogel", categoryId: dogelCat.id, price: 3.75, cost: 0.9, active: true },
-  });
-
-  // Sandwiches
-  await prisma.product.upsert({
-    where: { id: 22 },
-    update: {},
-    create: { name: "Bacon Egg & Cheese", categoryId: sandwichCat.id, price: 5.5, cost: 1.8, active: true },
-  });
-  await prisma.product.upsert({
-    where: { id: 23 },
-    update: {},
-    create: { name: "Sausage Egg & Cheese", categoryId: sandwichCat.id, price: 5.5, cost: 1.6, active: true },
-  });
-
-  // Inventory items
-  const inventoryItems = [
-    { name: "All-Purpose Flour", category: "BOH" as const, unit: "lb", unitCost: 0.45, parLevel: 50, currentStock: 35, minStock: 15, reorderQty: 50 },
-    { name: "Sugar", category: "BOH" as const, unit: "lb", unitCost: 0.55, parLevel: 30, currentStock: 22, minStock: 10, reorderQty: 30 },
-    { name: "Espresso Beans", category: "FOH" as const, unit: "lb", unitCost: 14.0, parLevel: 20, currentStock: 12, minStock: 5, reorderQty: 15 },
-    { name: "Whole Milk", category: "FOH" as const, unit: "gal", unitCost: 3.5, parLevel: 15, currentStock: 8, minStock: 5, reorderQty: 10 },
-    { name: "Oat Milk", category: "FOH" as const, unit: "carton", unitCost: 4.5, parLevel: 8, currentStock: 5, minStock: 3, reorderQty: 6 },
-    { name: "Yeast", category: "BOH" as const, unit: "lb", unitCost: 5.0, parLevel: 5, currentStock: 3, minStock: 2, reorderQty: 5 },
-    { name: "Vegetable Oil", category: "BOH" as const, unit: "gal", unitCost: 6.0, parLevel: 10, currentStock: 7, minStock: 3, reorderQty: 8 },
-    { name: "Chocolate Frosting", category: "BOH" as const, unit: "lb", unitCost: 3.0, parLevel: 10, currentStock: 6, minStock: 3, reorderQty: 8 },
-    { name: "Jelly Filling", category: "BOH" as const, unit: "lb", unitCost: 4.0, parLevel: 8, currentStock: 5, minStock: 3, reorderQty: 6 },
-    { name: "Bacon", category: "BOH" as const, unit: "lb", unitCost: 8.0, parLevel: 15, currentStock: 10, minStock: 5, reorderQty: 12 },
-  ];
-
-  for (const item of inventoryItems) {
-    await prisma.inventoryItem.create({ data: item });
-  }
-
-  // Some sample data for today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Sample donut logs
-  const products = await prisma.product.findMany({ where: { categoryId: donutCat.id } });
-  for (const p of products.slice(0, 5)) {
-    await prisma.donutLog.create({
-      data: {
-        userId: employee1.id,
-        productId: p.id,
-        made: Math.floor(Math.random() * 40) + 20,
-        sold: Math.floor(Math.random() * 30) + 15,
-        wasted: Math.floor(Math.random() * 5),
-        period: "AM",
-        createdAt: today,
+    }),
+    prisma.vendor.upsert({
+      where: { name: "GFI" },
+      update: {},
+      create: {
+        name: "GFI",
+        role: "Specialty ingredient vendor",
+        mainUse: "Dark chocolate, cocoa powder, chocolate curls, specialty flavor items",
+        cadence: "Every 3-6 weeks",
+        contactInfo: "GFI ordering",
       },
-    });
-  }
-
-  // Sample drink logs
-  const drinkProducts = await prisma.product.findMany({ where: { categoryId: drinkCat.id } });
-  for (let i = 0; i < 25; i++) {
-    const p = drinkProducts[Math.floor(Math.random() * drinkProducts.length)];
-    await prisma.drinkLog.create({
-      data: {
-        userId: employee1.id,
-        drinkType: p.name,
-        size: ["Small", "Medium", "Large"][Math.floor(Math.random() * 3)],
-        milkType: ["Whole", "Oat", "Almond"][Math.floor(Math.random() * 3)],
-        espressoShots: Math.random() > 0.5 ? 2 : 1,
-        waste: Math.random() > 0.8 ? 1 : 0,
-        createdAt: new Date(today.getTime() + i * 20 * 60000),
+    }),
+    prisma.vendor.upsert({
+      where: { name: "Amazon" },
+      update: {},
+      create: {
+        name: "Amazon",
+        role: "Smallwares/supplies vendor",
+        mainUse: "Sprinkles, gloves, piping bags, labels, Cafiza",
+        cadence: "As needed",
+        contactInfo: "Amazon Business",
       },
-    });
-  }
-
-  // Sample transactions
-  for (let i = 0; i < 15; i++) {
-    await prisma.transaction.create({
-      data: {
-        userId: employee1.id,
-        totalAmount: Math.round((Math.random() * 25 + 5) * 100) / 100,
-        paymentMethod: Math.random() > 0.5 ? "CARD" : "CASH",
-        createdAt: new Date(today.getTime() + i * 30 * 60000),
-        lines: {
-          create: {
-            productName: "Half Dozen Mixed",
-            quantity: 1,
-            unitPrice: 9.5,
-            total: 9.5,
-          },
-        },
+    }),
+    prisma.vendor.upsert({
+      where: { name: "Aldi" },
+      update: {},
+      create: {
+        name: "Aldi",
+        role: "Supplemental grocery vendor",
+        mainUse: "Sourdough, almond milk, and supplemental grocery items",
+        cadence: "As needed",
+        contactInfo: "In-store purchasing",
       },
+    }),
+  ]);
+
+  const [usFoods, sennBrothers, gfi, amazon, aldi] = vendors;
+
+  console.log("Seeding inventory items...");
+
+  // ─── Helper ───────────────────────────────────────────────────
+  type ItemData = {
+    name: string;
+    category: "FOH" | "BOH" | "BOTH";
+    unit: string;
+    unitCost: number;
+    parLevel: number;
+    minStock: number;
+    reorderQty: number;
+    vendorId: number;
+    packSize: string | null;
+    suggestedCadence: string | null;
+    sku: string | null;
+    notes: string | null;
+    inventorySection: "KITCHEN_REGULAR" | "KITCHEN_INFREQUENT" | "PACKAGING" | "BARISTA";
+  };
+
+  async function upsertItem(item: ItemData) {
+    // Use name + vendorId as the natural key for upsert
+    const existing = await prisma.inventoryItem.findFirst({
+      where: { name: item.name, vendorId: item.vendorId },
     });
-  }
-
-  // Sample holidays
-  await prisma.holidaySchedule.createMany({
-    data: [
-      { date: new Date("2025-07-04"), name: "Independence Day", impactLevel: "HIGH" },
-      { date: new Date("2025-12-25"), name: "Christmas", impactLevel: "HIGH" },
-      { date: new Date("2025-11-27"), name: "Thanksgiving", impactLevel: "HIGH" },
-      { date: new Date("2025-02-14"), name: "Valentine's Day", impactLevel: "MEDIUM" },
-    ],
-    skipDuplicates: true,
-  });
-
-  // Sample cleaning tasks
-  await prisma.cleaningTask.createMany({
-    data: [
-      { title: "Espresso Machine Clean", description: "Backflush and clean group heads", frequency: "DAILY", location: "FOH" },
-      { title: "Floor Sweep & Mop", description: "Sweep and mop all floors", frequency: "DAILY", location: "FOH" },
-      { title: "Fryer Oil Change", description: "Drain and replace fryer oil", frequency: "WEEKLY", location: "BOH" },
-      { title: "Deep Clean Prep Area", description: "Sanitize all surfaces and equipment", frequency: "WEEKLY", location: "BOH" },
-      { title: "Walk-in Cooler Clean", description: "Clean and organize walk-in cooler", frequency: "MONTHLY", location: "BOH" },
-    ],
-  });
-
-  // Sample overboard schedule
-  for (let i = 1; i <= 14; i++) {
-    const obDate = new Date(today);
-    obDate.setDate(obDate.getDate() + i);
-    if (i % 2 === 0) {
-      const ob = await prisma.overboardSchedule.create({
-        data: {
-          date: obDate,
-          status: "SCHEDULED",
-          notes: `Overboard run #${i}`,
-        },
-      });
-      await prisma.overboardLine.createMany({
-        data: [
-          { overboardId: ob.id, productId: 1, quantity: 60, fillings: "Vanilla Cream", toppings: "Glaze" },
-          { overboardId: ob.id, productId: 2, quantity: 50, fillings: "Chocolate Cream", toppings: "Chocolate Sprinkles" },
-          { overboardId: ob.id, productId: 3, quantity: 40, fillings: "Boston Cream", toppings: "Chocolate Glaze" },
-        ],
+    if (existing) {
+      return prisma.inventoryItem.update({
+        where: { id: existing.id },
+        data: item,
       });
     }
+    return prisma.inventoryItem.create({ data: item });
   }
 
-  console.log("✅ Seed data created successfully!");
-  console.log("Users: owner, manager, employee, bob — all use password: password123");
+  // ─── US Foods Items ───────────────────────────────────────────
+  const usFoodsItems: ItemData[] = [
+    {
+      name: "Beef Tallow Frying Shortening",
+      category: "BOH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 89.93,
+      parLevel: 6,
+      minStock: 2,
+      reorderQty: 3,
+      vendorId: usFoods.id,
+      packSize: "50 lb case",
+      suggestedCadence: "2-3 cases/week",
+      sku: "2880383",
+      notes: "True weekly staple. Price range $65.82-$89.93/case.",
+    },
+    {
+      name: "Powdered Sugar 10X Cane",
+      category: "BOH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 53.47,
+      parLevel: 4,
+      minStock: 1,
+      reorderQty: 2,
+      vendorId: usFoods.id,
+      packSize: "50 lb case",
+      suggestedCadence: "1-3 cases/week",
+      sku: "3171071",
+      notes: "Recurring weekly/near-weekly. Brand: Dixie Imperial.",
+    },
+    {
+      name: "Extra Fine White Cane Sugar",
+      category: "BOH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 39.79,
+      parLevel: 3,
+      minStock: 1,
+      reorderQty: 2,
+      vendorId: usFoods.id,
+      packSize: "50 lb bag/case",
+      suggestedCadence: "1-2 cases every 2-3 weeks",
+      sku: "8383283",
+      notes: "Granulated sugar. Brand: Monarch.",
+    },
+    {
+      name: "Pure Vanilla Extract",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 80.05,
+      parLevel: 2,
+      minStock: 1,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "32 oz each",
+      suggestedCadence: "1 bottle every 6-8 weeks",
+      sku: "8033011",
+      notes: "Not weekly; par item. Brand: McCormick Culinary.",
+    },
+    {
+      name: "Instant Yeast",
+      category: "BOH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 111.83,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Monthly / when low",
+      sku: null,
+      notes: "Production ingredient.",
+    },
+    {
+      name: "Cream Cheese Plain Loaf",
+      category: "BOH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 89.07,
+      parLevel: 2,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "10/3 lb case",
+      suggestedCadence: "1 case weekly or every other week",
+      sku: "8340861",
+      notes: "Brand: Glenview Farms. Also appeared as individual 3 lb loaves.",
+    },
+    {
+      name: "European-Style Unsalted Butter",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 124.35,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Every 2-3 weeks",
+      sku: null,
+      notes: "Par/check inventory item.",
+    },
+    {
+      name: "Ground Cinnamon",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 14.49,
+      parLevel: 2,
+      minStock: 1,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "18 oz each",
+      suggestedCadence: "As needed",
+      sku: "5353115",
+      notes: "Spice. Brand: Monarch.",
+    },
+    {
+      name: "Maple Syrup",
+      category: "BOH",
+      inventorySection: "BARISTA",
+      unit: "each",
+      unitCost: 46.86,
+      parLevel: 3,
+      minStock: 1,
+      reorderQty: 2,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "2-3 units every 2-3 weeks",
+      sku: null,
+      notes: "One prior order adjusted/not delivered.",
+    },
+    {
+      name: "Oreo Cookie Crumb",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Topping/flavor item.",
+    },
+    {
+      name: "Nutella",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Topping/filling item.",
+    },
+    {
+      name: "Whole Milk",
+      category: "BOTH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 23.26,
+      parLevel: 4,
+      minStock: 2,
+      reorderQty: 2,
+      vendorId: usFoods.id,
+      packSize: "4 x 1 gal case",
+      suggestedCadence: "2 cases/week",
+      sku: "8350258",
+      notes: "Clear weekly staple. Brand: Glenview Farms.",
+    },
+    {
+      name: "Oat Milk",
+      category: "FOH",
+      inventorySection: "BARISTA",
+      unit: "case",
+      unitCost: 48.48,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "12 x 32 oz case",
+      suggestedCadence: "1 case every other week",
+      sku: "1063371",
+      notes: "Semi-regular. Brand: Califia Farms.",
+    },
+    {
+      name: "Half & Half",
+      category: "FOH",
+      inventorySection: "BARISTA",
+      unit: "case",
+      unitCost: 38.98,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "12 x 1 qt case",
+      suggestedCadence: "Every 2-3 weeks / as needed",
+      sku: "2341238",
+      notes: "Drink/coffee item. Brand: Glenview Farms.",
+    },
+    {
+      name: "Heavy Whipping Cream 36%",
+      category: "BOTH",
+      inventorySection: "BARISTA",
+      unit: "case",
+      unitCost: 57.63,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "12 x 1 qt case",
+      suggestedCadence: "Every 2-3 weeks / as needed",
+      sku: "7340979",
+      notes: "Cold foam/cream use. Brand: Glenview Farms.",
+    },
+    {
+      name: "Skim Milk",
+      category: "FOH",
+      inventorySection: "BARISTA",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 0,
+      minStock: 0,
+      reorderQty: 0,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Only if menu requires.",
+    },
+    {
+      name: "Large Grade A White Shell Eggs",
+      category: "BOTH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 15.99,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "15 dozen case",
+      suggestedCadence: "1 case/week if sandwiches active",
+      sku: "4163879",
+      notes: "Breakfast/sandwich egg. Brand: Glenview Farms.",
+    },
+    {
+      name: "Liquid Egg Yolk (Pasteurized)",
+      category: "BOH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 84.47,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "15 x 2 lb case",
+      suggestedCadence: "As needed",
+      sku: "6078737",
+      notes: "Production item, not sandwich egg. Brand: Papetti's.",
+    },
+    {
+      name: "Bacon",
+      category: "FOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 55.22,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Every 2-3 weeks / based on sales",
+      sku: null,
+      notes: "Breakfast sandwich item.",
+    },
+    {
+      name: "Pork Sausage Patties",
+      category: "FOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 57.65,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Every 2-3 weeks / based on sales",
+      sku: null,
+      notes: "Breakfast sandwich item.",
+    },
+    {
+      name: "Sourdough Bread",
+      category: "FOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 36.78,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Weekly if using daily",
+      sku: null,
+      notes: "Sandwich bread.",
+    },
+    {
+      name: "Flour Tortillas",
+      category: "FOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 32.94,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Every 2-3 weeks",
+      sku: null,
+      notes: "Wraps/breakfast item.",
+    },
+    {
+      name: "Sliced Cheddar",
+      category: "FOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 33.33,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "Every 2-3 weeks",
+      sku: null,
+      notes: "Sandwich cheese.",
+    },
+    {
+      name: "Mayonnaise",
+      category: "BOTH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Sandwich/sauce item.",
+    },
+    {
+      name: "Garlic Powder",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Seasoning.",
+    },
+    {
+      name: "Onion Powder",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Seasoning.",
+    },
+    {
+      name: "Black Pepper",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Seasoning.",
+    },
+    {
+      name: "Rice Wine Vinegar",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Sauce/pickle item.",
+    },
+    {
+      name: "Soy Sauce",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Sauce item.",
+    },
+    {
+      name: "Ricotta Cheese",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 0,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Only if tied to menu item.",
+    },
+    {
+      name: "Sour Cream",
+      category: "BOTH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 0,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Only if tied to menu item.",
+    },
+    {
+      name: "Greek Yogurt",
+      category: "BOTH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 0,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Case",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "Only if tied to menu item.",
+    },
+    {
+      name: "Pan Liners",
+      category: "BOH",
+      inventorySection: "PACKAGING",
+      unit: "case",
+      unitCost: 53.19,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "1000/case",
+      suggestedCadence: "Monthly / when low",
+      sku: "2880516",
+      notes: "Baking supply. Brand: Monogram.",
+    },
+    {
+      name: "Plastic Film Wrap",
+      category: "BOH",
+      inventorySection: "PACKAGING",
+      unit: "roll",
+      unitCost: 25.39,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: usFoods.id,
+      packSize: "Roll",
+      suggestedCadence: "Monthly / when low",
+      sku: null,
+      notes: "BOH supply.",
+    },
+  ];
+
+  // ─── Senn Brothers Items ──────────────────────────────────────
+  const sennItems: ItemData[] = [
+    {
+      name: "Lemons",
+      category: "BOTH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: sennBrothers.id,
+      packSize: "Case",
+      suggestedCadence: "Weekly / near-weekly",
+      sku: null,
+      notes: "Itemized cost not visible in Gmail.",
+    },
+    {
+      name: "Strawberries",
+      category: "BOTH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: sennBrothers.id,
+      packSize: "Case",
+      suggestedCadence: "Weekly / near-weekly",
+      sku: null,
+      notes: "Perishable; watch waste.",
+    },
+    {
+      name: "Blueberries",
+      category: "BOTH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: sennBrothers.id,
+      packSize: "Case",
+      suggestedCadence: "Weekly / near-weekly",
+      sku: null,
+      notes: "Perishable; watch waste.",
+    },
+    {
+      name: "Jalapenos",
+      category: "BOTH",
+      inventorySection: "KITCHEN_REGULAR",
+      unit: "case",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: sennBrothers.id,
+      packSize: "Case",
+      suggestedCadence: "Weekly / as needed",
+      sku: null,
+      notes: "Perishable; likely lower volume.",
+    },
+  ];
+
+  // ─── GFI Items ────────────────────────────────────────────────
+  const gfiItems: ItemData[] = [
+    {
+      name: "55.1% Dark Chocolate Callets C811",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 257.56,
+      parLevel: 2,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1-2 units per order",
+      sku: "46690",
+      notes: "",
+    },
+    {
+      name: "31.7% Milk Chocolate Callets C823",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 307.05,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "46687",
+      notes: "",
+    },
+    {
+      name: "25.9% White Chocolate Block CW2",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 168.27,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "46688",
+      notes: "",
+    },
+    {
+      name: "White Chocolate Curls Kosher",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 89.59,
+      parLevel: 2,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1-2 units as needed",
+      sku: "48861",
+      notes: "",
+    },
+    {
+      name: "Pink Chocolate Curls Kosher",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 89.35,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "48858",
+      notes: "",
+    },
+    {
+      name: "Extra Brute Cocoa Powder 22-24% Fat",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 43.02,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "100166",
+      notes: "",
+    },
+    {
+      name: "White Pate A Glacer",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 90.09,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "7664",
+      notes: "Coating/glaze item.",
+    },
+    {
+      name: "Dark Brune Pate A Glacer",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 91.81,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "7665",
+      notes: "Coating/glaze item.",
+    },
+    {
+      name: "Fancy Pecan Medium Pieces",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 50.04,
+      parLevel: 2,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1-2 units as needed",
+      sku: "163186",
+      notes: "",
+    },
+    {
+      name: "Vanilla Paste Kosher",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 49.22,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "1443",
+      notes: "",
+    },
+    {
+      name: "Confit Orange Peel Strips",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 52.77,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "16250",
+      notes: "Seasonal/specialty flavor.",
+    },
+    {
+      name: "Green Cardamom Whole",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 41.83,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "163958",
+      notes: "Specialty flavor.",
+    },
+    {
+      name: "Super Blue Lavender Flowers",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 20.73,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "164036",
+      notes: "Specialty garnish/flavor.",
+    },
+    {
+      name: "Chabis Goat Cheese",
+      category: "BOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "unit",
+      unitCost: 30.77,
+      parLevel: 0,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: gfi.id,
+      packSize: "Unit",
+      suggestedCadence: "1 unit as needed",
+      sku: "85981",
+      notes: "Specialty item; not recurring unless menu uses it.",
+    },
+  ];
+
+  // ─── Amazon Items ─────────────────────────────────────────────
+  const amazonItems: ItemData[] = [
+    {
+      name: "Sprinkles",
+      category: "BOH",
+      inventorySection: "PACKAGING",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 2,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: amazon.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "",
+    },
+    {
+      name: "Disposable Gloves",
+      category: "BOTH",
+      inventorySection: "PACKAGING",
+      unit: "box",
+      unitCost: 0,
+      parLevel: 4,
+      minStock: 2,
+      reorderQty: 2,
+      vendorId: amazon.id,
+      packSize: "Box",
+      suggestedCadence: "Reorder when below 2 boxes per size",
+      sku: null,
+      notes: "",
+    },
+    {
+      name: "Piping Bags",
+      category: "BOH",
+      inventorySection: "PACKAGING",
+      unit: "box",
+      unitCost: 0,
+      parLevel: 2,
+      minStock: 1,
+      reorderQty: 1,
+      vendorId: amazon.id,
+      packSize: "Box/sleeve",
+      suggestedCadence: "Reorder before below one sleeve/box",
+      sku: null,
+      notes: "",
+    },
+    {
+      name: "Labels",
+      category: "BOTH",
+      inventorySection: "PACKAGING",
+      unit: "roll",
+      unitCost: 0,
+      parLevel: 2,
+      minStock: 1,
+      reorderQty: 1,
+      vendorId: amazon.id,
+      packSize: "Roll",
+      suggestedCadence: "Reorder based on weekly label burn",
+      sku: null,
+      notes: "",
+    },
+    {
+      name: "Cafiza",
+      category: "FOH",
+      inventorySection: "BARISTA",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: amazon.id,
+      packSize: "Container",
+      suggestedCadence: "Keep one backup container",
+      sku: null,
+      notes: "Espresso machine cleaner.",
+    },
+  ];
+
+  // ─── Aldi Items ───────────────────────────────────────────────
+  const aldiItems: ItemData[] = [
+    {
+      name: "Sourdough (Aldi)",
+      category: "FOH",
+      inventorySection: "KITCHEN_INFREQUENT",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: aldi.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "",
+    },
+    {
+      name: "Almond Milk (Aldi)",
+      category: "FOH",
+      inventorySection: "BARISTA",
+      unit: "each",
+      unitCost: 0,
+      parLevel: 1,
+      minStock: 0,
+      reorderQty: 1,
+      vendorId: aldi.id,
+      packSize: "Each",
+      suggestedCadence: "As needed",
+      sku: null,
+      notes: "",
+    },
+  ];
+
+  // Seed all items
+  const allItems = [...usFoodsItems, ...sennItems, ...gfiItems, ...amazonItems, ...aldiItems];
+  for (const item of allItems) {
+    await upsertItem(item);
+  }
+
+  console.log(`Seeded ${allItems.length} inventory items across ${vendors.length} vendors.`);
 }
 
 main()

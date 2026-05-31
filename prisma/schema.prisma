@@ -27,11 +27,15 @@ model User {
   cleaningLogs   CleaningLog[]
   maintenanceLogs MaintenanceLog[] @relation("MaintenanceCreator")
   maintenanceResolver MaintenanceLog[] @relation("MaintenanceResolver")
-  inventoryOrders InventoryOrder[]
-  sopsCreated     Sop[]           @relation("SopCreator")
-  sopsUpdated     Sop[]           @relation("SopUpdater")
-  dashboardLayout DashboardLayout?
-  espressoDials   EspressoDialLog[]
+  inventoryOrders   InventoryOrder[]
+  sopsCreated       Sop[]           @relation("SopCreator")
+  sopsUpdated       Sop[]           @relation("SopUpdater")
+  dashboardLayout   DashboardLayout?
+  espressoDials     EspressoDialLog[]
+  inventoryCounts   InventoryCount[]
+  orderRequests     OrderRequest[]  @relation("OrderRequester")
+  orderReviews      OrderRequest[]  @relation("OrderRequestReviewer")
+  batchCompletions  BatchCompletion[]
 
   @@map("users")
 }
@@ -175,23 +179,50 @@ enum ShiftPeriod {
   PM
 }
 
+// ─── Vendors ─────────────────────────────────────────────────
+
+model Vendor {
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  role           String?  // e.g. "Primary broadline vendor"
+  mainUse        String?  // e.g. "Donut ingredients, dairy, supplies"
+  cadence        String?  // e.g. "Weekly / near-weekly"
+  contactInfo    String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  inventoryItems InventoryItem[]
+
+  @@map("vendors")
+}
+
 // ─── Inventory ──────────────────────────────────────────────
 
 model InventoryItem {
-  id          Int       @id @default(autoincrement())
-  name        String
-  category    FohBoh
-  unit        String
-  unitCost    Float     @map("unit_cost") @default(0)
-  parLevel    Float     @map("par_level") @default(0)
-  currentStock Float    @default(0) @map("current_stock")
-  minStock    Float     @map("min_stock") @default(0)
-  reorderQty  Float     @map("reorder_qty") @default(0)
-  supplier    String?
-  active      Boolean   @default(true)
+  id               Int       @id @default(autoincrement())
+  name             String
+  category         FohBoh
+  unit             String
+  unitCost         Float     @map("unit_cost") @default(0)
+  parLevel         Float     @map("par_level") @default(0)
+  currentStock     Float     @default(0) @map("current_stock")
+  minStock         Float     @map("min_stock") @default(0)
+  reorderQty       Float     @map("reorder_qty") @default(0)
+  supplier         String?   // legacy field, kept for backward compat
+  active           Boolean   @default(true)
+  vendorId         Int?      @map("vendor_id")
+  packSize         String?   @map("pack_size")      // e.g. "50 lb case", "12 x 32 oz case"
+  suggestedCadence String?   @map("suggested_cadence") // e.g. "2-3 cases/week"
+  sku              String?
+  notes            String?
+  inventorySection InventorySection @default(KITCHEN_REGULAR) @map("inventory_section")
 
+  vendor            Vendor?               @relation(fields: [vendorId], references: [id])
   productIngredients ProductIngredient[]
   orderLines        InventoryOrderLine[]
+  countLines        InventoryCountLine[]
+  orderRequests     OrderRequest[]
 
   @@map("inventory_items")
 }
@@ -226,9 +257,80 @@ model InventoryOrderLine {
   unitCost        Float         @map("unit_cost") @default(0)
 
   order         InventoryOrder @relation(fields: [orderId], references: [id])
-  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id])
 
   @@map("inventory_order_lines")
+}
+
+// ─── Weekly Inventory Counts ─────────────────────────────────
+
+model InventoryCount {
+  id         Int                  @id @default(autoincrement())
+  date       DateTime
+  countedBy  Int                  @map("counted_by")
+  notes      String?
+  createdAt  DateTime             @default(now()) @map("created_at")
+
+  counter User                 @relation(fields: [countedBy], references: [id])
+  lines   InventoryCountLine[]
+
+  @@unique([date])
+  @@map("inventory_counts")
+}
+
+model InventoryCountLine {
+  id              Int           @id @default(autoincrement())
+  countId         Int           @map("count_id")
+  inventoryItemId Int           @map("inventory_item_id")
+  onHand          Float         @map("on_hand") @default(0)
+  amountToOrder   Float         @map("amount_to_order") @default(0)
+
+  count         InventoryCount @relation(fields: [countId], references: [id])
+  inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id])
+
+  @@unique([countId, inventoryItemId])
+  @@map("inventory_count_lines")
+}
+
+// ─── Order Requests ──────────────────────────────────────────
+
+enum InventorySection {
+  KITCHEN_REGULAR
+  KITCHEN_INFREQUENT
+  PACKAGING
+  BARISTA
+}
+
+enum OrderRequestStatus {
+  PENDING
+  APPROVED
+  ORDERED
+  FULFILLED
+  CANCELLED
+}
+
+model OrderRequest {
+  id             Int               @id @default(autoincrement())
+  inventoryItemId Int?             @map("inventory_item_id")
+  qtyRequested   Float             @map("qty_requested") @default(0)
+  requestedBy    Int               @map("requested_by")
+  notes          String?
+  status         OrderRequestStatus @default(PENDING)
+  reviewedBy     Int?              @map("reviewed_by")
+  reviewedAt     DateTime?         @map("reviewed_at")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  // Custom item fields (used when inventoryItemId is null — item not in system yet)
+  customItemName   String?         @map("custom_item_name")
+  customVendorName String?         @map("custom_vendor_name")
+  customUnit       String?         @map("custom_unit")
+
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  requester     User          @relation("OrderRequester", fields: [requestedBy], references: [id])
+  reviewer      User?         @relation("OrderRequestReviewer", fields: [reviewedBy], references: [id])
+
+  @@map("order_requests")
 }
 
 model PrepStockItem {
@@ -477,4 +579,45 @@ model EspressoDialLog {
   user User @relation(fields: [userId], references: [id])
 
   @@map("espresso_dial_logs")
+}
+
+// ─── Recipes ────────────────────────────────────────────────────
+
+model Recipe {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String   @default("general")
+  description String?
+  ingredients Json     // Array of { name, amount, unit }
+  instructions String?
+  yield       String?  // e.g. "Makes 1 quart"
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("recipes")
+}
+
+model ProductionTargetOverride {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique
+  target    Int
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("production_target_overrides")
+}
+
+model BatchCompletion {
+  id         Int      @id @default(autoincrement())
+  date       DateTime
+  batchIndex Int      @map("batch_index")
+  mixerType  String   @map("mixer_type")  // "Large" or "Small"
+  completedBy Int?    @map("completed_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [completedBy], references: [id])
+
+  @@unique([date, batchIndex])
+  @@map("batch_completions")
 }

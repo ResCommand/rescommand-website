@@ -12,6 +12,8 @@ interface KPIs {
   todaySales: number; ticketCount: number; avgTicket: number;
   overboardsSold: number; overboardRevenue: number;
   overboardUpcharges: number; upchargeRevenue: number;
+  laborCostPercent: number; laborCostPercentMTD: number;
+  todayTotalHours: number; mtdTotalHours: number;
 }
 interface Hourly { hour: string; sales: number }
 interface ParLine { product: { name: string }; predicted: number; actual: number }
@@ -36,6 +38,8 @@ const ALL_METRICS = [
   { id: "overboardRevenue", label: "Overboard Revenue", icon: "💵", color: "stat-icon-green", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.overboardRevenue) },
   { id: "upchargesSold", label: "Upcharges Sold", icon: "⬆️", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboardUpcharges },
   { id: "upchargeRevenue", label: "Upcharge Revenue", icon: "💲", color: "stat-icon-purple", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.upchargeRevenue) },
+  { id: "laborCostPercent", label: "Labor Cost % (Today)", icon: "👷", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.laborCostPercent != null ? `${k.laborCostPercent}%` : "—" },
+  { id: "laborCostPercentMTD", label: "Labor Cost % (MTD)", icon: "👷", color: "stat-icon-red", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.laborCostPercentMTD != null ? `${k.laborCostPercentMTD}%` : "—" },
   { id: "salesByHour", label: "Sales by Hour", icon: "📈", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: () => null, isChart: true },
 ];
 

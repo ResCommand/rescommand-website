@@ -3,7 +3,7 @@
 /* Reset & Base */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-size: 16px; line-height: 1.5; color: #111827; }
-body { background: #F9FAFB; min-height: 100vh; }
+body { background: #F9FAFB; min-height: 100vh; overflow-x: hidden; max-width: 100vw; }
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
 input, select, textarea { font: inherit; color: inherit; }
@@ -31,8 +31,8 @@ ul, ol { list-style: none; }
 .sidebar-user-role { font-size: 11px; color: #6B7280; text-transform: capitalize; }
 
 /* Main content */
-.main-content { flex: 1; margin-left: 240px; min-height: 100vh; }
-.page-container { padding: 28px 32px; max-width: 1200px; }
+.main-content { flex: 1; margin-left: 240px; min-height: 100vh; max-width: 100vw; overflow-x: hidden; }
+.page-container { padding: 28px 32px; max-width: 1200px; width: 100%; box-sizing: border-box; }
 
 /* Mobile top bar */
 .mobile-topbar { display: none; position: fixed; top: 0; left: 0; right: 0; height: 56px; background: #111827; color: #fff; align-items: center; padding: 0 16px; z-index: 50; justify-content: space-between; }
@@ -128,8 +128,8 @@ tr:hover td { background: #FAFAFA; }
 .badge-orange { background: #FFF7ED; color: #EA580C; }
 
 /* ===== Tabs ===== */
-.tabs { display: flex; gap: 2px; background: #F3F4F6; padding: 3px; border-radius: 8px; margin-bottom: 20px; }
-.tab { padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #6B7280; transition: all 0.15s; }
+.tabs { display: flex; gap: 2px; background: #F3F4F6; padding: 3px; border-radius: 8px; margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tab { padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #6B7280; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
 .tab:hover { color: #374151; }
 .tab.active { background: #fff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
 
@@ -272,10 +272,69 @@ tr:hover td { background: #FAFAFA; }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; padding-top: 56px; }
   .mobile-topbar { display: flex; }
-  .page-container { padding: 20px 16px; }
+  .page-container { padding: 12px 10px; width: 100%; box-sizing: border-box; overflow-x: hidden; }
   .grid-2, .grid-3, .grid-4, .grid-6 { grid-template-columns: 1fr; }
   .quick-entry-grid { grid-template-columns: repeat(2, 1fr); }
   .qr-sign-grid { grid-template-columns: 1fr; max-width: 320px; }
-  .page-header-row { flex-direction: column; align-items: flex-start; }
+  .page-header-row { flex-direction: column; align-items: flex-start; width: 100%; }
   .stat-card .stat-value { font-size: 18px; }
+
+  /* Inventory responsive: show cards on mobile, hide table */
+  .inv-table-desktop { display: none !important; }
+  .inv-cards-mobile { display: block !important; }
+  .inv-card { padding: 8px 6px !important; }
+}
+
+/* Inventory: cards hidden on desktop, shown on mobile */
+.inv-cards-mobile { display: none; }
+.inv-table-desktop { display: block; }
+.inv-card { padding: 10px 14px; }
+
+/* Inventory count bar — row on desktop, column on mobile */
+.inv-count-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.inv-count-bar-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.inv-vendor-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.inv-section-block { margin-bottom: 16px; }
+.inv-section-header {
+  cursor: pointer;
+  padding: 12px 14px;
+  background: #F1F3F5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+.inv-section-title { font-size: 15px; font-weight: 700; margin: 0; }
+
+@media (max-width: 768px) {
+  .inv-count-bar { flex-direction: column; align-items: stretch; }
+  .inv-count-bar-row { flex-wrap: wrap; }
+  .inv-vendor-tabs { gap: 4px; }
+  .inv-vendor-tabs .tab { font-size: 11px; padding: 4px 8px; white-space: nowrap; }
+  .inv-section-header { padding: 10px 10px !important; }
+  .inv-section-title { font-size: 13px !important; }
+  .tab { padding: 6px 10px; font-size: 12px; }
+  .tabs { gap: 1px; }
 }

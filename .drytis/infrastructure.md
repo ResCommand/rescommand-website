@@ -21,9 +21,15 @@ NODE_ENV             — production
 ```bash
 cd /workspace
 npm ci
-npx prisma migrate deploy
+npx prisma generate
+npx prisma db push --skip-generate
+npm run seed
 npm run build
 ```
 
 ## External APIs
 - Open-Meteo (free, no key) — weather data for prediction engine
+
+## Seed Data
+- 5 vendors: US Foods, Senn Brothers, GFI, Amazon, Aldi
+- 59 inventory items with costs, par levels, pack sizes, cadences

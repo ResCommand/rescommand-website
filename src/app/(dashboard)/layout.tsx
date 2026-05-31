@@ -4,7 +4,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
-  Clock, Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
+  Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
+  ShoppingCart, ChefHat,
 } from "lucide-react";
 
 const allNav = [
@@ -12,11 +13,12 @@ const allNav = [
   { href: "/espresso-dial", icon: Coffee, label: "Espresso Dial", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/owner", icon: DollarSign, label: "Financials", roles: ["OWNER"] },
   { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER"] },
+  { href: "/inventory/order-requests", icon: ShoppingCart, label: "Order Requests", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
+  { href: "/recipes", icon: ChefHat, label: "Recipes", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"] },
   { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/hours", icon: Clock, label: "Hours", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
   { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"] },
   { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"] },
 ];

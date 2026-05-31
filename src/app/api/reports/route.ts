@@ -92,6 +92,29 @@ export async function GET() {
   });
   const totalCost = productsSold.reduce((sum, l) => sum + (l.product?.cost || 0) * l.sold, 0);
 
+  // ─── Labor Cost % ─────────────────────────────────────
+  // Today: total hours worked * assumed hourly rate / today's sales
+  const todayTotalHours = hours.reduce((sum, h) => sum + (h.totalHours || 0), 0);
+  const ASSUMED_HOURLY_RATE = 15; // $15/hr assumption
+  const todayLaborCost = todayTotalHours * ASSUMED_HOURLY_RATE;
+  const laborCostPercent = totalSales > 0 ? parseFloat(((todayLaborCost / totalSales) * 100).toFixed(1)) : 0;
+
+  // MTD: first of month → now
+  const monthStart = new Date(today);
+  monthStart.setDate(1);
+
+  const mtdHours = await prisma.employeeHour.findMany({
+    where: { date: { gte: monthStart } },
+  });
+  const mtdTotalHours = mtdHours.reduce((sum, h) => sum + (h.totalHours || 0), 0);
+  const mtdLaborCost = mtdTotalHours * ASSUMED_HOURLY_RATE;
+
+  const mtdTransactions = await prisma.transaction.findMany({
+    where: { createdAt: { gte: monthStart } },
+  });
+  const mtdSales = mtdTransactions.reduce((sum, t) => sum + t.totalAmount, 0);
+  const laborCostPercentMTD = mtdSales > 0 ? parseFloat(((mtdLaborCost / mtdSales) * 100).toFixed(1)) : 0;
+
   return NextResponse.json({
     donutsSold,
     overboard,
@@ -111,5 +134,9 @@ export async function GET() {
     overboardRevenue: parseFloat(overboardRevenue.toFixed(2)),
     overboardUpcharges,
     upchargeRevenue: parseFloat(upchargeRevenue.toFixed(2)),
+    laborCostPercent,
+    laborCostPercentMTD,
+    todayTotalHours: parseFloat(todayTotalHours.toFixed(1)),
+    mtdTotalHours: parseFloat(mtdTotalHours.toFixed(1)),
   });
 }

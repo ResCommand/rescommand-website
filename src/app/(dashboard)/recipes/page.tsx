@@ -171,7 +171,12 @@ export default function RecipesPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to save");
+        const errMsg = typeof data.error === "string"
+          ? data.error
+          : data.error?.fieldErrors
+            ? Object.values(data.error.fieldErrors).flat().join(", ")
+            : "Failed to save";
+        throw new Error(errMsg);
       }
       setShowAddForm(false);
       resetForm();

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Vendor {
   id: number;
@@ -26,16 +28,19 @@ interface InvItem {
   sku: string | null;
   notes: string | null;
   inventorySection: string;
+  inventorySectionId?: number | null;
   vendor: { id: number; name: string } | null;
 }
 
-const SECTION_LABELS: Record<string, string> = {
-  KITCHEN_REGULAR: "🍳 Kitchen — Regular Orders",
-  KITCHEN_INFREQUENT: "🧂 Kitchen — Infrequent Orders",
-  PACKAGING: "📦 Packaging & Supplies",
-  BARISTA: "☕ Barista & Coffee",
-};
-const SECTION_ORDER = ["KITCHEN_REGULAR", "KITCHEN_INFREQUENT", "PACKAGING", "BARISTA"];
+interface Section {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string;
+  sortOrder: number;
+  active: boolean;
+  _count?: { items: number };
+}
 
 function getMonday(d: Date): Date {
   const date = new Date(d);
@@ -53,10 +58,17 @@ function formatDateISO(d: Date): string {
 export default function InventoryPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [items, setItems] = useState<InvItem[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [activeVendor, setActiveVendor] = useState<number | "ALL">("ALL");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(SECTION_ORDER));
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  // Section management
+  const [showSectionModal, setShowSectionModal] = useState(false);
+  const [editingSection, setEditingSection] = useState<Section | null>(null);
+  const [secName, setSecName] = useState("");
+  const [secIcon, setSecIcon] = useState("📦");
 
   // Weekly count state
   const [lines, setLines] = useState<Map<number, number>>(new Map());
@@ -64,33 +76,65 @@ export default function InventoryPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
-  const [parEdits, setParEdits] = useState<Map<number, number>>(new Map()); // local par overrides
+  const [parEdits, setParEdits] = useState<Map<number, number>>(new Map());
 
-  useEffect(() => {
+  const loadData = () => {
     Promise.all([
       fetch("/api/inventory/vendors").then((r) => r.json()),
       fetch("/api/inventory").then((r) => r.json()),
+      fetch("/api/inventory/sections").then((r) => r.json()).catch(() => []),
     ])
-      .then(([v, i]) => {
+      .then(([v, i, s]) => {
         const vendorArr = Array.isArray(v) ? v : [];
         const itemArr = Array.isArray(i) ? i : [];
+        const secArr = Array.isArray(s) ? s : [];
         setVendors(vendorArr);
         setItems(itemArr);
-        // Initialize on-hand from current stock
+        setSections(secArr);
+        setCollapsed(new Set(secArr.map((sec: Section) => sec.slug)));
         const m = new Map<number, number>();
         itemArr.forEach((item: InvItem) => m.set(item.id, item.currentStock));
         setLines(m);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  // Section order from DB
+  const sectionOrder = sections.map(s => s.slug);
+  const sectionLabelMap = Object.fromEntries(sections.map(s => [s.slug, `${s.icon} ${s.name}`]));
+
+  // Section CRUD
+  function openSectionCreate() { setEditingSection(null); setSecName(""); setSecIcon("📦"); setShowSectionModal(true); }
+  function openSectionEdit(s: Section) { setEditingSection(s); setSecName(s.name); setSecIcon(s.icon); setShowSectionModal(true); }
+
+  async function handleSectionSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const method = editingSection ? "PUT" : "POST";
+      const body = editingSection ? { id: editingSection.id, name: secName, icon: secIcon } : { name: secName, icon: secIcon };
+      const r = await fetch("/api/inventory/sections", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (r.ok) { toast.success(editingSection ? "Updated" : "Created"); setShowSectionModal(false); loadData(); }
+      else { const d = await r.json(); toast.error(d.error || "Failed"); }
+    } catch { toast.error("Error"); }
+  }
+
+  async function handleSectionDelete(id: number) {
+    try {
+      const r = await fetch(`/api/inventory/sections?id=${id}`, { method: "DELETE" });
+      if (r.ok) { toast.success("Deleted"); loadData(); }
+      else { const d = await r.json(); toast.error(d.error); }
+    } catch { toast.error("Error"); }
+  }
 
   const filtered = items
     .filter((i) => activeVendor === "ALL" || i.vendor?.id === activeVendor)
     .filter((i) => !search || i.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
-      const sa = SECTION_ORDER.indexOf(a.inventorySection || "KITCHEN_REGULAR");
-      const sb = SECTION_ORDER.indexOf(b.inventorySection || "KITCHEN_REGULAR");
+      const sa = sectionOrder.indexOf(a.inventorySection || "kitchen_regular");
+      const sb = sectionOrder.indexOf(b.inventorySection || "kitchen_regular");
       if (sa !== sb) return sa - sb;
       return a.name.localeCompare(b.name);
     });
@@ -167,12 +211,12 @@ export default function InventoryPage() {
     }
   };
 
-  // Build grouped sections
-  const sections = SECTION_ORDER
+  // Build grouped sections from DB-driven sections
+  const sectionGroups = sectionOrder
     .map((key) => ({
       key,
-      label: SECTION_LABELS[key] || key,
-      items: filtered.filter((i) => (i.inventorySection || "KITCHEN_REGULAR") === key),
+      label: sectionLabelMap[key] || key,
+      items: filtered.filter((i) => (i.inventorySection || "kitchen_regular") === key),
     }))
     .filter((sec) => sec.items.length > 0);
 
@@ -200,14 +244,17 @@ export default function InventoryPage() {
               )}
             </p>
           </div>
-          <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
-            <Link href="/inventory/items" className="btn btn-secondary btn-sm">
-              ⚙️ Manage Items
-            </Link>
-            <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
-              🛒 Order Requests
-            </Link>
-          </div>
+<div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+	            <button onClick={openSectionCreate} className="btn btn-secondary btn-sm">
+	              <Settings size={14} /> Sections
+	            </button>
+	            <Link href="/inventory/items" className="btn btn-secondary btn-sm">
+	              ⚙️ Manage Items
+	            </Link>
+	            <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
+	              🛒 Order Requests
+	            </Link>
+	          </div>
         </div>
       </div>
 
@@ -294,8 +341,8 @@ export default function InventoryPage() {
         />
       </div>
 
-      {/* Collapsible sections */}
-      {sections.map((section) => {
+      {/* Collapsible sectionGroups */}
+      {sectionGroups.map((section) => {
         const isCollapsed = collapsed.has(section.key);
         const sectionToOrder = section.items.reduce((sum, i) => {
           const par = getPar(i);
@@ -508,7 +555,7 @@ export default function InventoryPage() {
           </div>
         );
       })}
-      {sections.length === 0 && (
+      {sectionGroups.length === 0 && (
         <div className="card">
           <div className="empty-state">No items found</div>
         </div>
@@ -525,6 +572,50 @@ export default function InventoryPage() {
           {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
         </button>
       </div>
+
+      {/* Section Management Modal */}
+      {showSectionModal && (
+        <div className="modal-backdrop" onClick={() => setShowSectionModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h2>{editingSection ? "Edit Section" : "Manage Sections"}</h2>
+            </div>
+            <div className="modal-body">
+              {/* Existing sections */}
+              <div className="space-y-2" style={{ marginBottom: 16 }}>
+                {sections.map(s => (
+                  <div key={s.id} className="list-item">
+                    <span className="font-medium text-sm">{s.icon} {s.name}</span>
+                    <span className="text-xs text-gray">{s._count?.items || 0} items</span>
+                    <div className="flex gap-1">
+                      <button onClick={() => openSectionEdit(s)} className="btn-icon"><Pencil size={12} /></button>
+                      <button onClick={() => handleSectionDelete(s.id)} className="btn-icon" style={{ color: "#DC2626" }}><Trash2 size={12} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Add/Edit form */}
+              <form onSubmit={handleSectionSubmit} className="space-y-3">
+                <div>
+                  <label className="form-label">{editingSection ? "Rename" : "New Section Name"}</label>
+                  <input value={secName} onChange={e => setSecName(e.target.value)} required className="form-input" placeholder="e.g. Freezer Items" />
+                </div>
+                <div>
+                  <label className="form-label">Icon</label>
+                  <input value={secIcon} onChange={e => setSecIcon(e.target.value)} className="form-input" style={{ width: 60 }} placeholder="📦" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-primary btn-sm">{editingSection ? "Update" : "Add Section"}</button>
+                  {editingSection && <button type="button" onClick={() => { setEditingSection(null); setSecName(""); setSecIcon("📦"); }} className="btn btn-secondary btn-sm">Cancel Edit</button>}
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowSectionModal(false)} className="btn btn-secondary">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Ingredient {
   name: string;
@@ -20,18 +22,16 @@ interface Recipe {
   active: boolean;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  base: "🧈 Base Recipes",
-  filling: "🥧 Fillings & Creams",
-  topping: "🎂 Toppings & Glazes",
-  general: "📋 General",
+// Default fallback categories — overridden by DB when loaded
+const DEFAULT_CATEGORY_ORDER = ["base", "filling", "topping", "general"];
+const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
+  base: "🧈 Base Recipes", filling: "🥧 Fillings & Creams", topping: "🎂 Toppings & Glazes", general: "📋 General",
 };
-const CATEGORY_ORDER = ["base", "filling", "topping", "general"];
-const CATEGORY_COLORS: Record<string, { bg: string; border: string; badge: string }> = {
-  base: { bg: "#FFF7ED", border: "#FED7AA", badge: "badge-orange" },
-  filling: { bg: "#F5F3FF", border: "#DDD6FE", badge: "badge-purple" },
-  topping: { bg: "#EFF6FF", border: "#BFDBFE", badge: "badge-blue" },
-  general: { bg: "#F9FAFB", border: "#E5E7EB", badge: "badge-gray" },
+const DEFAULT_CATEGORY_COLORS: Record<string, { bg: string; border: string }> = {
+  base: { bg: "#FFF7ED", border: "#FED7AA" },
+  filling: { bg: "#F5F3FF", border: "#DDD6FE" },
+  topping: { bg: "#EFF6FF", border: "#BFDBFE" },
+  general: { bg: "#F9FAFB", border: "#E5E7EB" },
 };
 
 export default function RecipesPage() {
@@ -46,6 +46,31 @@ export default function RecipesPage() {
   const [expandedRecipe, setExpandedRecipe] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+
+  // Recipe category management
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [dbCategories, setDbCategories] = useState<{ id: number; name: string; slug: string; icon: string; color: string; _count?: { recipes: number } }[]>([]);
+  const [editCat, setEditCat] = useState<{ id: number; name: string; icon: string; color: string } | null>(null);
+  const [catFormName, setCatFormName] = useState("");
+  const [catFormIcon, setCatFormIcon] = useState("📋");
+  const [catFormColor, setCatFormColor] = useState("#F9FAFB");
+
+  const loadCategories = () => {
+    fetch("/api/recipes/categories").then(r => r.json()).then(d => Array.isArray(d) && setDbCategories(d)).catch(() => {});
+  };
+
+  useEffect(() => { loadCategories(); }, []);
+
+  // Derived category helpers — use DB when available, fallback to hardcoded
+  const categoryOrder = dbCategories.length > 0
+    ? dbCategories.map(c => c.slug)
+    : DEFAULT_CATEGORY_ORDER;
+  const categoryLabels: Record<string, string> = dbCategories.length > 0
+    ? Object.fromEntries(dbCategories.map(c => [c.slug, `${c.icon} ${c.name}`]))
+    : DEFAULT_CATEGORY_LABELS;
+  const categoryColors: Record<string, { bg: string; border: string }> = dbCategories.length > 0
+    ? Object.fromEntries(dbCategories.map(c => [c.slug, { bg: c.color || "#F9FAFB", border: "#E5E7EB" }]))
+    : DEFAULT_CATEGORY_COLORS;
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -74,27 +99,25 @@ export default function RecipesPage() {
     .filter((r) => activeCategory === "ALL" || r.category === activeCategory)
     .filter((r) => !search || r.name.toLowerCase().includes(search.toLowerCase()) || r.ingredients.some((ing) => ing.name.toLowerCase().includes(search.toLowerCase())))
     .sort((a, b) => {
-      const ca = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+      const ca = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
       if (ca !== 0) return ca;
       return a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
     });
 
   // Group by category
-  const grouped = CATEGORY_ORDER
+  const grouped = categoryOrder
     .map((key) => ({
       key,
-      label: CATEGORY_LABELS[key] || key,
-      color: CATEGORY_COLORS[key] || CATEGORY_COLORS.general,
+      label: categoryLabels[key] || key,
+      color: categoryColors[key] || { bg: "#F9FAFB", border: "#E5E7EB" },
       recipes: filtered.filter((r) => r.category === key),
     }))
     .filter((g) => g.recipes.length > 0);
 
-  const categoryCounts: Record<string, number> = {
-    base: recipes.filter((r) => r.category === "base").length,
-    filling: recipes.filter((r) => r.category === "filling").length,
-    topping: recipes.filter((r) => r.category === "topping").length,
-    general: recipes.filter((r) => r.category === "general").length,
-  };
+  const categoryCounts: Record<string, number> = {};
+  for (const slug of categoryOrder) {
+    categoryCounts[slug] = recipes.filter((r) => r.category === slug).length;
+  }
 
   const resetForm = () => {
     setFormName("");
@@ -208,12 +231,17 @@ export default function RecipesPage() {
             <p className="text-sm text-gray">{recipes.length} recipes in the book</p>
           </div>
           {isManager && (
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => { if (showAddForm) { resetForm(); } setShowAddForm(!showAddForm); }}
-            >
-              {showAddForm ? "✕ Cancel" : "+ Add Recipe"}
-            </button>
+            <div className="flex gap-2">
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowCatModal(true)}>
+                <Settings size={14} /> Categories
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => { if (showAddForm) { resetForm(); } setShowAddForm(!showAddForm); }}
+              >
+                {showAddForm ? "✕ Cancel" : "+ Add Recipe"}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -237,10 +265,10 @@ export default function RecipesPage() {
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Category</label>
               <select className="form-input" value={formCategory} onChange={(e) => setFormCategory(e.target.value)}>
-                <option value="base">🧈 Base Recipe</option>
-                <option value="filling">🥧 Filling / Cream</option>
-                <option value="topping">🎂 Topping / Glaze</option>
-                <option value="general">📋 General</option>
+                {dbCategories.length > 0
+                  ? dbCategories.map(c => <option key={c.slug} value={c.slug}>{c.icon} {c.name}</option>)
+                  : DEFAULT_CATEGORY_ORDER.map(key => <option key={key} value={key}>{DEFAULT_CATEGORY_LABELS[key]}</option>)
+                }
               </select>
             </div>
           </div>
@@ -307,9 +335,9 @@ export default function RecipesPage() {
           <button className={`tab ${activeCategory === "ALL" ? "active" : ""}`} onClick={() => setActiveCategory("ALL")}>
             All ({recipes.length})
           </button>
-          {CATEGORY_ORDER.filter((k) => categoryCounts[k] > 0).map((key) => (
+          {categoryOrder.filter((k) => (categoryCounts[k] || 0) > 0).map((key) => (
             <button key={key} className={`tab ${activeCategory === key ? "active" : ""}`} onClick={() => setActiveCategory(key)}>
-              {CATEGORY_LABELS[key].replace(/^.{2}\s/, "")} ({categoryCounts[key]})
+              {(categoryLabels[key] || key).replace(/^.{2}\s/, "")} ({categoryCounts[key] || 0})
             </button>
           ))}
         </div>
@@ -422,6 +450,72 @@ export default function RecipesPage() {
         <div className="card">
           <div className="empty-state">
             {search ? `No recipes matching "${search}"` : "No recipes found"}
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {showCatModal && (
+        <div className="modal-backdrop" onClick={() => setShowCatModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h2>Recipe Categories</h2>
+            </div>
+            <div className="modal-body">
+              {/* Existing categories */}
+              <div className="space-y-2" style={{ marginBottom: 16 }}>
+                {dbCategories.map(c => (
+                  <div key={c.id} className="list-item">
+                    <span className="font-medium text-sm">{c.icon} {c.name}</span>
+                    <span className="text-xs text-gray">{c._count?.recipes || 0} recipes</span>
+                    <div className="flex gap-1">
+                      <button onClick={() => { setEditCat({ id: c.id, name: c.name, icon: c.icon, color: c.color }); setCatFormName(c.name); setCatFormIcon(c.icon); setCatFormColor(c.color); }} className="btn-icon"><Pencil size={12} /></button>
+                      <button onClick={async () => {
+                        if (!confirm(`Delete "${c.name}" category?`)) return;
+                        const r = await fetch(`/api/recipes/categories?id=${c.id}`, { method: "DELETE" });
+                        if (r.ok) { toast.success("Deleted"); loadCategories(); }
+                        else { const d = await r.json(); toast.error(d.error || "Failed"); }
+                      }} className="btn-icon" style={{ color: "#DC2626" }}><Trash2 size={12} /></button>
+                    </div>
+                  </div>
+                ))}
+                {dbCategories.length === 0 && <p className="text-sm text-gray">No categories yet. Add one below.</p>}
+              </div>
+              {/* Add/Edit form */}
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!catFormName.trim()) return;
+                try {
+                  const method = editCat ? "PUT" : "POST";
+                  const body = editCat ? { id: editCat.id, name: catFormName, icon: catFormIcon, color: catFormColor } : { name: catFormName, icon: catFormIcon, color: catFormColor };
+                  const r = await fetch("/api/recipes/categories", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+                  if (r.ok) { toast.success(editCat ? "Updated" : "Created"); setEditCat(null); setCatFormName(""); setCatFormIcon("📋"); setCatFormColor("#F9FAFB"); loadCategories(); }
+                  else { const d = await r.json(); toast.error(d.error || "Failed"); }
+                } catch { toast.error("Error"); }
+              }} className="space-y-3">
+                <div>
+                  <label className="form-label">{editCat ? "Rename" : "New Category Name"}</label>
+                  <input value={catFormName} onChange={e => setCatFormName(e.target.value)} required className="form-input" placeholder="e.g. Frostings" />
+                </div>
+                <div className="grid-2" style={{ gap: 8 }}>
+                  <div>
+                    <label className="form-label">Icon</label>
+                    <input value={catFormIcon} onChange={e => setCatFormIcon(e.target.value)} className="form-input" style={{ width: 60 }} placeholder="📋" />
+                  </div>
+                  <div>
+                    <label className="form-label">Color</label>
+                    <input type="color" value={catFormColor} onChange={e => setCatFormColor(e.target.value)} className="form-input" style={{ width: 50, height: 36, padding: 2 }} />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-primary btn-sm">{editCat ? "Update" : "Add Category"}</button>
+                  {editCat && <button type="button" onClick={() => { setEditCat(null); setCatFormName(""); setCatFormIcon("📋"); setCatFormColor("#F9FAFB"); }} className="btn btn-secondary btn-sm">Cancel Edit</button>}
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowCatModal(false)} className="btn btn-secondary">Done</button>
+            </div>
           </div>
         </div>
       )}

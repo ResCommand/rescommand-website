@@ -394,6 +394,36 @@ export async function GET(request: Request) {
   // Sandwich info — only populated on make days (Mon/Thu)
   const sandwichToday = await getSandwichInfoForDate(targetDate, dayOfWeek);
 
+  // Load prep list from database (editable), fall back to hardcoded if empty
+  let prepList = PREP_LIST;
+  try {
+    const dbPrepItems = await prisma.prepItem.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    if (dbPrepItems.length > 0) {
+      prepList = dbPrepItems.map(item => ({
+        category: item.category,
+        categoryColor: item.categoryColor,
+        name: item.name,
+        amount: item.amount,
+        shelfLifeHours: item.shelfLifeHours,
+      }));
+    }
+  } catch { /* keep hardcoded fallback */ }
+
+  // Load tray overrides for this date
+  const trayOverrides = await prisma.trayOverride.findMany({
+    where: { date: targetDate },
+  });
+  const overrideMap = new Map(trayOverrides.map(o => [o.flavor, o.trays]));
+
+  // Apply overrides to tray allocations
+  const finalTrayAllocations = trayAllocations.map(a => {
+    const override = overrideMap.get(a.name);
+    return override !== undefined ? { ...a, trays: override, donuts: Math.round(override * TRAY_SIZE) } : a;
+  });
+
   return NextResponse.json({
     date: targetDate.toISOString(),
     dayOfWeek,
@@ -405,8 +435,8 @@ export async function GET(request: Request) {
     batches,
     traySize: TRAY_SIZE,
     totalTrays,
-    trayAllocations,
-    prepList: PREP_LIST,
+    trayAllocations: finalTrayAllocations,
+    prepList,
     sandwichToday,
   });
 }

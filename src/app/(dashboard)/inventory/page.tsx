@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import IconPicker from "@/components/IconPicker";
 
 interface Vendor {
   id: number;
@@ -600,10 +601,7 @@ export default function InventoryPage() {
                   <label className="form-label">{editingSection ? "Rename" : "New Section Name"}</label>
                   <input value={secName} onChange={e => setSecName(e.target.value)} required className="form-input" placeholder="e.g. Freezer Items" />
                 </div>
-                <div>
-                  <label className="form-label">Icon</label>
-                  <input value={secIcon} onChange={e => setSecIcon(e.target.value)} className="form-input" style={{ width: 60 }} placeholder="📦" />
-                </div>
+                <IconPicker value={secIcon} onChange={setSecIcon} />
                 <div className="flex gap-2">
                   <button type="submit" className="btn btn-primary btn-sm">{editingSection ? "Update" : "Add Section"}</button>
                   {editingSection && <button type="button" onClick={() => { setEditingSection(null); setSecName(""); setSecIcon("📦"); }} className="btn btn-secondary btn-sm">Cancel Edit</button>}

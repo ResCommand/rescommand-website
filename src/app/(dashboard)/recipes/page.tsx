@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import IconPicker from "@/components/IconPicker";
 
 interface Ingredient {
   name: string;
@@ -498,10 +499,7 @@ export default function RecipesPage() {
                   <input value={catFormName} onChange={e => setCatFormName(e.target.value)} required className="form-input" placeholder="e.g. Frostings" />
                 </div>
                 <div className="grid-2" style={{ gap: 8 }}>
-                  <div>
-                    <label className="form-label">Icon</label>
-                    <input value={catFormIcon} onChange={e => setCatFormIcon(e.target.value)} className="form-input" style={{ width: 60 }} placeholder="📋" />
-                  </div>
+                  <IconPicker value={catFormIcon} onChange={setCatFormIcon} />
                   <div>
                     <label className="form-label">Color</label>
                     <input type="color" value={catFormColor} onChange={e => setCatFormColor(e.target.value)} className="form-input" style={{ width: 50, height: 36, padding: 2 }} />

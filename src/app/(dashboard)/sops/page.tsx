@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, BookOpen, X } from "lucide-react";
 import { toast } from "sonner";
+import RichTextEditor from "@/components/RichTextEditor";
 
 interface Sop {
   id: number; title: string; category: string; content: string;
@@ -53,7 +54,12 @@ export default function SopsPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault(); setSaving(true);
+    e.preventDefault();
+    if (!title.trim() || !content.trim() || content === "<p></p>") {
+      toast.error("Title and content are required");
+      return;
+    }
+    setSaving(true);
     try {
       const body = editing
         ? { id: editing.id, title, category, content }
@@ -158,9 +164,11 @@ export default function SopsPage() {
               <button onClick={() => setSelectedSop(null)} className="btn-icon"><X size={18} /></button>
             </div>
             <div className="modal-body" style={{ maxHeight: "60vh", overflowY: "auto" }}>
-              <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, fontSize: 14, color: "#374151" }}>
-                {selectedSop.content}
-              </div>
+              <div
+                className="sop-viewer"
+                style={{ lineHeight: 1.7, fontSize: 14, color: "#374151" }}
+                dangerouslySetInnerHTML={{ __html: selectedSop.content }}
+              />
             </div>
             <div className="modal-footer" style={{ justifyContent: "space-between" }}>
               <div className="text-xs text-gray">
@@ -193,14 +201,10 @@ export default function SopsPage() {
                 </div>
                 <div>
                   <label className="form-label">Content *</label>
-                  <textarea
-                    value={content}
-                    onChange={e => setContent(e.target.value)}
-                    required
-                    className="form-input"
-                    placeholder="Write the SOP steps here..."
-                    rows={12}
-                    style={{ lineHeight: 1.7 }}
+                  <RichTextEditor
+                    content={content}
+                    onChange={(html) => setContent(html)}
+                    minHeight={300}
                   />
                 </div>
               </div>

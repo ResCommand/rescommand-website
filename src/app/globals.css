@@ -337,4 +337,10 @@ tr:hover td { background: #FAFAFA; }
   .inv-section-title { font-size: 13px !important; }
   .tab { padding: 6px 10px; font-size: 12px; }
   .tabs { gap: 1px; }
+
+  /* Inventory Items page — mobile tweaks */
+  .inv-items-header-actions { width: 100%; display: flex; gap: 8px; flex-wrap: wrap; }
+  .inv-items-header-actions .btn { flex: 1; min-width: 0; text-align: center; justify-content: center; }
+  .inv-items-form-card { padding: 12px !important; }
+  .inv-items-search { max-width: 100% !important; }
 }

@@ -19,7 +19,8 @@ const inventorySchema = z.object({
   suggestedCadence: z.string().optional().nullable(),
   sku: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  inventorySection: z.enum(["KITCHEN_REGULAR", "KITCHEN_INFREQUENT", "PACKAGING", "BARISTA"]).optional().default("KITCHEN_REGULAR"),
+  inventorySection: z.string().optional().default("kitchen_regular"),
+  inventorySectionId: z.number().optional().nullable(),
 });
 
 export async function GET(request: Request) {

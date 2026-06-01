@@ -27,18 +27,18 @@ interface InvItem {
   active: boolean;
 }
 
-const SECTION_OPTIONS = [
-  { value: "KITCHEN_REGULAR", label: "🍳 Kitchen — Regular" },
-  { value: "KITCHEN_INFREQUENT", label: "🧂 Kitchen — Infrequent" },
-  { value: "PACKAGING", label: "📦 Packaging & Supplies" },
-  { value: "BARISTA", label: "☕ Barista & Coffee" },
+const DEFAULT_SECTION_OPTIONS = [
+  { value: "kitchen_regular", label: "🍳 Kitchen — Regular" },
+  { value: "kitchen_infrequent", label: "🧂 Kitchen — Infrequent" },
+  { value: "packaging", label: "📦 Packaging & Supplies" },
+  { value: "barista", label: "☕ Barista & Coffee" },
 ];
 
-const SECTION_LABELS: Record<string, string> = {
-  KITCHEN_REGULAR: "Kitchen Regular",
-  KITCHEN_INFREQUENT: "Kitchen Infrequent",
-  PACKAGING: "Packaging",
-  BARISTA: "Barista",
+const DEFAULT_SECTION_LABELS: Record<string, string> = {
+  kitchen_regular: "Kitchen Regular",
+  kitchen_infrequent: "Kitchen Infrequent",
+  packaging: "Packaging",
+  barista: "Barista",
 };
 
 const emptyForm = {
@@ -55,12 +55,22 @@ const emptyForm = {
   suggestedCadence: "",
   sku: "",
   notes: "",
-  inventorySection: "KITCHEN_REGULAR" as string,
+  inventorySection: "",
 };
+
+interface Section {
+  id: number;
+  name: string;
+  slug: string;
+  icon: string;
+  sortOrder: number;
+  active: boolean;
+}
 
 export default function InventoryItemsPage() {
   const [items, setItems] = useState<InvItem[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -71,12 +81,14 @@ export default function InventoryItemsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [itemsRes, vendorsRes] = await Promise.all([
+      const [itemsRes, vendorsRes, sectionsRes] = await Promise.all([
         fetch("/api/inventory").then((r) => r.json()),
         fetch("/api/inventory/vendors").then((r) => r.json()),
+        fetch("/api/inventory/sections").then((r) => r.json()).catch(() => []),
       ]);
       setItems(Array.isArray(itemsRes) ? itemsRes : []);
       setVendors(Array.isArray(vendorsRes) ? vendorsRes : []);
+      setSections(Array.isArray(sectionsRes) ? sectionsRes : []);
     } catch {
       // ignore
     } finally {
@@ -85,6 +97,21 @@ export default function InventoryItemsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Set default section when sections load and form is empty
+  useEffect(() => {
+    if (sections.length > 0 && !form.inventorySection) {
+      setForm(f => ({ ...f, inventorySection: sections[0].slug }));
+    }
+  }, [sections, form.inventorySection]);
+
+  // Build section lookup from DB sections (fallback to hardcoded)
+  const sectionOptions = sections.length > 0
+    ? sections.map(s => ({ value: s.slug, label: `${s.icon} ${s.name}` }))
+    : DEFAULT_SECTION_OPTIONS;
+  const sectionLabels: Record<string, string> = sections.length > 0
+    ? Object.fromEntries(sections.map(s => [s.slug, s.name]))
+    : DEFAULT_SECTION_LABELS;
 
   const filtered = items.filter(
     (i) => !search || i.name.toLowerCase().includes(search.toLowerCase())
@@ -106,7 +133,7 @@ export default function InventoryItemsPage() {
       suggestedCadence: item.suggestedCadence || "",
       sku: item.sku || "",
       notes: item.notes || "",
-      inventorySection: item.inventorySection || "KITCHEN_REGULAR",
+      inventorySection: item.inventorySection || sections[0]?.slug || "",
     });
     setShowForm(true);
     setError("");
@@ -179,7 +206,7 @@ export default function InventoryItemsPage() {
             <h1>📦 Manage Items</h1>
             <p className="text-sm text-gray">Add, edit, and organize inventory items by vendor.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="inv-items-header-actions">
             <button className="btn btn-primary btn-sm" onClick={openNew}>
               + Add Item
             </button>
@@ -192,7 +219,7 @@ export default function InventoryItemsPage() {
 
       {/* Add/Edit form */}
       {showForm && (
-        <div className="card mb-4" style={{ padding: 20 }}>
+        <div className="card mb-4 inv-items-form-card">
           <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
             {editingId ? "Edit Item" : "Add New Item"}
           </h3>
@@ -339,7 +366,7 @@ export default function InventoryItemsPage() {
                 value={form.inventorySection}
                 onChange={(e) => setForm({ ...form, inventorySection: e.target.value })}
               >
-                {SECTION_OPTIONS.map((opt) => (
+                {sectionOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -365,7 +392,7 @@ export default function InventoryItemsPage() {
       )}
 
       {/* Search */}
-      <div className="form-group" style={{ maxWidth: 320, marginBottom: 16 }}>
+      <div className="form-group inv-items-search" style={{ marginBottom: 16 }}>
         <input
           type="text"
           className="form-input"
@@ -375,9 +402,9 @@ export default function InventoryItemsPage() {
         />
       </div>
 
-      {/* Items list */}
+      {/* Items list — Desktop table */}
       <div className="card">
-        <div className="table-wrapper">
+        <div className="table-wrapper inv-table-desktop">
           <table>
             <thead>
               <tr>
@@ -400,7 +427,7 @@ export default function InventoryItemsPage() {
                   </td>
                   <td><span className="badge badge-blue">{item.vendor?.name || "—"}</span></td>
                   <td>
-                    <span className="text-xs">{SECTION_LABELS[item.inventorySection || "KITCHEN_REGULAR"] || item.inventorySection}</span>
+                    <span className="text-xs">{sectionLabels[item.inventorySection] || item.inventorySection}</span>
                   </td>
                   <td className="text-sm">{item.category}</td>
                   <td className="text-sm">{item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}</td>
@@ -421,6 +448,68 @@ export default function InventoryItemsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Items list — Mobile cards */}
+        <div className="inv-cards-mobile">
+          {filtered.map((item) => {
+            const isLow = item.parLevel > 0 && item.currentStock <= item.minStock && item.minStock > 0;
+            return (
+              <div
+                key={item.id}
+                className="inv-card"
+                style={{ borderBottom: "1px solid #F1F3F5" }}
+              >
+                <div className="flex items-center justify-between" style={{ gap: 4, marginBottom: 6 }}>
+                  <div className="font-medium text-sm" style={{ flex: 1, marginRight: 4, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {item.name}
+                  </div>
+                  <span className="badge badge-blue" style={{ fontSize: 10, padding: "1px 6px", flexShrink: 0 }}>
+                    {item.vendor?.name || "—"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between" style={{ gap: 6 }}>
+                  <div className="flex items-center" style={{ gap: 8 }}>
+                    <div>
+                      <div className="text-xs text-gray">On Hand</div>
+                      <div className="font-semibold text-sm" style={{ color: isLow ? "#DC2626" : undefined }}>
+                        {item.currentStock} <span className="text-xs text-gray">{item.unit}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray">Par</div>
+                      <div className="font-semibold text-sm">{item.parLevel}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray">Cost</div>
+                      <div className="text-sm">{item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}</div>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => openEdit(item)}
+                    style={{ flexShrink: 0 }}
+                  >
+                    Edit
+                  </button>
+                </div>
+                <div className="flex items-center gap-2" style={{ marginTop: 4 }}>
+                  <span className="text-xs text-gray">{sectionLabels[item.inventorySection] || item.inventorySection}</span>
+                  <span className="text-xs text-gray">·</span>
+                  <span className="text-xs text-gray">{item.category}</span>
+                  {item.sku && (
+                    <>
+                      <span className="text-xs text-gray">·</span>
+                      <span className="text-xs text-gray">SKU: {item.sku}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="empty-state">No items found</div>
+          )}
         </div>
       </div>
     </div>

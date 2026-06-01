@@ -436,7 +436,8 @@ export default function InventoryPage() {
                                 }}
                                 min="0"
                                 step="0.5"
-                                value={onHand}
+                                placeholder="0"
+                                value={onHand || ""}
                                 onChange={(e) => updateLine(item.id, e.target.value)}
                               />
                             </td>
@@ -453,7 +454,8 @@ export default function InventoryPage() {
                                 }}
                                 min="0"
                                 step="0.5"
-                                value={par}
+                                placeholder="0"
+                                value={par || ""}
                                 onChange={(e) => updatePar(item.id, e.target.value)}
                                 title={par === 0 ? "Set par level above 0 to track this item" : ""}
                               />
@@ -502,32 +504,32 @@ export default function InventoryPage() {
 	                          <div className="flex items-center" style={{ gap: 6 }}>
 	                            <div>
 	                              <label className="text-xs text-gray" style={{ display: "block" }}>On Hand</label>
-	                              <input
-	                                type="number"
-	                                className="form-input"
-	                                style={{
-	                                  width: 64, padding: "4px 4px", fontSize: 14,
-	                                  borderColor: isLow ? "#DC2626" : undefined,
-	                                  background: isLow ? "#FEF2F2" : undefined,
-	                                }}
-	                                min="0" step="0.5"
-	                                value={onHand}
-	                                onChange={(e) => updateLine(item.id, e.target.value)}
-	                              />
-	                            </div>
-	                            <div>
-	                              <label className="text-xs text-gray" style={{ display: "block" }}>Par</label>
-	                              <input
-	                                type="number"
-	                                className="form-input"
-	                                style={{
-	                                  width: 52, padding: "4px 4px", fontSize: 14,
-	                                  color: par === 0 ? "#9CA3AF" : undefined,
-	                                }}
-	                                min="0" step="0.5"
-	                                value={par}
-	                                onChange={(e) => updatePar(item.id, e.target.value)}
-	                              />
+<input
+                                type="number"
+                                className="form-input"
+                                style={{
+                                  width: 64, padding: "4px 4px", fontSize: 14,
+                                  borderColor: isLow ? "#DC2626" : undefined,
+                                  background: isLow ? "#FEF2F2" : undefined,
+                                }}
+                                min="0" step="0.5" placeholder="0"
+                                value={onHand || ""}
+                                onChange={(e) => updateLine(item.id, e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray" style={{ display: "block" }}>Par</label>
+                              <input
+                                type="number"
+                                className="form-input"
+                                style={{
+                                  width: 52, padding: "4px 4px", fontSize: 14,
+                                  color: par === 0 ? "#9CA3AF" : undefined,
+                                }}
+                                min="0" step="0.5" placeholder="0"
+                                value={par || ""}
+                                onChange={(e) => updatePar(item.id, e.target.value)}
+                              />
 	                            </div>
 	                          </div>
 	                          <div style={{ textAlign: "right", flexShrink: 0 }}>

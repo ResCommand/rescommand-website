@@ -58,6 +58,10 @@ model User {
   sentNotifications Notification[]     @relation("NotificationSender")
   notificationReads NotificationRead[]
   notificationRecipients NotificationRecipient[]
+  shifts              Shift[]
+  availabilityBlocks  AvailabilityBlock[]
+  timeOffRequests     TimeOffRequest[]
+  timeOffReviewed     TimeOffRequest[]    @relation("TimeOffReviewer")
 
   @@map("users")
 }
@@ -714,4 +718,55 @@ model NotificationRecipient {
 
   @@unique([notificationId, userId])
   @@map("notification_recipients")
+}
+
+// ─── Employee Scheduling ────────────────────────────────────────
+
+model Shift {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  startTime String   @map("start_time")   // "06:00"
+  endTime   String   @map("end_time")     // "14:00"
+  position  String   @default("GENERAL")  // GENERAL, FOH, BOH, CLOSING, OPENING
+  notes     String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("shifts")
+}
+
+model AvailabilityBlock {
+  id        Int      @id @default(autoincrement())
+  dayOfWeek Int      @map("day_of_week")   // 0=Sun, 1=Mon, ... 6=Sat. -1 = all days
+  startTime String?  @map("start_time")    // null = all day blocked
+  endTime   String?  @map("end_time")      // null = all day blocked
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("availability_blocks")
+}
+
+model TimeOffRequest {
+  id        Int      @id @default(autoincrement())
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+  reason    String?
+  status    String   @default("PENDING")  // PENDING, APPROVED, DENIED
+  reviewedBy Int?    @map("reviewed_by")
+  reviewedAt DateTime? @map("reviewed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  reviewer User? @relation("TimeOffReviewer", fields: [reviewedBy], references: [id])
+
+  @@map("time_off_requests")
 }

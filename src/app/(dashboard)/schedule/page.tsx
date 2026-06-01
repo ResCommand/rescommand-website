@@ -98,7 +98,7 @@ export default function SchedulePage() {
 
       if (isManager) {
         const users = await fetch("/api/users").then(r => r.json());
-        if (Array.isArray(users)) setTeam(users.filter((u: TeamMember) => u.role !== "OWNER"));
+        if (Array.isArray(users)) setTeam(users);
       }
     } catch { /* ignore */ }
     setLoading(false);

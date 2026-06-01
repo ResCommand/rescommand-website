@@ -81,6 +81,7 @@ export default function SchedulePage() {
 
   // Time-off form
   const [showTimeOffForm, setShowTimeOffForm] = useState(false);
+  const [editingTimeOff, setEditingTimeOff] = useState<TimeOffReq | null>(null);
   const [toForm, setToForm] = useState({ startDate: "", endDate: "", reason: "" });
 
   const loadData = useCallback(async () => {
@@ -473,18 +474,16 @@ export default function SchedulePage() {
       {/* ── Time-Off Tab ───────────────────────────────────── */}
       {activeTab === "timeoff" && (
         <div className="space-y-4">
-          {!isManager && (
-            <div className="card" style={{ padding: "12px 16px" }}>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray">Request specific dates off.</p>
-                <button className="btn btn-primary btn-sm" onClick={() => setShowTimeOffForm(true)}><Plus size={14} /> Request Off</button>
-              </div>
+          <div className="card" style={{ padding: "12px 16px" }}>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray">{isManager ? "All time-off requests. Approve or deny below." : "Request specific dates off."}</p>
+              <button className="btn btn-primary btn-sm" onClick={() => { setEditingTimeOff(null); setToForm({ startDate: "", endDate: "", reason: "" }); setShowTimeOffForm(true); }}><Plus size={14} /> Request Off</button>
             </div>
-          )}
+          </div>
 
           {showTimeOffForm && (
             <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Request Time Off</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingTimeOff ? "Edit Request" : "Request Time Off"}</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div>
                   <label className="form-label">Start Date *</label>
@@ -500,8 +499,23 @@ export default function SchedulePage() {
                 </div>
               </div>
               <div className="flex gap-2" style={{ justifyContent: "flex-end" }}>
-                <button className="btn btn-secondary btn-sm" onClick={() => setShowTimeOffForm(false)}>Cancel</button>
-                <button className="btn btn-primary btn-sm" onClick={saveTimeOff}>Submit Request</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => { setShowTimeOffForm(false); setEditingTimeOff(null); }}>Cancel</button>
+                <button className="btn btn-primary btn-sm" onClick={async () => {
+                  if (editingTimeOff) {
+                    // Update existing request
+                    try {
+                      const r = await fetch("/api/time-off", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: editingTimeOff.id, startDate: toForm.startDate, endDate: toForm.endDate, reason: toForm.reason }),
+                      });
+                      if (r.ok) { toast.success("Updated"); setShowTimeOffForm(false); setEditingTimeOff(null); loadData(); }
+                      else { const d = await r.json(); toast.error(d.error || "Failed"); }
+                    } catch { toast.error("Error"); }
+                  } else {
+                    saveTimeOff();
+                  }
+                }}>{editingTimeOff ? "Update Request" : "Submit Request"}</button>
               </div>
             </div>
           )}
@@ -517,14 +531,14 @@ export default function SchedulePage() {
                     <th>Dates</th>
                     <th>Reason</th>
                     <th>Status</th>
-                    {isManager && <th>Actions</th>}
-                    {!isManager && <th></th>}
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {timeOffReqs.map(r => {
                     const start = new Date(r.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
                     const end = new Date(r.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                    const isOwn = r.userId === userId;
                     return (
                       <tr key={r.id}>
                         {isManager && <td className="font-medium text-sm">{r.user.name}</td>}
@@ -535,23 +549,30 @@ export default function SchedulePage() {
                             {r.status}
                           </span>
                         </td>
-                        {isManager && r.status === "PENDING" && (
-                          <td>
-                            <div className="flex gap-1">
-                              <button onClick={() => reviewTimeOff(r.id, "APPROVED")} className="btn btn-sm" style={{ background: "#059669", color: "#fff", padding: "4px 8px" }}>
-                                <CheckCircle size={12} /> Approve
-                              </button>
-                              <button onClick={() => reviewTimeOff(r.id, "DENIED")} className="btn btn-sm" style={{ background: "#DC2626", color: "#fff", padding: "4px 8px" }}>
-                                <XCircle size={12} /> Deny
-                              </button>
-                            </div>
-                          </td>
-                        )}
-                        {!isManager && r.status === "PENDING" && (
-                          <td>
-                            <button onClick={() => cancelTimeOff(r.id)} className="btn btn-secondary btn-sm">Cancel</button>
-                          </td>
-                        )}
+                        <td>
+                          <div className="flex gap-1" style={{ flexWrap: "wrap" }}>
+                            {isManager && r.status === "PENDING" && (
+                              <>
+                                <button onClick={() => reviewTimeOff(r.id, "APPROVED")} className="btn btn-sm" style={{ background: "#059669", color: "#fff", padding: "4px 8px" }}>
+                                  <CheckCircle size={12} /> Approve
+                                </button>
+                                <button onClick={() => reviewTimeOff(r.id, "DENIED")} className="btn btn-sm" style={{ background: "#DC2626", color: "#fff", padding: "4px 8px" }}>
+                                  <XCircle size={12} /> Deny
+                                </button>
+                              </>
+                            )}
+                            {r.status === "PENDING" && isOwn && (
+                              <>
+                                <button onClick={() => {
+                                  setEditingTimeOff(r);
+                                  setToForm({ startDate: fmtDate(new Date(r.startDate)), endDate: fmtDate(new Date(r.endDate)), reason: r.reason || "" });
+                                  setShowTimeOffForm(true);
+                                }} className="btn btn-secondary btn-sm"><Pencil size={12} /> Edit</button>
+                                <button onClick={() => cancelTimeOff(r.id)} className="btn btn-secondary btn-sm">Cancel</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}

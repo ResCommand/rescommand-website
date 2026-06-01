@@ -53,33 +53,56 @@ export async function PUT(request: Request) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const reviewerId = parseInt((session.user as { id?: string }).id || "0");
+  const currentUserId = parseInt((session.user as { id?: string }).id || "0");
   const body = await request.json();
-  const { id, status } = body;
-  if (!id || !["APPROVED", "DENIED"].includes(status))
-    return NextResponse.json({ error: "id and status (APPROVED/DENIED) required" }, { status: 400 });
+  const { id, status, startDate, endDate, reason } = body;
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const req = await prisma.timeOffRequest.update({
+  // Approve/deny flow (managers only)
+  if (status) {
+    if (role !== "MANAGER" && role !== "OWNER")
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!["APPROVED", "DENIED"].includes(status))
+      return NextResponse.json({ error: "status must be APPROVED or DENIED" }, { status: 400 });
+
+    const req = await prisma.timeOffRequest.update({
+      where: { id },
+      data: { status, reviewedBy: currentUserId, reviewedAt: new Date() },
+      include: { user: { select: { id: true, name: true } }, reviewer: { select: { id: true, name: true } } },
+    });
+
+    await prisma.notification.create({
+      data: {
+        title: `Time-Off ${status === "APPROVED" ? "Approved" : "Denied"}`,
+        message: `Your request for ${new Date(req.startDate).toLocaleDateString()} – ${new Date(req.endDate).toLocaleDateString()} has been ${status.toLowerCase()}.`,
+        priority: status === "DENIED" ? "HIGH" : "NORMAL",
+        sentBy: currentUserId,
+        recipients: { create: [{ userId: req.userId }] },
+      },
+    });
+
+    return NextResponse.json(req);
+  }
+
+  // Edit flow (own pending requests only)
+  const existing = await prisma.timeOffRequest.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (existing.userId !== currentUserId)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (existing.status !== "PENDING")
+    return NextResponse.json({ error: "Can only edit pending requests" }, { status: 400 });
+
+  const updateData: Record<string, unknown> = {};
+  if (startDate) updateData.startDate = new Date(startDate + "T00:00:00");
+  if (endDate) updateData.endDate = new Date(endDate + "T00:00:00");
+  if (reason !== undefined) updateData.reason = reason || null;
+
+  const updated = await prisma.timeOffRequest.update({
     where: { id },
-    data: { status, reviewedBy: reviewerId, reviewedAt: new Date() },
+    data: updateData,
     include: { user: { select: { id: true, name: true } }, reviewer: { select: { id: true, name: true } } },
   });
-
-  // Send notification to the employee
-  await prisma.notification.create({
-    data: {
-      title: `Time-Off ${status === "APPROVED" ? "Approved" : "Denied"}`,
-      message: `Your request for ${req.startDate.toLocaleDateString()} – ${req.endDate.toLocaleDateString()} has been ${status.toLowerCase()}.`,
-      priority: status === "DENIED" ? "HIGH" : "NORMAL",
-      sentBy: reviewerId,
-      recipients: { create: [{ userId: req.userId,  }] },
-    },
-  });
-
-  return NextResponse.json(req);
+  return NextResponse.json(updated);
 }
 
 // DELETE /api/time-off?id=X — cancel own pending request

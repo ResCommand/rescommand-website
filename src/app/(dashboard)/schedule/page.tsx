@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import {
   ChevronLeft, ChevronRight, Calendar, Clock, Plus, Trash2,
   CheckCircle, XCircle, AlertTriangle, Send, Copy, Eye, Pencil,
+  LayoutTemplate, Save, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,6 +29,16 @@ interface TimeOffReq {
 
 interface TeamMember {
   id: number; name: string; role: string; category?: { name: string; color: string } | null;
+}
+
+interface TemplateShiftItem {
+  id?: number; dayOfWeek: number; startTime: string; endTime: string; position: string; userId: number;
+  user?: { id: number; name: string };
+}
+
+interface ScheduleTemplateItem {
+  id: number; name: string; isDefault: boolean;
+  shifts: TemplateShiftItem[];
 }
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -62,7 +73,7 @@ export default function SchedulePage() {
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
   const isManager = role === "MANAGER" || role === "OWNER";
 
-  const [activeTab, setActiveTab] = useState<"schedule" | "availability" | "timeoff">("schedule");
+  const [activeTab, setActiveTab] = useState<"schedule" | "availability" | "timeoff" | "templates">("schedule");
   const [weekStart, setWeekStart] = useState<Date>(getMonday(new Date()));
   const [shifts, setShifts] = useState<ShiftItem[]>([]);
   const [blocks, setBlocks] = useState<AvailBlock[]>([]);
@@ -83,6 +94,21 @@ export default function SchedulePage() {
   const [showTimeOffForm, setShowTimeOffForm] = useState(false);
   const [editingTimeOff, setEditingTimeOff] = useState<TimeOffReq | null>(null);
   const [toForm, setToForm] = useState({ startDate: "", endDate: "", reason: "" });
+
+  // Template state
+  const [template, setTemplate] = useState<ScheduleTemplateItem | null>(null);
+  const [templateShifts, setTemplateShifts] = useState<TemplateShiftItem[]>([]);
+  const [templateSaving, setTemplateSaving] = useState(false);
+  const [templateName, setTemplateName] = useState("Default Schedule");
+
+  // Copy week state
+  const [showCopyWeek, setShowCopyWeek] = useState(false);
+  const [copyTargetWeek, setCopyTargetWeek] = useState("");
+  const [copying, setCopying] = useState(false);
+
+  // Apply template state
+  const [showApplyTemplate, setShowApplyTemplate] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -105,7 +131,27 @@ export default function SchedulePage() {
     setLoading(false);
   }, [weekStart, isManager]);
 
+  const loadTemplate = useCallback(async () => {
+    try {
+      const res = await fetch("/api/schedule-templates");
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const t = data[0];
+        setTemplate(t);
+        setTemplateName(t.name);
+        setTemplateShifts(t.shifts.map((s: TemplateShiftItem) => ({
+          dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime,
+          position: s.position, userId: s.userId, user: s.user,
+        })));
+      } else {
+        setTemplate(null);
+        setTemplateShifts([]);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { if (isManager && activeTab === "templates") loadTemplate(); }, [isManager, activeTab, loadTemplate]);
 
   // Week dates
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -125,14 +171,12 @@ export default function SchedulePage() {
     const dateObj = new Date(date + "T00:00:00");
     const dow = dateObj.getDay();
 
-    // Check availability blocks
     for (const b of blocks) {
       if (b.dayOfWeek !== dow && b.dayOfWeek !== -1) continue;
       if (b.startTime === null) { conflicts.push("Blocked day"); break; }
       if (startTime < b.endTime! && endTime > b.startTime!) { conflicts.push("Blocked hours"); break; }
     }
 
-    // Check approved time-off
     for (const t of timeOffReqs) {
       if (t.userId !== userId || t.status !== "APPROVED") continue;
       const start = new Date(t.startDate).getTime();
@@ -243,6 +287,70 @@ export default function SchedulePage() {
     } catch { toast.error("Error"); }
   };
 
+  // ─── Template CRUD ───────────────────────────────────────
+  const addTemplateShift = () => {
+    if (team.length === 0) { toast.error("No team members"); return; }
+    setTemplateShifts([...templateShifts, {
+      dayOfWeek: 1, startTime: "06:00", endTime: "14:00", position: "GENERAL", userId: team[0].id,
+    }]);
+  };
+
+  const updateTemplateShift = (idx: number, field: string, value: string | number) => {
+    const updated = [...templateShifts];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setTemplateShifts(updated);
+  };
+
+  const removeTemplateShift = (idx: number) => {
+    setTemplateShifts(templateShifts.filter((_, i) => i !== idx));
+  };
+
+  const saveTemplate = async () => {
+    setTemplateSaving(true);
+    try {
+      const r = await fetch("/api/schedule-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: templateName, shifts: templateShifts }),
+      });
+      if (r.ok) { toast.success("Template saved"); loadTemplate(); }
+      else { const d = await r.json(); toast.error(d.error || "Failed"); }
+    } catch { toast.error("Error"); }
+    setTemplateSaving(false);
+  };
+
+  const applyTemplate = async () => {
+    if (!confirm(`Apply template to week of ${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}? This will create shifts for all template entries.`)) return;
+    setApplying(true);
+    try {
+      const r = await fetch("/api/schedule-templates", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weekStart: fmtDate(weekStart) }),
+      });
+      const d = await r.json();
+      if (r.ok) { toast.success(`${d.created} shifts created, ${d.notified} employees notified`); setShowApplyTemplate(false); loadData(); }
+      else { toast.error(d.error || "Failed"); }
+    } catch { toast.error("Error"); }
+    setApplying(false);
+  };
+
+  const copyWeek = async () => {
+    if (!copyTargetWeek) { toast.error("Select a target week"); return; }
+    setCopying(true);
+    try {
+      const r = await fetch("/api/schedule-templates/copy-week", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceWeek: fmtDate(weekStart), targetWeek: copyTargetWeek }),
+      });
+      const d = await r.json();
+      if (r.ok) { toast.success(`${d.created} shifts copied as drafts to target week`); setShowCopyWeek(false); setCopyTargetWeek(""); }
+      else { toast.error(d.error || "Failed"); }
+    } catch { toast.error("Error"); }
+    setCopying(false);
+  };
+
   // ─── Render ──────────────────────────────────────────────
   const userId = parseInt((session?.user as { id?: string })?.id || "0");
   const myShifts = shifts.filter(s => s.userId === userId);
@@ -269,6 +377,11 @@ export default function SchedulePage() {
           {isManager ? <Eye size={14} /> : <Calendar size={14} />}
           {isManager ? "Time-Off Requests" : "Request Off"}
         </button>
+        {isManager && (
+          <button className={`tab ${activeTab === "templates" ? "active" : ""}`} onClick={() => setActiveTab("templates")}>
+            <LayoutTemplate size={14} /> Templates
+          </button>
+        )}
       </div>
 
       {/* ── Schedule Tab ──────────────────────────────────── */}
@@ -286,12 +399,14 @@ export default function SchedulePage() {
                 {!isThisWeek && <button className="btn btn-ghost btn-sm" onClick={() => setWeekStart(getMonday(new Date()))} style={{ fontSize: 11 }}>Today</button>}
               </div>
               {isManager && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" style={{ flexWrap: "wrap" }}>
                   {unpublishedCount > 0 && <span className="badge badge-orange">{unpublishedCount} draft</span>}
                   <button className="btn btn-primary btn-sm" onClick={() => {
                     setShiftForm({ userId: team[0]?.id || 0, date: fmtDate(weekStart), startTime: "06:00", endTime: "14:00", position: "GENERAL", notes: "" });
                     setShowShiftForm(true);
                   }}><Plus size={14} /> Add Shift</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setShowCopyWeek(true)}><Copy size={14} /> Copy Week</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setShowApplyTemplate(true)}><LayoutTemplate size={14} /> Apply Template</button>
                   {unpublishedCount > 0 && (
                     <button className="btn btn-sm" style={{ background: "#059669", color: "#fff" }} onClick={publishWeek}>
                       <Send size={14} /> Publish Week
@@ -301,6 +416,40 @@ export default function SchedulePage() {
               )}
             </div>
           </div>
+
+          {/* Copy Week Modal */}
+          {showCopyWeek && (
+            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}><Copy size={16} /> Copy Week</h3>
+              <p className="text-sm text-gray" style={{ marginBottom: 12 }}>
+                Copy all shifts from the week of <strong>{weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</strong> to another week. Copied shifts are created as drafts.
+              </p>
+              <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Target Week (Monday) *</label>
+                <input type="date" className="form-input" value={copyTargetWeek} onChange={e => setCopyTargetWeek(e.target.value)} />
+              </div>
+              <div className="flex gap-2" style={{ justifyContent: "flex-end" }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setShowCopyWeek(false)}>Cancel</button>
+                <button className="btn btn-primary btn-sm" onClick={copyWeek} disabled={copying}>{copying ? "Copying..." : "Copy Shifts"}</button>
+              </div>
+            </div>
+          )}
+
+          {/* Apply Template Modal */}
+          {showApplyTemplate && (
+            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}><LayoutTemplate size={16} /> Apply Template</h3>
+              <p className="text-sm text-gray" style={{ marginBottom: 12 }}>
+                Apply your default schedule template to the week of <strong>{weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</strong>. 
+                Shifts that already exist for an employee on that day/time will be skipped. All new shifts are published immediately and employees are notified.
+              </p>
+              {!template && <div className="text-sm" style={{ color: "#D97706", marginBottom: 12 }}>⚠ No template saved yet. Go to the Templates tab to create one.</div>}
+              <div className="flex gap-2" style={{ justifyContent: "flex-end" }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setShowApplyTemplate(false)}>Cancel</button>
+                <button className="btn btn-primary btn-sm" onClick={applyTemplate} disabled={applying || !template}>{applying ? "Applying..." : "Apply Template"}</button>
+              </div>
+            </div>
+          )}
 
           {/* Add shift form */}
           {showShiftForm && isManager && (
@@ -502,7 +651,6 @@ export default function SchedulePage() {
                 <button className="btn btn-secondary btn-sm" onClick={() => { setShowTimeOffForm(false); setEditingTimeOff(null); }}>Cancel</button>
                 <button className="btn btn-primary btn-sm" onClick={async () => {
                   if (editingTimeOff) {
-                    // Update existing request
                     try {
                       const r = await fetch("/api/time-off", {
                         method: "PUT",
@@ -580,6 +728,150 @@ export default function SchedulePage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Templates Tab ──────────────────────────────────── */}
+      {activeTab === "templates" && isManager && (
+        <div className="space-y-4">
+          <div className="card" style={{ padding: "12px 16px" }}>
+            <div className="flex items-center justify-between" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div>
+                <p className="text-sm text-gray">Define a default weekly schedule. Apply it to any week with one click, or copy an existing week&apos;s shifts.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="btn btn-primary btn-sm" onClick={addTemplateShift}><Plus size={14} /> Add Shift Slot</button>
+                <button className="btn btn-sm" style={{ background: "#059669", color: "#fff" }} onClick={saveTemplate} disabled={templateSaving}>
+                  <Save size={14} /> {templateSaving ? "Saving..." : "Save Template"}
+                </button>
+                {template && (
+                  <button className="btn btn-secondary btn-sm" onClick={async () => {
+                    if (!confirm("Delete this template?")) return;
+                    await fetch("/api/schedule-templates", { method: "DELETE" });
+                    setTemplate(null); setTemplateShifts([]);
+                    toast.success("Template deleted");
+                  }}><Trash2 size={14} /> Delete</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Template name */}
+          <div className="card" style={{ padding: "12px 16px" }}>
+            <div className="flex items-center gap-3">
+              <label className="form-label" style={{ marginBottom: 0, whiteSpace: "nowrap" }}>Template Name</label>
+              <input className="form-input" value={templateName} onChange={e => setTemplateName(e.target.value)} style={{ maxWidth: 300 }} />
+            </div>
+          </div>
+
+          {/* Template shift editor — grid by day */}
+          {templateShifts.length === 0 ? (
+            <div className="card">
+              <div className="empty-state">
+                <LayoutTemplate size={32} style={{ color: "#9CA3AF", marginBottom: 8 }} />
+                <p>No shift slots yet. Click &quot;Add Shift Slot&quot; to define recurring shifts.</p>
+              </div>
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, minWidth: 800 }}>
+                {DAY_FULL.map((dayName, dow) => {
+                  const dayShifts = templateShifts.filter(s => s.dayOfWeek === dow);
+                  return (
+                    <div key={dow} style={{ background: "#fff", borderRadius: 8, border: "1px solid #E5E7EB", minHeight: 80 }}>
+                      <div style={{ padding: "8px 10px", borderBottom: "1px solid #E5E7EB", textAlign: "center", background: "#F9FAFB", borderRadius: "8px 8px 0 0" }}>
+                        <div className="text-xs font-semibold" style={{ color: "#374151" }}>{dayName}</div>
+                      </div>
+                      <div style={{ padding: 4 }}>
+                        {dayShifts.length === 0 && (
+                          <div className="text-xs text-gray" style={{ padding: 4, textAlign: "center" }}>—</div>
+                        )}
+                        {dayShifts.map((s, idx) => {
+                          const globalIdx = templateShifts.indexOf(s);
+                          return (
+                            <div key={idx} style={{
+                              padding: "4px 6px", margin: "2px 0", borderRadius: 4, fontSize: 11,
+                              background: POSITION_COLORS[s.position] || "#F3F4F6",
+                              position: "relative",
+                            }}>
+                              <div className="font-medium" style={{ fontSize: 11 }}>{team.find(t => t.id === s.userId)?.name || "Unassigned"}</div>
+                              <div style={{ color: "#6B7280" }}>{s.startTime}–{s.endTime}</div>
+                              {s.position !== "GENERAL" && <div className="text-xs" style={{ color: "#9CA3AF" }}>{s.position}</div>}
+                              <button onClick={() => removeTemplateShift(globalIdx)} style={{ position: "absolute", top: 2, right: 2, background: "none", border: "none", cursor: "pointer", color: "#DC2626", padding: 0 }}>
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Template shift list (editable) */}
+          {templateShifts.length > 0 && (
+            <div className="card">
+              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Edit Shift Slots</h3>
+              <div style={{ overflowX: "auto" }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th>Employee</th>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th>Position</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {templateShifts.map((s, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <select className="form-input" value={s.dayOfWeek} onChange={e => updateTemplateShift(idx, "dayOfWeek", parseInt(e.target.value))} style={{ minWidth: 90 }}>
+                            {DAY_FULL.map((d, i) => <option key={i} value={i}>{d}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <select className="form-input" value={s.userId} onChange={e => updateTemplateShift(idx, "userId", parseInt(e.target.value))} style={{ minWidth: 120 }}>
+                            <option value={0}>Select</option>
+                            {team.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <input type="time" className="form-input" value={s.startTime} onChange={e => updateTemplateShift(idx, "startTime", e.target.value)} style={{ width: 100 }} />
+                        </td>
+                        <td>
+                          <input type="time" className="form-input" value={s.endTime} onChange={e => updateTemplateShift(idx, "endTime", e.target.value)} style={{ width: 100 }} />
+                        </td>
+                        <td>
+                          <select className="form-input" value={s.position} onChange={e => updateTemplateShift(idx, "position", e.target.value)} style={{ minWidth: 100 }}>
+                            {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <button onClick={() => removeTemplateShift(idx)} className="btn-icon" style={{ color: "#DC2626" }}><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Quick actions */}
+          <div className="card" style={{ padding: "12px 16px" }}>
+            <div className="flex items-center justify-between" style={{ flexWrap: "wrap", gap: 8 }}>
+              <p className="text-sm text-gray">Apply this template to the current week from the Schedule tab, or use &quot;Copy Week&quot; to duplicate an existing week.</p>
+              <button className="btn btn-primary btn-sm" onClick={() => { setActiveTab("schedule"); setShowApplyTemplate(true); }}>
+                <LayoutTemplate size={14} /> Go Apply to Current Week
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

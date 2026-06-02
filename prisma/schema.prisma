@@ -62,6 +62,7 @@ model User {
   availabilityBlocks  AvailabilityBlock[]
   timeOffRequests     TimeOffRequest[]
   timeOffReviewed     TimeOffRequest[]    @relation("TimeOffReviewer")
+  templateShifts      TemplateShift[]
 
   @@map("users")
 }
@@ -769,4 +770,31 @@ model TimeOffRequest {
   reviewer User? @relation("TimeOffReviewer", fields: [reviewedBy], references: [id])
 
   @@map("time_off_requests")
+}
+
+model ScheduleTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String   @default("Default Schedule")
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  shifts TemplateShift[]
+
+  @@map("schedule_templates")
+}
+
+model TemplateShift {
+  id         Int    @id @default(autoincrement())
+  dayOfWeek  Int    @map("day_of_week")    // 0=Sun, 1=Mon...6=Sat
+  startTime  String @map("start_time")
+  endTime    String @map("end_time")
+  position   String @default("GENERAL")
+  userId     Int    @map("user_id")
+
+  user     User             @relation(fields: [userId], references: [id])
+  template ScheduleTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId Int            @map("template_id")
+
+  @@map("template_shifts")
 }

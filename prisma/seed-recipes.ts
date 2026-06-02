@@ -145,6 +145,7 @@ async function main() {
         sortOrder: recipe.sortOrder,
       },
       create: {
+        tenantId: 1,
         name: recipe.name,
         category: recipe.category,
         description: recipe.description,

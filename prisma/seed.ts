@@ -11,6 +11,7 @@ async function main() {
       where: { name: "US Foods" },
       update: {},
       create: {
+        tenantId: 1,
         name: "US Foods",
         role: "Primary broadline vendor",
         mainUse: "Donut ingredients, dairy, drink items, sandwich ingredients, supplies",
@@ -22,6 +23,7 @@ async function main() {
       where: { name: "Senn Brothers" },
       update: {},
       create: {
+        tenantId: 1,
         name: "Senn Brothers",
         role: "Produce vendor",
         mainUse: "Lemons, strawberries, blueberries, jalapenos, other produce",
@@ -33,6 +35,7 @@ async function main() {
       where: { name: "GFI" },
       update: {},
       create: {
+        tenantId: 1,
         name: "GFI",
         role: "Specialty ingredient vendor",
         mainUse: "Dark chocolate, cocoa powder, chocolate curls, specialty flavor items",
@@ -44,6 +47,7 @@ async function main() {
       where: { name: "Amazon" },
       update: {},
       create: {
+        tenantId: 1,
         name: "Amazon",
         role: "Smallwares/supplies vendor",
         mainUse: "Sprinkles, gloves, piping bags, labels, Cafiza",
@@ -55,6 +59,7 @@ async function main() {
       where: { name: "Aldi" },
       update: {},
       create: {
+        tenantId: 1,
         name: "Aldi",
         role: "Supplemental grocery vendor",
         mainUse: "Sourdough, almond milk, and supplemental grocery items",
@@ -96,7 +101,7 @@ async function main() {
         data: item,
       });
     }
-    return prisma.inventoryItem.create({ data: item });
+    return prisma.inventoryItem.create({ data: { ...item, tenantId: 1 } });
   }
 
   // ─── US Foods Items ───────────────────────────────────────────

@@ -15,7 +15,117 @@ enum Role {
   OWNER
 }
 
+// ─── Platform: Multi-Tenancy ─────────────────────────────────
+
+model Tenant {
+  id              Int       @id @default(autoincrement())
+  name            String
+  slug            String    @unique                    // e.g. "duffersdonutshop"
+  domain          String?   @unique                    // Custom domain e.g. "ops.duffersdonutshop.com"
+  businessType    String    @default("DONUT_SHOP")     // DONUT_SHOP, BAKERY, CAFE, RESTAURANT, BAR, FOOD_TRUCK
+  plan            String    @default("STARTER")        // FREE, STARTER, PROFESSIONAL, ENTERPRISE
+  stripeCustomerId String?  @map("stripe_customer_id")
+  active          Boolean   @default(true)
+  logoUrl         String?   @map("logo_url")
+  primaryColor    String?   @map("primary_color") @default("#1A56DB")
+  settings        Json?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  members         TenantUser[]
+  subscription    TenantSubscription?
+  employeeCategories    EmployeeCategory[]
+  productCategories     ProductCategory[]
+  products              Product[]
+  productIngredients    ProductIngredient[]
+  transactions          Transaction[]
+  transactionLines      TransactionLine[]
+  drinkLogs             DrinkLog[]
+  donutLogs             DonutLog[]
+  vendors               Vendor[]
+  inventoryItems        InventoryItem[]
+  inventoryOrders       InventoryOrder[]
+  inventoryOrderLines   InventoryOrderLine[]
+  inventoryCounts       InventoryCount[]
+  inventoryCountLines   InventoryCountLine[]
+  inventorySections     InventorySection[]
+  orderRequests         OrderRequest[]
+  holidaySchedules      HolidaySchedule[]
+  weatherCache          WeatherCache[]
+  parSheets             ParSheet[]
+  parSheetLines         ParSheetLine[]
+  predictionModels      PredictionModel[]
+  overboardSchedules    OverboardSchedule[]
+  overboardLines        OverboardLine[]
+  cleaningTasks         CleaningTask[]
+  cleaningLogs          CleaningLog[]
+  maintenanceLogs       MaintenanceLog[]
+  employeeHours         EmployeeHour[]
+  sops                  Sop[]
+  dashboardLayouts      DashboardLayout[]
+  espressoDialLogs      EspressoDialLog[]
+  recipeCategories      RecipeCategory[]
+  recipes               Recipe[]
+  productionTargetOverrides ProductionTargetOverride[]
+  batchCompletions      BatchCompletion[]
+  trayOverrides         TrayOverride[]
+  prepItems             PrepItem[]
+  notifications         Notification[]
+  notificationReads     NotificationRead[]
+  notificationRecipients NotificationRecipient[]
+  shifts                Shift[]
+  availabilityBlocks    AvailabilityBlock[]
+  timeOffRequests       TimeOffRequest[]
+  scheduleTemplates     ScheduleTemplate[]
+  templateShifts        TemplateShift[]
+  moduleConfigs         ModuleConfig[]
+  greenCoffees          GreenCoffee[]
+  roastProfiles         RoastProfile[]
+  roastLogs             RoastLog[]
+  menuTasks             MenuTask[]
+  socialPosts           SocialPost[]
+
+  @@map("tenants")
+}
+
+model TenantUser {
+  id          Int       @id @default(autoincrement())
+  tenantId    Int       @map("tenant_id")
+  userId      Int       @map("user_id")
+  role        Role      @default(EMPLOYEE)
+  invitedBy   Int?      @map("invited_by")
+  acceptedAt  DateTime? @map("accepted_at")
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  inviter     User?     @relation("TenantInviter", fields: [invitedBy], references: [id])
+
+  @@unique([tenantId, userId])
+  @@map("tenant_users")
+}
+
+model TenantSubscription {
+  id                  Int      @id @default(autoincrement())
+  tenantId            Int      @unique @map("tenant_id")
+  stripeSubscriptionId String  @map("stripe_subscription_id")
+  stripePriceId       String   @map("stripe_price_id")
+  status              String   @default("active")    // active, past_due, canceled, trialing
+  currentPeriodStart  DateTime @map("current_period_start")
+  currentPeriodEnd    DateTime @map("current_period_end")
+  cancelAtPeriodEnd   Boolean  @default(false) @map("cancel_at_period_end")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("tenant_subscriptions")
+}
+
 model EmployeeCategory {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   name      String   @unique
   color     String   @default("#6B7280")
@@ -67,6 +177,8 @@ model User {
   menuTaskAssignments MenuTask[]         @relation("MenuTaskAssignee")
   socialPostsCreated  SocialPost[]       @relation("SocialPostCreator")
   socialPostsApproved SocialPost[]       @relation("SocialPostApprover")
+  tenantMemberships   TenantUser[]
+  tenantInvites       TenantUser[]       @relation("TenantInviter")
 
   @@map("users")
 }
@@ -74,6 +186,8 @@ model User {
 // ─── Products ────────────────────────────────────────────────
 
 model ProductCategory {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int              @id @default(autoincrement())
   name      String
   type      ProductType
@@ -98,6 +212,8 @@ enum FohBoh {
 }
 
 model Product {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int              @id @default(autoincrement())
   name        String
   categoryId  Int              @map("category_id")
@@ -117,6 +233,8 @@ model Product {
 }
 
 model ProductIngredient {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id              Int           @id @default(autoincrement())
   productId       Int           @map("product_id")
   inventoryItemId Int           @map("inventory_item_id")
@@ -131,6 +249,8 @@ model ProductIngredient {
 // ─── Sales & Logging ────────────────────────────────────────
 
 model Transaction {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id            Int              @id @default(autoincrement())
   userId        Int              @map("user_id")
   totalAmount   Float            @map("total_amount") @default(0)
@@ -151,6 +271,8 @@ enum PaymentMethod {
 }
 
 model TransactionLine {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id            Int        @id @default(autoincrement())
   transactionId Int        @map("transaction_id")
   productId     Int?       @map("product_id")
@@ -166,6 +288,8 @@ model TransactionLine {
 }
 
 model DrinkLog {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int        @id @default(autoincrement())
   userId         Int        @map("user_id")
   drinkType      String     @map("drink_type")
@@ -183,6 +307,8 @@ model DrinkLog {
 }
 
 model DonutLog {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   productId Int?     @map("product_id")
@@ -207,6 +333,8 @@ enum ShiftPeriod {
 // ─── Vendors ─────────────────────────────────────────────────
 
 model Vendor {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int      @id @default(autoincrement())
   name           String   @unique
   role           String?  // e.g. "Primary broadline vendor"
@@ -225,6 +353,8 @@ model Vendor {
 // ─── Inventory ──────────────────────────────────────────────
 
 model InventoryItem {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id               Int       @id @default(autoincrement())
   name             String
   category         FohBoh
@@ -255,6 +385,8 @@ model InventoryItem {
 }
 
 model InventoryOrder {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int              @id @default(autoincrement())
   status     OrderStatus      @default(DRAFT)
   createdBy  Int              @map("created_by")
@@ -276,6 +408,8 @@ enum OrderStatus {
 }
 
 model InventoryOrderLine {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id              Int           @id @default(autoincrement())
   orderId         Int           @map("order_id")
   inventoryItemId Int           @map("inventory_item_id")
@@ -292,6 +426,8 @@ model InventoryOrderLine {
 // ─── Weekly Inventory Counts ─────────────────────────────────
 
 model InventoryCount {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int                  @id @default(autoincrement())
   date       DateTime
   countedBy  Int                  @map("counted_by")
@@ -306,6 +442,8 @@ model InventoryCount {
 }
 
 model InventoryCountLine {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id              Int           @id @default(autoincrement())
   countId         Int           @map("count_id")
   inventoryItemId Int           @map("inventory_item_id")
@@ -324,6 +462,8 @@ model InventoryCountLine {
 // ─── Inventory Sections (DB-driven, replaces enum) ──────────────
 
 model InventorySection {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int              @id @default(autoincrement())
   name      String           // Display name: "Kitchen — Regular Orders"
   slug      String           @unique  // Internal key: "kitchen_regular"
@@ -344,6 +484,8 @@ enum OrderRequestStatus {
 }
 
 model OrderRequest {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int               @id @default(autoincrement())
   inventoryItemId Int?             @map("inventory_item_id")
   qtyRequested   Float             @map("qty_requested") @default(0)
@@ -370,6 +512,8 @@ model OrderRequest {
 // ─── Prediction & Par ───────────────────────────────────────
 
 model HolidaySchedule {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id           Int          @id @default(autoincrement())
   date         DateTime
   name         String
@@ -386,6 +530,8 @@ enum ImpactLevel {
 }
 
 model WeatherCache {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id           Int      @id @default(autoincrement())
   date         DateTime @unique
   tempHigh     Float     @map("temp_high") @default(0)
@@ -398,6 +544,8 @@ model WeatherCache {
 }
 
 model ParSheet {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int      @id @default(autoincrement())
   date        DateTime @unique
   generatedBy Int?     @map("generated_by")
@@ -408,6 +556,8 @@ model ParSheet {
 }
 
 model ParSheetLine {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int      @id @default(autoincrement())
   parSheetId Int      @map("par_sheet_id")
   productId  Int      @map("product_id")
@@ -424,6 +574,8 @@ model ParSheetLine {
 }
 
 model PredictionModel {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id            Int    @id @default(autoincrement())
   productId     Int    @map("product_id")
   dayOfWeek     Int    @map("day_of_week")
@@ -437,6 +589,8 @@ model PredictionModel {
 // ─── Operations ─────────────────────────────────────────────
 
 model OverboardSchedule {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id     Int              @id @default(autoincrement())
   date   DateTime
   status OverboardStatus  @default(SCHEDULED)
@@ -455,6 +609,8 @@ enum OverboardStatus {
 }
 
 model OverboardLine {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int     @id @default(autoincrement())
   overboardId    Int     @map("overboard_id")
   productId      Int     @map("product_id")
@@ -473,6 +629,8 @@ model OverboardLine {
 }
 
 model CleaningTask {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int           @id @default(autoincrement())
   title       String
   description String?
@@ -492,6 +650,8 @@ enum TaskFrequency {
 }
 
 model CleaningLog {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int       @id @default(autoincrement())
   taskId      Int       @map("task_id")
   completedBy Int       @map("completed_by")
@@ -505,6 +665,8 @@ model CleaningLog {
 }
 
 model MaintenanceLog {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int      @id @default(autoincrement())
   equipment  String
   issue      String
@@ -522,6 +684,8 @@ model MaintenanceLog {
 }
 
 model EmployeeHour {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
   clockIn   DateTime  @map("clock_in")
@@ -548,6 +712,8 @@ enum SopCategory {
 }
 
 model Sop {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int         @id @default(autoincrement())
   title       String
   category    SopCategory
@@ -566,6 +732,8 @@ model Sop {
   @@map("sops")
 }
 model DashboardLayout {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id       Int    @id @default(autoincrement())
   userId   Int    @unique @map("user_id")
   layout   String @db.MediumText
@@ -577,6 +745,8 @@ model DashboardLayout {
 }
 
 model EspressoDialLog {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id                Int      @id @default(autoincrement())
   userId            Int      @map("user_id")
   date              DateTime @default(now())
@@ -606,6 +776,8 @@ model EspressoDialLog {
 // ─── Recipes ────────────────────────────────────────────────────
 
 model RecipeCategory {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   name      String
   slug      String   @unique
@@ -619,6 +791,8 @@ model RecipeCategory {
 }
 
 model Recipe {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int      @id @default(autoincrement())
   name        String
   category    String   @default("general")
@@ -638,6 +812,8 @@ model Recipe {
 }
 
 model ProductionTargetOverride {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   date      DateTime @unique
   target    Int
@@ -647,6 +823,8 @@ model ProductionTargetOverride {
 }
 
 model BatchCompletion {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int      @id @default(autoincrement())
   date       DateTime
   batchIndex Int      @map("batch_index")
@@ -661,6 +839,8 @@ model BatchCompletion {
 }
 
 model TrayOverride {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int      @id @default(autoincrement())
   date       DateTime
   flavor    String    // Flavor name: "M&M", "Vanilla", etc.
@@ -672,6 +852,8 @@ model TrayOverride {
 }
 
 model PrepItem {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int      @id @default(autoincrement())
   name           String
   category       String
@@ -687,6 +869,8 @@ model PrepItem {
 // ─── Notifications ────────────────────────────────────────────
 
 model Notification {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int      @id @default(autoincrement())
   title      String
   message    String
@@ -702,6 +886,8 @@ model Notification {
 }
 
 model NotificationRead {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int      @id @default(autoincrement())
   notificationId Int      @map("notification_id")
   userId         Int      @map("user_id")
@@ -715,6 +901,8 @@ model NotificationRead {
 }
 
 model NotificationRecipient {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int      @id @default(autoincrement())
   notificationId Int      @map("notification_id")
   userId         Int      @map("user_id")
@@ -729,6 +917,8 @@ model NotificationRecipient {
 // ─── Employee Scheduling ────────────────────────────────────────
 
 model Shift {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   date      DateTime
   startTime String   @map("start_time")   // "06:00"
@@ -746,6 +936,8 @@ model Shift {
 }
 
 model AvailabilityBlock {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   dayOfWeek Int      @map("day_of_week")   // 0=Sun, 1=Mon, ... 6=Sat. -1 = all days
   startTime String?  @map("start_time")    // null = all day blocked
@@ -760,6 +952,8 @@ model AvailabilityBlock {
 }
 
 model TimeOffRequest {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   startDate DateTime @map("start_date")
   endDate   DateTime @map("end_date")
@@ -778,6 +972,8 @@ model TimeOffRequest {
 }
 
 model ScheduleTemplate {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   name      String   @default("Default Schedule")
   isDefault Boolean  @default(false) @map("is_default")
@@ -790,6 +986,8 @@ model ScheduleTemplate {
 }
 
 model TemplateShift {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id         Int    @id @default(autoincrement())
   dayOfWeek  Int    @map("day_of_week")    // 0=Sun, 1=Mon...6=Sat
   startTime  String @map("start_time")
@@ -807,6 +1005,8 @@ model TemplateShift {
 // ─── Module Configuration ────────────────────────────────────
 
 model ModuleConfig {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int     @id @default(autoincrement())
   moduleKey   String  @unique @map("module_key")   // e.g. "roasting", "schedule", "inventory"
   name        String  // Display name, e.g. "Coffee Roasting"
@@ -822,6 +1022,8 @@ model ModuleConfig {
 // ─── Coffee Roasting ─────────────────────────────────────────
 
 model GreenCoffee {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id            Int     @id @default(autoincrement())
   name          String
   origin        String?   // Country / region
@@ -847,6 +1049,8 @@ model GreenCoffee {
 }
 
 model RoastProfile {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id              Int     @id @default(autoincrement())
   name            String
   greenCoffeeId   Int     @map("green_coffee_id")
@@ -869,6 +1073,8 @@ model RoastProfile {
 }
 
 model RoastLog {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id              Int     @id @default(autoincrement())
   date            DateTime
   greenCoffeeId   Int     @map("green_coffee_id")
@@ -896,6 +1102,8 @@ model RoastLog {
 // ─── Menu Planning Tasks ────────────────────────────────────
 
 model MenuTask {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int      @id @default(autoincrement())
   scheduleId Int      @map("schedule_id")     // Links to OverboardSchedule (menu plan)
   title      String
@@ -914,6 +1122,8 @@ model MenuTask {
 // ─── Social Media Planner ──────────────────────────────────
 
 model SocialPost {
+  tenantId Int @default(1) @map("tenant_id")
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
   id            Int      @id @default(autoincrement())
   title         String
   description   String?                    // Caption / copy

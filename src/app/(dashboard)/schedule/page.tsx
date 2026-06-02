@@ -83,6 +83,7 @@ export default function SchedulePage() {
 
   // Shift form
   const [showShiftForm, setShowShiftForm] = useState(false);
+  const [editingShift, setEditingShift] = useState<ShiftItem | null>(null);
   const [shiftForm, setShiftForm] = useState({ userId: 0, date: "", startTime: "06:00", endTime: "14:00", position: "GENERAL", notes: "" });
   const [saving, setSaving] = useState(false);
 
@@ -189,6 +190,25 @@ export default function SchedulePage() {
   };
 
   // ─── Shift CRUD ──────────────────────────────────────────
+  const openEditShift = (s: ShiftItem) => {
+    setEditingShift(s);
+    setShiftForm({
+      userId: s.userId,
+      date: fmtDate(new Date(s.date)),
+      startTime: s.startTime,
+      endTime: s.endTime,
+      position: s.position,
+      notes: s.notes || "",
+    });
+    setShowShiftForm(true);
+  };
+
+  const openAddShift = () => {
+    setEditingShift(null);
+    setShiftForm({ userId: team[0]?.id || 0, date: fmtDate(weekStart), startTime: "06:00", endTime: "14:00", position: "GENERAL", notes: "" });
+    setShowShiftForm(true);
+  };
+
   const saveShift = async () => {
     if (!shiftForm.userId || !shiftForm.date || !shiftForm.startTime || !shiftForm.endTime) {
       toast.error("Fill in all required fields"); return;
@@ -196,11 +216,11 @@ export default function SchedulePage() {
     setSaving(true);
     try {
       const r = await fetch("/api/shifts", {
-        method: "POST",
+        method: editingShift ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...shiftForm, published: true }),
+        body: JSON.stringify({ ...shiftForm, ...(editingShift ? { id: editingShift.id } : { published: true }) }),
       });
-      if (r.ok) { toast.success("Shift created"); setShowShiftForm(false); loadData(); }
+      if (r.ok) { toast.success(editingShift ? "Shift updated" : "Shift created"); setShowShiftForm(false); setEditingShift(null); loadData(); }
       else { const d = await r.json(); toast.error(d.error || "Failed"); }
     } catch { toast.error("Error"); }
     setSaving(false);
@@ -401,10 +421,7 @@ export default function SchedulePage() {
               {isManager && (
                 <div className="flex items-center gap-2" style={{ flexWrap: "wrap" }}>
                   {unpublishedCount > 0 && <span className="badge badge-orange">{unpublishedCount} draft</span>}
-                  <button className="btn btn-primary btn-sm" onClick={() => {
-                    setShiftForm({ userId: team[0]?.id || 0, date: fmtDate(weekStart), startTime: "06:00", endTime: "14:00", position: "GENERAL", notes: "" });
-                    setShowShiftForm(true);
-                  }}><Plus size={14} /> Add Shift</button>
+                  <button className="btn btn-primary btn-sm" onClick={openAddShift}><Plus size={14} /> Add Shift</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => setShowCopyWeek(true)}><Copy size={14} /> Copy Week</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => setShowApplyTemplate(true)}><LayoutTemplate size={14} /> Apply Template</button>
                   {unpublishedCount > 0 && (
@@ -454,7 +471,7 @@ export default function SchedulePage() {
           {/* Add shift form */}
           {showShiftForm && isManager && (
             <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Add Shift</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingShift ? "Edit Shift" : "Add Shift"}</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div>
                   <label className="form-label">Employee *</label>
@@ -495,7 +512,7 @@ export default function SchedulePage() {
               )}
               <div className="flex gap-2" style={{ justifyContent: "flex-end" }}>
                 <button className="btn btn-secondary btn-sm" onClick={() => setShowShiftForm(false)}>Cancel</button>
-                <button className="btn btn-primary btn-sm" onClick={saveShift} disabled={saving}>{saving ? "Saving..." : "Create Shift"}</button>
+                <button className="btn btn-primary btn-sm" onClick={saveShift} disabled={saving}>{saving ? "Saving..." : (editingShift ? "Update Shift" : "Create Shift")}</button>
               </div>
             </div>
           )}
@@ -530,9 +547,14 @@ export default function SchedulePage() {
                             {s.position !== "GENERAL" && <div className="text-xs" style={{ color: "#9CA3AF" }}>{s.position}</div>}
                             {!s.published && <div className="text-xs" style={{ color: "#D97706" }}>Draft</div>}
                             {isManager && (
-                              <button onClick={() => deleteShift(s.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", padding: 0, marginTop: 2 }}>
-                                <Trash2 size={10} />
-                              </button>
+                              <div className="flex gap-1" style={{ marginTop: 2 }}>
+                                <button onClick={() => openEditShift(s)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", padding: 0 }}>
+                                  <Pencil size={10} />
+                                </button>
+                                <button onClick={() => deleteShift(s.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", padding: 0 }}>
+                                  <Trash2 size={10} />
+                                </button>
+                              </div>
                             )}
                           </div>
                         );

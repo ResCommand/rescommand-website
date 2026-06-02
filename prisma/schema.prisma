@@ -63,6 +63,7 @@ model User {
   timeOffRequests     TimeOffRequest[]
   timeOffReviewed     TimeOffRequest[]    @relation("TimeOffReviewer")
   templateShifts      TemplateShift[]
+  roastLogs           RoastLog[]         @relation("RoastPerformer")
 
   @@map("users")
 }
@@ -797,4 +798,93 @@ model TemplateShift {
   templateId Int            @map("template_id")
 
   @@map("template_shifts")
+}
+
+// ─── Module Configuration ────────────────────────────────────
+
+model ModuleConfig {
+  id          Int     @id @default(autoincrement())
+  moduleKey   String  @unique @map("module_key")   // e.g. "roasting", "schedule", "inventory"
+  name        String  // Display name, e.g. "Coffee Roasting"
+  description String? // Short help text
+  enabled     Boolean @default(false)
+  icon        String  @default("")                  // Emoji or lucide icon name
+  sortOrder   Int     @default(0) @map("sort_order")
+  group       String  @default("operations")       // "operations" | "management" | "coffee"
+
+  @@map("module_configs")
+}
+
+// ─── Coffee Roasting ─────────────────────────────────────────
+
+model GreenCoffee {
+  id            Int     @id @default(autoincrement())
+  name          String
+  origin        String?   // Country / region
+  farm          String?
+  process       String?   // Washed, Natural, Honey, etc.
+  variety       String?   // Typica, Bourbon, Gesha, etc.
+  elevation     String?
+  grade         String?
+  density       String?
+  moisture      Float?    // Percentage
+  bagWeightKg   Float     @default(60) @map("bag_weight_kg")
+  stockKg       Float     @default(0) @map("stock_kg")      // Current on-hand
+  costPerKg     Float?    @map("cost_per_kg")
+  notes         String?
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  roastLogs    RoastLog[]
+  roastProfiles RoastProfile[]
+
+  @@map("green_coffees")
+}
+
+model RoastProfile {
+  id              Int     @id @default(autoincrement())
+  name            String
+  greenCoffeeId   Int     @map("green_coffee_id")
+  targetWeightKg  Float   @map("target_weight_kg")     // Batch size
+  chargeTemp      Float?  @map("charge_temp")          // Starting drum temp (°F or °C)
+  turnAroundPoint Float?  @map("turn_around_point")    // When beans hit target temp
+  firstCrack      Float?  @map("first_crack")          // Time mark (seconds or string)
+  developmentTime Float?  @map("development_time")     // Post-first-crack seconds
+  dropTemp        Float?  @map("drop_temp")            // Final bean temp
+  totalDuration   Float?  @map("total_duration")       // Total roast seconds
+  roastLevel      String  @default("MEDIUM") @map("roast_level")  // LIGHT / MEDIUM / MEDIUM_DARK / DARK
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  greenCoffee GreenCoffee @relation(fields: [greenCoffeeId], references: [id])
+  roastLogs   RoastLog[]
+
+  @@map("roast_profiles")
+}
+
+model RoastLog {
+  id              Int     @id @default(autoincrement())
+  date            DateTime
+  greenCoffeeId   Int     @map("green_coffee_id")
+  profileId       Int?    @map("profile_id")
+  greenWeightKg   Float   @map("green_weight_kg")      // Input weight
+  roastedWeightKg Float   @map("roasted_weight_kg")    // Output weight
+  roastLevel      String  @default("MEDIUM") @map("roast_level")
+  chargeTemp      Float?  @map("charge_temp")
+  firstCrackTime  Float?  @map("first_crack_time")
+  dropTemp        Float?  @map("drop_temp")
+  totalDuration   Float?  @map("total_duration")       // Seconds
+  notes           String?
+  lossPercent     Float?  @map("loss_percent")         // Auto-calculated
+  batchNumber     String? @map("batch_number")
+  performedBy     Int?    @map("performed_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  greenCoffee  GreenCoffee   @relation(fields: [greenCoffeeId], references: [id])
+  profile      RoastProfile? @relation(fields: [profileId], references: [id])
+  performer    User?         @relation("RoastPerformer", fields: [performedBy], references: [id])
+
+  @@map("roast_logs")
 }

@@ -5,24 +5,26 @@ import { useState, useEffect, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
   Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
-  ShoppingCart, ChefHat, Bell, CalendarClock,
+  ShoppingCart, ChefHat, Bell, CalendarClock, Settings, Thermometer,
 } from "lucide-react";
 
 const allNav = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/espresso-dial", icon: Coffee, label: "Espresso Dial", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/owner", icon: DollarSign, label: "Financials", roles: ["OWNER"] },
-  { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER"] },
-  { href: "/inventory/order-requests", icon: ShoppingCart, label: "Order Requests", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/recipes", icon: ChefHat, label: "Recipes", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"] },
-  { href: "/schedule", icon: CalendarClock, label: "Schedule", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER"] },
-  { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"] },
-  { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"] },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "dashboard" },
+  { href: "/espresso-dial", icon: Coffee, label: "Espresso Dial", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "espresso" },
+  { href: "/owner", icon: DollarSign, label: "Financials", roles: ["OWNER"], moduleKey: "owner" },
+  { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER"], moduleKey: "inventory" },
+  { href: "/inventory/order-requests", icon: ShoppingCart, label: "Order Requests", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "inventory" },
+  { href: "/recipes", icon: ChefHat, label: "Recipes", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "recipes" },
+  { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"], moduleKey: "production" },
+  { href: "/schedule", icon: CalendarClock, label: "Schedule", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "schedule" },
+  { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "overboards" },
+  { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "sops" },
+  { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "operations" },
+  { href: "/roasting", icon: Thermometer, label: "Roasting", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "roasting" },
+  { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "notifications" },
+  { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"], moduleKey: "team" },
+  { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"], moduleKey: "operations" },
+  { href: "/settings", icon: Settings, label: "Settings", roles: ["OWNER"], moduleKey: "settings" },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -30,9 +32,33 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [enabledModules, setEnabledModules] = useState<Set<string>>(new Set());
 
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const nav = allNav.filter(n => n.roles.includes(role));
+
+  // Fetch enabled modules on mount
+  useEffect(() => {
+    fetch("/api/module-config")
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setEnabledModules(new Set(data.filter((c: { enabled: boolean; moduleKey: string }) => c.enabled).map((c: { moduleKey: string }) => c.moduleKey)));
+        }
+      })
+      .catch(() => {
+        // If fetch fails, show all modules
+        setEnabledModules(new Set(allNav.map(n => n.moduleKey)));
+      });
+  }, []);
+
+  // Filter by role AND enabled modules
+  const nav = allNav.filter(n => {
+    if (!n.roles.includes(role)) return false;
+    // Always show items that don't have a moduleKey or whose module is enabled
+    if (!n.moduleKey) return true;
+    return enabledModules.has(n.moduleKey);
+  });
+
   const initials = session?.user?.name?.split(" ").map(w => w[0]).join("") || "?";
 
   return (

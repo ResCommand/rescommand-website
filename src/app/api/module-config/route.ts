@@ -19,7 +19,7 @@ export async function GET() {
       { moduleKey: "recipes", name: "Recipes", description: "Recipe management with categories and costing", icon: "📋", sortOrder: 3, group: "operations", enabled: true },
       { moduleKey: "sops", name: "SOPs", description: "Standard operating procedures with rich text & PDFs", icon: "📖", sortOrder: 4, group: "operations", enabled: true },
       { moduleKey: "schedule", name: "Schedule", description: "Employee scheduling, availability, time-off requests", icon: "📅", sortOrder: 5, group: "management", enabled: true },
-      { moduleKey: "team", name: "Team", description: "Employee management, roles, categories", icon: "👥", sortOrder: 6, group: "management", enabled: true },
+      { moduleKey: "team", name: "Admin", description: "Team management, permissions, feature toggles", icon: "👥", sortOrder: 6, group: "management", enabled: true },
       { moduleKey: "notifications", name: "Notifications", description: "Send and receive notifications", icon: "🔔", sortOrder: 7, group: "management", enabled: true },
       { moduleKey: "overboards", name: "Menu Planning", description: "Plan menus, track tasks, and manage seasonal items", icon: "🍽️", sortOrder: 8, group: "operations", enabled: true },
       { moduleKey: "espresso", name: "Espresso Dialing", description: "Espresso shot dial-in tracking", icon: "☕", sortOrder: 9, group: "coffee", enabled: false },

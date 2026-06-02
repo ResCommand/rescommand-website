@@ -24,9 +24,9 @@ const allNav = [
   { href: "/roasting", icon: Thermometer, label: "Roasting", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "roasting" },
   { href: "/social", icon: Megaphone, label: "Social Media", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "social" },
   { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "notifications" },
-  { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"], moduleKey: "team" },
+  { href: "/admin/users", icon: Users, label: "Admin", roles: ["MANAGER", "OWNER"], moduleKey: "settings" },
   { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"], moduleKey: "operations" },
-  { href: "/settings", icon: Settings, label: "Settings", roles: ["OWNER"], moduleKey: "settings" },
+  
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {

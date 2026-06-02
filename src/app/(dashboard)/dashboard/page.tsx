@@ -24,7 +24,7 @@ const fmt = (n: number | string | undefined | null) => n != null ? "$" + Number(
 // All possible metrics with role visibility defaults
 const ALL_METRICS = [
   { id: "donutsSold", label: "Donuts Sold", icon: "🍩", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.donutsSold },
-  { id: "overboard", label: "Overboard", icon: "📋", color: "stat-icon-red", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboard },
+  { id: "overboard", label: "Menu Plans", icon: "📋", color: "stat-icon-red", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboard },
   { id: "dozens", label: "Dozens", icon: "📦", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.dozens },
   { id: "halfDozens", label: "Half Dozens", icon: "📦", color: "stat-icon-purple", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.halfDozens },
   { id: "drinksSold", label: "Drinks", icon: "☕", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.drinksSold },
@@ -34,8 +34,8 @@ const ALL_METRICS = [
   { id: "todaySales", label: "Today's Sales", icon: "💰", color: "stat-icon-green", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => fmt(k.todaySales) },
   { id: "ticketCount", label: "Tickets", icon: "🧾", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.ticketCount },
   { id: "avgTicket", label: "Avg Ticket", icon: "📊", color: "stat-icon-purple", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => fmt(k.avgTicket) },
-  { id: "overboardsSold", label: "Overboards Sold", icon: "🛒", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboardsSold },
-  { id: "overboardRevenue", label: "Overboard Revenue", icon: "💵", color: "stat-icon-green", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.overboardRevenue) },
+  { id: "overboardsSold", label: "Menu Plans Sold", icon: "🛒", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboardsSold },
+  { id: "overboardRevenue", label: "Menu Plan Revenue", icon: "💵", color: "stat-icon-green", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.overboardRevenue) },
   { id: "upchargesSold", label: "Upcharges Sold", icon: "⬆️", color: "stat-icon-blue", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.overboardUpcharges },
   { id: "upchargeRevenue", label: "Upcharge Revenue", icon: "💲", color: "stat-icon-purple", roles: ["OWNER"], getValue: (k: KPIs) => fmt(k.upchargeRevenue) },
   { id: "laborCostPercent", label: "Labor Cost % (Today)", icon: "👷", color: "stat-icon-orange", roles: ["MANAGER", "OWNER"], getValue: (k: KPIs) => k.laborCostPercent != null ? `${k.laborCostPercent}%` : "—" },

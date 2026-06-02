@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
   Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
   ShoppingCart, ChefHat, Bell, CalendarClock, Settings, Thermometer,
+  Megaphone,
 } from "lucide-react";
 
 const allNav = [
@@ -17,10 +18,11 @@ const allNav = [
   { href: "/recipes", icon: ChefHat, label: "Recipes", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "recipes" },
   { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER"], moduleKey: "production" },
   { href: "/schedule", icon: CalendarClock, label: "Schedule", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "schedule" },
-  { href: "/overboards", icon: Calendar, label: "Overboards", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "overboards" },
+  { href: "/overboards", icon: Calendar, label: "Menu Planning", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "overboards" },
   { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "sops" },
   { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "operations" },
   { href: "/roasting", icon: Thermometer, label: "Roasting", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "roasting" },
+  { href: "/social", icon: Megaphone, label: "Social Media", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "social" },
   { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "notifications" },
   { href: "/admin/users", icon: Users, label: "Team", roles: ["MANAGER", "OWNER"], moduleKey: "team" },
   { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"], moduleKey: "operations" },

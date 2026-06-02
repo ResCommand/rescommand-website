@@ -21,9 +21,10 @@ export async function GET() {
       { moduleKey: "schedule", name: "Schedule", description: "Employee scheduling, availability, time-off requests", icon: "📅", sortOrder: 5, group: "management", enabled: true },
       { moduleKey: "team", name: "Team", description: "Employee management, roles, categories", icon: "👥", sortOrder: 6, group: "management", enabled: true },
       { moduleKey: "notifications", name: "Notifications", description: "Send and receive notifications", icon: "🔔", sortOrder: 7, group: "management", enabled: true },
-      { moduleKey: "overboards", name: "Overboards", description: "Track overboard waste", icon: "🗑️", sortOrder: 8, group: "operations", enabled: true },
+      { moduleKey: "overboards", name: "Menu Planning", description: "Plan menus, track tasks, and manage seasonal items", icon: "🍽️", sortOrder: 8, group: "operations", enabled: true },
       { moduleKey: "espresso", name: "Espresso Dialing", description: "Espresso shot dial-in tracking", icon: "☕", sortOrder: 9, group: "coffee", enabled: false },
       { moduleKey: "roasting", name: "Coffee Roasting", description: "Green coffee inventory, roast profiles, roast logs", icon: "🫘", sortOrder: 10, group: "coffee", enabled: false },
+      { moduleKey: "social", name: "Social Media Planner", description: "Plan, schedule, and share social media content with your team", icon: "📱", sortOrder: 10, group: "marketing", enabled: false },
       { moduleKey: "owner", name: "Owner Dashboard", description: "Financial overview and reports", icon: "💰", sortOrder: 11, group: "management", enabled: true },
     ];
     await prisma.moduleConfig.createMany({ data: defaults });

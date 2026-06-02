@@ -16,6 +16,7 @@ export async function GET() {
     where: { date: { gte: today, lte: future } },
     include: {
       lines: { include: { product: true } },
+      tasks: { include: { assignee: { select: { id: true, name: true } } }, orderBy: { sortOrder: "asc" } },
     },
     orderBy: { date: "asc" },
   });

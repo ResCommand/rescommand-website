@@ -87,7 +87,7 @@ export default async function OwnerPage() {
     { label: "Revenue", value: fmt(todayRevenue), sub: `${todayTicketCount} tickets` },
     { label: "Donuts Sold", value: String(todayDonutsSold), sub: "Today" },
     { label: "Drinks", value: String(todayDrinksCount), sub: "Today" },
-    { label: "Overboard Rev", value: fmt(todayOBRevenue), sub: fmt(todayOBUpcharges) + " upcharges" },
+    { label: "Menu Plan Rev", value: fmt(todayOBRevenue), sub: fmt(todayOBUpcharges) + " upcharges" },
   ];
 
   const mtdCards = [

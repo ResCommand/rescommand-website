@@ -91,16 +91,11 @@ async function main() {
   };
 
   async function upsertItem(item: ItemData) {
-    // Use name + vendorId as the natural key for upsert
+    // Only create if not exists — never overwrite user edits
     const existing = await prisma.inventoryItem.findFirst({
       where: { name: item.name, vendorId: item.vendorId },
     });
-    if (existing) {
-      return prisma.inventoryItem.update({
-        where: { id: existing.id },
-        data: item,
-      });
-    }
+    if (existing) return existing; // Skip — preserve user modifications
     return prisma.inventoryItem.create({ data: { ...item, tenantId: 1 } });
   }
 

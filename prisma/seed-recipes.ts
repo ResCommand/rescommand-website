@@ -196,31 +196,31 @@ async function main() {
     });
   }
 
+  // Only CREATE recipes that don't exist yet — never overwrite user edits
+  const existingNames = new Set(
+    (await prisma.recipe.findMany({ where: { tenantId: 1 }, select: { name: true } }))
+      .map(r => r.name)
+  );
+
+  let created = 0;
   for (const recipe of recipes) {
-    await prisma.recipe.upsert({
-      where: { id: recipes.indexOf(recipe) + 1 },
-      update: {
-        name: recipe.name,
-        category: recipe.category,
-        description: recipe.description,
-        ingredients: recipe.ingredients,
-        instructions: recipe.instructions,
-        yield: recipe.yield,
-        sortOrder: recipe.sortOrder,
-      },
-      create: {
-        tenantId: 1,
-        name: recipe.name,
-        category: recipe.category,
-        description: recipe.description,
-        ingredients: recipe.ingredients,
-        instructions: recipe.instructions,
-        yield: recipe.yield,
-        sortOrder: recipe.sortOrder,
-      },
-    });
+    if (!existingNames.has(recipe.name)) {
+      await prisma.recipe.create({
+        data: {
+          tenantId: 1,
+          name: recipe.name,
+          category: recipe.category,
+          description: recipe.description,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          yield: recipe.yield,
+          sortOrder: recipe.sortOrder,
+        },
+      });
+      created++;
+    }
   }
-  console.log(`Seeded ${recipes.length} recipes`);
+  console.log(`Recipes: ${existingNames.size} existing, ${created} new seeded`);
 }
 
 main()

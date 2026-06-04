@@ -90,7 +90,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <nav className={`sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebar-brand">
           <h2>{brandName}</h2>
-          <span>Operations</span>
+          <span className="sidebar-brand-sub">by {PLATFORM_NAME}</span>
         </div>
         <div className="sidebar-nav">
           {nav.map(n => {

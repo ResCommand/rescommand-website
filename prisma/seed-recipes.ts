@@ -129,9 +129,73 @@ const recipes = [
     yield: "Makes ~50 oz",
     sortOrder: 80,
   },
+  {
+    name: "Egg Squares",
+    category: "sandwiches",
+    description: "Batch egg squares for breakfast sandwiches. Oven Settings: Top Oven 3.5, Bottom Oven 4.5",
+    ingredients: [
+      { name: "Eggs", amount: "48", unit: "whole" },
+      { name: "Ricotta cheese", amount: "2", unit: "cups" },
+    ],
+    instructions: "1. Butter the sheet pan.\n2. Crack 48 eggs into a large pitcher or mixing container.\n3. Add 2 cups ricotta cheese.\n4. Blend with an immersion blender until fully combined.\n5. Pour mixture into prepared sheet pan.\n6. Bake for approximately 20 minutes.\n7. Rotate pan halfway through baking.\n8. Bake until eggs are fully set.\n9. Remove from oven and cool slightly.\n10. Cut into 24 equal squares.",
+    yield: "24 egg portions (one per sandwich)",
+    sortOrder: 10,
+  },
+  {
+    name: "Sausage Patties",
+    category: "sandwiches",
+    description: "Batch sausage patties for breakfast sandwiches.",
+    ingredients: [
+      { name: "Sausage patties (4 oz each)", amount: "24", unit: "each" },
+    ],
+    instructions: "1. Line a baking sheet with parchment paper.\n2. Place baking rack on top of sheet pan.\n3. Arrange 24 sausage patties evenly on rack.\n4. Bake until fully cooked and internal temperature reaches food-safe standards.\n5. Hold for sandwich assembly.",
+    yield: "24 sausage portions",
+    sortOrder: 20,
+  },
+  {
+    name: "Bacon",
+    category: "sandwiches",
+    description: "Batch bacon for breakfast sandwiches.",
+    ingredients: [
+      { name: "Bacon slices", amount: "24", unit: "slices" },
+    ],
+    instructions: "1. Line baking sheet with parchment paper.\n2. Place baking rack on baking sheet.\n3. Arrange 24 slices of bacon on rack.\n4. Bake for 15-20 minutes, or until desired crispness is reached.\n5. Remove and drain if needed.",
+    yield: "24 bacon portions",
+    sortOrder: 30,
+  },
+  {
+    name: "Breakfast Sandwich Assembly",
+    category: "sandwiches",
+    description: "Assembly guide for Sausage Egg & Cheese and Bacon Egg & Cheese breakfast sandwiches. One batch of eggs yields 24 sandwiches. One sheet of bacon yields 24 bacon sandwiches. One tray of sausage yields 24 sausage sandwiches. Label and date all prepared ingredients according to food safety procedures.",
+    ingredients: [
+      { name: "Sandwich rolls", amount: "24", unit: "each" },
+      { name: "Egg squares", amount: "24", unit: "each" },
+      { name: "Sausage patties (4 oz each)", amount: "24", unit: "each" },
+      { name: "Bacon slices", amount: "24", unit: "slices" },
+      { name: "Cheese slices", amount: "24", unit: "each" },
+    ],
+    instructions: "SAUSAGE, EGG & CHEESE:\n- 1 sandwich roll\n- 1 egg square\n- 1 sausage patty\n- 1 slice cheese\n\nBACON, EGG & CHEESE:\n- 1 sandwich roll\n- 1 egg square\n- 1 bacon slice portion\n- 1 slice cheese\n\nPRODUCTION NOTES:\n- One batch of eggs yields 24 sandwiches.\n- One sheet of bacon yields 24 bacon sandwiches.\n- One tray of sausage yields 24 sausage sandwiches.\n- Label and date all prepared ingredients according to food safety procedures.",
+    yield: "24 sandwiches",
+    sortOrder: 40,
+  },
 ];
 
 async function main() {
+  // Ensure Sandwiches category exists
+  const existingCats = await prisma.recipeCategory.findMany({ where: { tenantId: 1 } });
+  if (!existingCats.some(c => c.slug === "sandwiches")) {
+    await prisma.recipeCategory.create({
+      data: {
+        tenantId: 1,
+        name: "Sandwiches",
+        slug: "sandwiches",
+        icon: "🥪",
+        color: "#FEF3C7",
+        sortOrder: 10,
+      },
+    });
+  }
+
   for (const recipe of recipes) {
     await prisma.recipe.upsert({
       where: { id: recipes.indexOf(recipe) + 1 },

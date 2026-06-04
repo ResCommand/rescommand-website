@@ -25,6 +25,7 @@ model Tenant {
   businessType    String    @default("DONUT_SHOP")     // DONUT_SHOP, BAKERY, CAFE, RESTAURANT, BAR, FOOD_TRUCK
   plan            String    @default("STARTER")        // FREE, STARTER, PROFESSIONAL, ENTERPRISE
   stripeCustomerId String?  @map("stripe_customer_id")
+  trialEndsAt      DateTime? @map("trial_ends_at")
   active          Boolean   @default(true)
   logoUrl         String?   @map("logo_url")
   primaryColor    String?   @map("primary_color") @default("#1A56DB")
@@ -137,16 +138,17 @@ model EmployeeCategory {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique
-  name         String
-  passwordHash String    @map("password_hash")
-  role         Role      @default(EMPLOYEE)
-  phone        String?
-  active       Boolean   @default(true)
-  categoryId   Int?      @map("category_id")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  name            String
+  passwordHash    String    @map("password_hash")
+  role            Role      @default(EMPLOYEE)
+  phone           String?
+  active          Boolean   @default(true)
+  isPlatformAdmin Boolean   @default(false) @map("is_platform_admin")
+  categoryId      Int?      @map("category_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   category          EmployeeCategory?   @relation(fields: [categoryId], references: [id])
   transactions      Transaction[]
@@ -1142,4 +1144,22 @@ model SocialPost {
   createdByUser  User  @relation("SocialPostCreator", fields: [createdById], references: [id])
 
   @@map("social_posts")
+}
+
+// ─── Platform: Plan Pricing ──────────────────────────────────
+
+model PlanPricing {
+  id            Int      @id @default(autoincrement())
+  planKey       String   @unique                          // FREE, STARTER, PROFESSIONAL, ENTERPRISE
+  name          String                                     // Starter, Professional, etc.
+  price         Int                                        // Price in cents (4900 = $49.00)
+  stripePriceId String?  @map("stripe_price_id")          // Linked Stripe Price ID
+  features      Json?                                      // Array of feature strings
+  staffLimit    Int?    @map("staff_limit")                // Max staff members (null = unlimited)
+  active        Boolean @default(true)
+  sortOrder     Int     @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("plan_pricings")
 }

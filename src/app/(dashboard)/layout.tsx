@@ -9,6 +9,8 @@ import {
   Megaphone,
 } from "lucide-react";
 
+const PLATFORM_NAME = "ResCommand";
+
 const allNav = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "dashboard" },
   { href: "/espresso-dial", icon: Coffee, label: "Espresso Dial", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "espresso" },
@@ -35,8 +37,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [enabledModules, setEnabledModules] = useState<Set<string>>(new Set());
+  const [brandName, setBrandName] = useState<string>("");
 
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
+
+  // Fetch branding on mount
+  useEffect(() => {
+    fetch("/api/tenants/branding")
+      .then(r => r.json())
+      .then(data => { if (data.brandName) setBrandName(data.brandName); })
+      .catch(() => {});
+  }, []);
 
   // Fetch enabled modules on mount
   useEffect(() => {
@@ -68,7 +79,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile top bar */}
       <div className="mobile-topbar">
         <button onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
-        <h2>Duffers OS</h2>
+        <h2>{brandName}</h2>
         <button onClick={() => signOut({ callbackUrl: "/login" })}><LogOut size={18} /></button>
       </div>
 
@@ -78,7 +89,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <nav className={`sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebar-brand">
-          <h2>Duffers OS</h2>
+          <h2>{brandName}</h2>
           <span>Operations</span>
         </div>
         <div className="sidebar-nav">
@@ -108,11 +119,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <LogOut size={16} style={{ color: "#6B7280" }} />
           </button>
         </div>
+        <div className="sidebar-poweredby">
+          <span>Powered by {PLATFORM_NAME}</span>
+        </div>
       </nav>
 
       {/* Main */}
       <main className="main-content">
         <div className="page-container">{children}</div>
+        <footer className="app-footer">
+          <span>{brandName} &middot; Powered by {PLATFORM_NAME}</span>
+        </footer>
       </main>
     </div>
   );

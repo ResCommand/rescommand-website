@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 const codes = [
   { href: "/entry/espresso", label: "Espresso Dial", desc: "Daily dial-in log", icon: "☕" },
@@ -10,10 +11,19 @@ const codes = [
 ];
 export default function QRSignPage() {
   const base = typeof window !== "undefined" ? window.location.origin : "";
+  const [brandName, setBrandName] = useState("ResCommand");
+
+  useEffect(() => {
+    fetch("/api/tenants/branding/public")
+      .then(r => r.json())
+      .then(data => { if (data?.brandName) setBrandName(data.brandName); })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="qr-sign-page">
       <div className="qr-sign-header">
-        <h1>🍩 Duffers OS</h1>
+        <h1>🍩 {brandName}</h1>
         <p>Scan a code to get started</p>
       </div>
       <div className="qr-sign-grid">
@@ -25,7 +35,7 @@ export default function QRSignPage() {
           </div>
         ))}
       </div>
-      <div className="qr-sign-footer">Duffers OS · Employee Portal</div>
+      <div className="qr-sign-footer">{brandName} · Powered by ResCommand</div>
     </div>
   );
 }

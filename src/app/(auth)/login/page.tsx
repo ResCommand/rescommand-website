@@ -19,6 +19,11 @@ export default function LoginPage() {
       // Capitalize slug for display
       setTenantName(slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()));
     }
+    // Also try fetching public branding for custom domains (e.g. ops.duffersdonutshop.com)
+    fetch("/api/tenants/branding/public")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.brandName) setTenantName(data.brandName); })
+      .catch(() => {});
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

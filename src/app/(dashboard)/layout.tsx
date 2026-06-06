@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
   Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
   ShoppingCart, ChefHat, Bell, CalendarClock, Settings, Thermometer,
-  Megaphone,
+  Megaphone, CreditCard,
 } from "lucide-react";
 
 const PLATFORM_NAME = "ResCommand";
@@ -27,6 +27,7 @@ const allNav = [
   { href: "/social", icon: Megaphone, label: "Social Media", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "social" },
   { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER"], moduleKey: "notifications" },
   { href: "/admin/users", icon: Users, label: "Admin", roles: ["MANAGER", "OWNER"], moduleKey: "settings" },
+  { href: "/billing", icon: CreditCard, label: "Billing", roles: ["OWNER"], moduleKey: "settings" },
   { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"], moduleKey: "operations" },
   
 ];

@@ -27,10 +27,11 @@ interface BillingData {
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  FREE: "#6B7280", STARTER: "#3B82F6", PROFESSIONAL: "#8B5CF6", ENTERPRISE: "#F59E0B",
+  TEST: "#6B7280", FREE: "#6B7280", STARTER: "#3B82F6", PROFESSIONAL: "#8B5CF6", ENTERPRISE: "#F59E0B",
 };
 
 const PLAN_ICONS: Record<string, React.ReactNode> = {
+  TEST: <span style={{ fontSize: 24 }}>🧪</span>,
   FREE: <span style={{ fontSize: 24 }}>🆓</span>,
   STARTER: <Sparkles size={24} style={{ color: "#3B82F6" }} />,
   PROFESSIONAL: <Crown size={24} style={{ color: "#8B5CF6" }} />,
@@ -139,8 +140,8 @@ export default function BillingPage() {
 
       {/* Plan Comparison */}
       <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Choose a Plan</h2>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${data.plans.filter(p => p.active).length}, 1fr)`, gap: 16, marginBottom: 32 }}>
-        {data.plans.filter(p => p.active).map(plan => {
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${data.plans.filter(p => p.active && p.planKey !== 'TEST').length}, 1fr)`, gap: 16, marginBottom: 32 }}>
+        {data.plans.filter(p => p.active && p.planKey !== 'TEST').map(plan => {
           const isCurrent = plan.planKey === data.tenant!.plan;
           const features = parseFeatures(plan.features);
           const isDowngrade = data.plans.findIndex(p => p.planKey === plan.planKey) < data.plans.findIndex(p => p.planKey === data.tenant!.plan);

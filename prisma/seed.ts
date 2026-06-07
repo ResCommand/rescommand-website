@@ -1011,6 +1011,28 @@ async function main() {
   }
 
   console.log(`Seeded ${allItems.length} inventory items across ${vendors.length} vendors.`);
+
+  // ─── Plan Pricing ──────────────────────────────────────────────
+  console.log("Seeding plan pricing...");
+  const plans = [
+    { planKey: "TEST", name: "Test / Internal", price: 100, stripePriceId: "price_1TfTxRFFrCACOpIZc2q1fp0S", features: ["Full access", "Testing only", "$1/month"], staffLimit: null, active: true, sortOrder: -1 },
+    { planKey: "FREE", name: "Free", price: 0, stripePriceId: null, features: ["Basic production", "Inventory tracking", "Up to 5 staff"], staffLimit: 5, active: true, sortOrder: 0 },
+    { planKey: "STARTER", name: "Starter", price: 4900, stripePriceId: "price_1TfTxSFFrCACOpIZ6NMv7AsP", features: ["Everything in Free", "Recipe management", "Employee scheduling", "SOPs", "Up to 15 staff"], staffLimit: 15, active: true, sortOrder: 1 },
+    { planKey: "PROFESSIONAL", name: "Professional", price: 9900, stripePriceId: "price_1TfTxSFFrCACOpIZ8yXAlWBJ", features: ["Everything in Starter", "Menu planning", "Social media planner", "Espresso dialing", "Priority support", "Up to 50 staff"], staffLimit: 50, active: true, sortOrder: 2 },
+    { planKey: "ENTERPRISE", name: "Enterprise", price: 19900, stripePriceId: "price_1TfTxSFFrCACOpIZtoVGEGU3", features: ["Everything in Professional", "Coffee roasting", "Custom integrations", "Dedicated support", "Unlimited staff", "Multi-location"], staffLimit: null, active: true, sortOrder: 3 },
+  ];
+
+  for (const plan of plans) {
+    await prisma.planPricing.upsert({
+      where: { planKey: plan.planKey },
+      update: { name: plan.name, price: plan.price, stripePriceId: plan.stripePriceId, features: plan.features as any, staffLimit: plan.staffLimit, active: plan.active, sortOrder: plan.sortOrder },
+      create: plan as any,
+    });
+  }
+  console.log(`Seeded ${plans.length} plans.`);
+
+  // Set Duffers to test plan
+  await prisma.tenant.updateMany({ where: { slug: "duffersdonutshop" }, data: { plan: "TEST" } });
 }
 
 main()

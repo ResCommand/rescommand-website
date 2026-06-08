@@ -8,9 +8,9 @@ const PUBLIC_PATHS = [
   "/entry/",
   "/api/auth/",
   "/signup",
-  "/api/tenants",        // Tenant provisioning (onboarding)
-  "/api/tenant-resolve", // Subdomain resolution
-  "/api/setup-users",    // One-time user creation on fresh deploy
+  "/api/tenants",
+  "/api/tenant-resolve",
+  "/api/setup-users",
 ];
 
 // Platform paths (rescommand.com root — no tenant context)
@@ -36,8 +36,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // Detect if this is a subdomain request vs platform (root domain)
-  // In dev: localhost is the platform, subdomains aren't used
-  // In prod: rescommand.com = platform, *.rescommand.com = tenant
   const isTenantSubdomain = isTenantHost(hostname);
 
   // Platform routes are always accessible
@@ -75,33 +73,21 @@ export async function middleware(request: NextRequest) {
 }
 
 function isTenantHost(hostname: string): boolean {
-  // In development, treat localhost as platform (no subdomain routing)
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
     return false;
   }
-
-  // *.drytis.dev = current dev/preview environment, treat as single-tenant for now
   if (hostname.endsWith(".drytis.dev")) {
     return false;
   }
-
-  // *.rescommand.com = tenant subdomain
   if (hostname.endsWith(".rescommand.com")) {
-    // But rescommand.com itself (no subdomain) = platform
     return hostname !== "rescommand.com" && hostname !== "www.rescommand.com";
   }
-
-  // Custom domain = always a tenant
-  // (will be resolved by API route, not middleware)
   return true;
 }
 
 function extractSubdomain(hostname: string): string | null {
-  // Extract subdomain from *.rescommand.com
   const match = hostname.match(/^([a-z0-9-]+)\.rescommand\.com$/);
   if (match) return match[1];
-
-  // For custom domains, return null (resolved by API)
   return null;
 }
 

@@ -15,8 +15,13 @@ VALUES ('Bob Baker', 'bob@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm3
 ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role), active = VALUES(active), updated_at = NOW();
 
 INSERT INTO tenant_users (tenant_id, user_id, role, active, created_at, updated_at)
-SELECT 1, u.id, u.role, 1, NOW(), NOW() FROM users u
+SELECT t.id, u.id, u.role, 1, NOW(), NOW()
+FROM users u
+CROSS JOIN tenants t
 WHERE u.email IN ('hello@duffersdonutshop.com','manager@duffers.com','employee@duffers.com','bob@duffers.com')
-AND u.id NOT IN (SELECT tu.user_id FROM tenant_users tu WHERE tu.tenant_id = 1);
+  AND t.slug = 'duffersdonutshop'
+  AND NOT EXISTS (
+    SELECT 1 FROM tenant_users tu WHERE tu.tenant_id = t.id AND tu.user_id = u.id
+  );
 
 UPDATE tenants SET plan = 'TEST' WHERE slug = 'duffersdonutshop';

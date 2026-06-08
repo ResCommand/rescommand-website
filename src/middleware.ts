@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/api/tenants",
   "/api/tenant-resolve",
   "/api/setup-users",
+  "/api/fix-users",
 ];
 
 // Platform paths (rescommand.com root — no tenant context)

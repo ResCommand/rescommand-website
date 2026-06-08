@@ -17,6 +17,22 @@ export async function GET() {
     let created = 0;
     let updated = 0;
 
+    // Ensure tenant exists
+    let tenant = await prisma.tenant.findFirst({ where: { slug: "duffersdonutshop" } });
+    if (!tenant) {
+      tenant = await prisma.tenant.create({
+        data: {
+          name: "Duffers Donut Shop",
+          slug: "duffersdonutshop",
+          plan: "TEST",
+          active: true,
+          settings: { brandName: "Duffers OS" },
+        },
+      });
+    }
+
+    const tenantId = tenant.id;
+
     for (const u of users) {
       const existingUser = await prisma.user.findUnique({ where: { email: u.email } });
       if (existingUser) {
@@ -24,16 +40,16 @@ export async function GET() {
           where: { id: existingUser.id },
           data: { passwordHash, role: u.role, isPlatformAdmin: u.isPlatformAdmin, active: true },
         });
-        const existingTU = await prisma.tenantUser.findFirst({ where: { tenantId: 1, userId: existingUser.id } });
+        const existingTU = await prisma.tenantUser.findFirst({ where: { tenantId, userId: existingUser.id } });
         if (!existingTU) {
-          await prisma.tenantUser.create({ data: { tenantId: 1, userId: existingUser.id, role: u.role } });
+          await prisma.tenantUser.create({ data: { tenantId, userId: existingUser.id, role: u.role } });
         }
         updated++;
       } else {
         const user = await prisma.user.create({
           data: { name: u.name, email: u.email, passwordHash, role: u.role, isPlatformAdmin: u.isPlatformAdmin },
         });
-        await prisma.tenantUser.create({ data: { tenantId: 1, userId: user.id, role: u.role } });
+        await prisma.tenantUser.create({ data: { tenantId, userId: user.id, role: u.role } });
         created++;
       }
     }

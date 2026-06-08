@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import ImportModal from "@/components/ImportModal";
+import { toast } from "sonner";
 
 interface Vendor {
   id: number;
@@ -78,6 +80,7 @@ export default function InventoryItemsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -146,6 +149,93 @@ export default function InventoryItemsPage() {
     setError("");
   };
 
+  const handleInventoryImport = (data: Record<string, unknown>) => {
+    const d = data as {
+      items?: {
+        name?: string;
+        category?: string;
+        unit?: string;
+        unitCost?: number;
+        parLevel?: number;
+        minStock?: number;
+        reorderQty?: number;
+        packSize?: string;
+        sku?: string;
+        vendorName?: string | null;
+        notes?: string | null;
+      }[];
+    };
+
+    const items = d.items || [];
+    if (items.length === 0) {
+      toast.error("No items found in the image");
+      return;
+    }
+
+    // For single item, fill the form directly
+    if (items.length === 1) {
+      const item = items[0];
+      // Try to match vendor by name
+      let vendorId: number | null = null;
+      if (item.vendorName && vendors.length > 0) {
+        const match = vendors.find(
+          (v) => v.name.toLowerCase().includes(item.vendorName!.toLowerCase())
+        );
+        if (match) vendorId = match.id;
+      }
+      setForm({
+        name: item.name || "",
+        category: ["FOH", "BOH", "BOTH"].includes(item.category || "") ? item.category! : "BOH",
+        unit: item.unit || "case",
+        unitCost: item.unitCost || 0,
+        parLevel: item.parLevel || 0,
+        currentStock: 0,
+        minStock: item.minStock || 0,
+        reorderQty: item.reorderQty || 0,
+        vendorId,
+        packSize: item.packSize || "",
+        suggestedCadence: "",
+        sku: item.sku || "",
+        notes: item.notes || "",
+        inventorySection: sections.length > 0 ? sections[0].slug : "kitchen_regular",
+      });
+      setEditingId(null);
+      setShowForm(true);
+      setError("");
+      toast.success("Item extracted — review and save!");
+    } else {
+      // Multiple items — create them all directly
+      (async () => {
+        let created = 0;
+        for (const item of items) {
+          try {
+            await fetch("/api/inventory", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: item.name || "Unknown Item",
+                category: ["FOH", "BOH", "BOTH"].includes(item.category || "") ? item.category : "BOH",
+                unit: item.unit || "case",
+                unitCost: item.unitCost || 0,
+                parLevel: item.parLevel || 0,
+                currentStock: 0,
+                minStock: item.minStock || 0,
+                reorderQty: item.reorderQty || 0,
+                packSize: item.packSize || null,
+                sku: item.sku || null,
+                notes: item.notes || null,
+                inventorySection: sections.length > 0 ? sections[0].slug : "kitchen_regular",
+              }),
+            });
+            created++;
+          } catch { /* skip failed */ }
+        }
+        toast.success(`Imported ${created} of ${items.length} items`);
+        fetchData();
+      })();
+    }
+  };
+
   const save = async () => {
     if (!form.name.trim()) { setError("Item name is required"); return; }
     setSaving(true);
@@ -207,6 +297,12 @@ export default function InventoryItemsPage() {
             <p className="text-sm text-gray">Add, edit, and organize inventory items by vendor.</p>
           </div>
           <div className="inv-items-header-actions">
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowImportModal(true)}
+            >
+              📷 Import
+            </button>
             <button className="btn btn-primary btn-sm" onClick={openNew}>
               + Add Item
             </button>
@@ -512,6 +608,16 @@ export default function InventoryItemsPage() {
           )}
         </div>
       </div>
+
+      {/* Import Inventory Modal */}
+      <ImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title="Import Inventory"
+        description="Upload a photo of an invoice, order sheet, supply list, or product label. We'll extract the item details."
+        importEndpoint="/api/inventory/import"
+        onImportComplete={handleInventoryImport}
+      />
     </div>
   );
 }

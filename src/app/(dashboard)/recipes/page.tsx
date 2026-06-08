@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import IconPicker from "@/components/IconPicker";
+import ImportModal from "@/components/ImportModal";
 
 interface Ingredient {
   name: string;
@@ -82,6 +83,7 @@ export default function RecipesPage() {
   const [formIngredients, setFormIngredients] = useState<Ingredient[]>([{ name: "", amount: "", unit: "" }]);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const fetchRecipes = useCallback(async () => {
     try {
@@ -129,6 +131,31 @@ export default function RecipesPage() {
     setFormIngredients([{ name: "", amount: "", unit: "" }]);
     setFormError("");
     setEditingRecipe(null);
+  };
+
+  const handleRecipeImport = (data: Record<string, unknown>) => {
+    const d = data as {
+      name?: string;
+      category?: string;
+      description?: string | null;
+      yield?: string | null;
+      ingredients?: { name: string; amount: string; unit: string }[];
+      instructions?: string | null;
+    };
+    setFormName(d.name || "");
+    setFormCategory(d.category || "general");
+    setFormDescription(d.description || "");
+    setFormYield(d.yield || "");
+    setFormInstructions(d.instructions || "");
+    setFormIngredients(
+      d.ingredients && d.ingredients.length > 0
+        ? d.ingredients.map((i) => ({ name: i.name || "", amount: i.amount || "", unit: i.unit || "" }))
+        : [{ name: "", amount: "", unit: "" }]
+    );
+    setEditingRecipe(null);
+    setShowAddForm(true);
+    setFormError("");
+    toast.success("Recipe extracted — review and save!");
   };
 
   const openEdit = (recipe: Recipe) => {
@@ -240,6 +267,12 @@ export default function RecipesPage() {
             <div className="flex gap-2">
               <button className="btn btn-secondary btn-sm" onClick={() => setShowCatModal(true)}>
                 <Settings size={14} /> Categories
+              </button>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowImportModal(true)}
+              >
+                📷 Import
               </button>
               <button
                 className="btn btn-primary btn-sm"
@@ -522,6 +555,16 @@ export default function RecipesPage() {
           </div>
         </div>
       )}
+
+      {/* Import Recipe Modal */}
+      <ImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        title="Import Recipe"
+        description="Upload a photo of a recipe card, production sheet, or written recipe. We'll extract the details for you to review."
+        importEndpoint="/api/recipes/import"
+        onImportComplete={handleRecipeImport}
+      />
     </div>
   );
 }

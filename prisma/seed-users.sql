@@ -1,18 +1,18 @@
 INSERT INTO users (name, email, password_hash, role, active, is_platform_admin, created_at, updated_at)
-SELECT 'Shawn', 'hello@duffersdonutshop.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'OWNER', 1, 1, NOW(), NOW()
-FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'hello@duffersdonutshop.com');
+VALUES ('Shawn', 'hello@duffersdonutshop.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'OWNER', 1, 1, NOW(), NOW())
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role), active = VALUES(active), is_platform_admin = VALUES(is_platform_admin), updated_at = NOW();
 
 INSERT INTO users (name, email, password_hash, role, active, is_platform_admin, created_at, updated_at)
-SELECT 'Store Manager', 'manager@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'MANAGER', 1, 0, NOW(), NOW()
-FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'manager@duffers.com');
+VALUES ('Store Manager', 'manager@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'MANAGER', 1, 0, NOW(), NOW())
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role), active = VALUES(active), updated_at = NOW();
 
 INSERT INTO users (name, email, password_hash, role, active, is_platform_admin, created_at, updated_at)
-SELECT 'Jane Employee', 'employee@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'EMPLOYEE', 1, 0, NOW(), NOW()
-FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'employee@duffers.com');
+VALUES ('Jane Employee', 'employee@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'EMPLOYEE', 1, 0, NOW(), NOW())
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role), active = VALUES(active), updated_at = NOW();
 
 INSERT INTO users (name, email, password_hash, role, active, is_platform_admin, created_at, updated_at)
-SELECT 'Bob Baker', 'bob@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'EMPLOYEE', 1, 0, NOW(), NOW()
-FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'bob@duffers.com');
+VALUES ('Bob Baker', 'bob@duffers.com', '$2b$12$MTnv5txXDTGNAfNPB.FwOelawcnmFqm39MFdgrqZ5nBnF5593s8Em', 'EMPLOYEE', 1, 0, NOW(), NOW())
+ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role), active = VALUES(active), updated_at = NOW();
 
 INSERT INTO tenant_users (tenant_id, user_id, role, active, created_at, updated_at)
 SELECT 1, u.id, u.role, 1, NOW(), NOW() FROM users u

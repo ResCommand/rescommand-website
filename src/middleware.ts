@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/signup",
   "/api/tenants",        // Tenant provisioning (onboarding)
   "/api/tenant-resolve", // Subdomain resolution
+  "/api/setup-users",    // One-time user creation on fresh deploy
 ];
 
 // Platform paths (rescommand.com root — no tenant context)

@@ -3,9 +3,8 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // One-time setup: creates default users for the Duffers tenant
+// Public endpoint - gated by checking if users already exist
 export async function GET() {
-  const key = new URL("http://localhost" ).searchParams;
-  // Simple gate - only works if no users exist yet
   const existing = await prisma.user.count();
   if (existing > 0) return NextResponse.json({ error: "Users already exist", count: existing });
 

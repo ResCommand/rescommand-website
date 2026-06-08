@@ -5,33 +5,30 @@ import bcrypt from "bcryptjs";
 // One-time setup: creates default users for the Duffers tenant
 // Public endpoint - gated by checking if users already exist
 export async function GET() {
-  const existing = await prisma.user.count();
-  if (existing > 0) return NextResponse.json({ error: "Users already exist", count: existing });
+  try {
+    const existing = await prisma.user.count();
+    if (existing > 0) return NextResponse.json({ message: "Users already exist", count: existing });
 
-  const passwordHash = await bcrypt.hash("password", 12);
+    const passwordHash = await bcrypt.hash("password", 12);
 
-  const owner = await prisma.user.create({
-    data: { name: "Shawn", email: "hello@duffersdonutshop.com", passwordHash, role: "OWNER" },
-  });
-  const manager = await prisma.user.create({
-    data: { name: "Store Manager", email: "manager@duffers.com", passwordHash, role: "MANAGER" },
-  });
-  const employee = await prisma.user.create({
-    data: { name: "Jane Employee", email: "employee@duffers.com", passwordHash, role: "EMPLOYEE" },
-  });
-  const bob = await prisma.user.create({
-    data: { name: "Bob Baker", email: "bob@duffers.com", passwordHash, role: "EMPLOYEE" },
-  });
+    const users = [
+      { name: "Shawn", email: "hello@duffersdonutshop.com", role: "OWNER" as const, isPlatformAdmin: true },
+      { name: "Store Manager", email: "manager@duffers.com", role: "MANAGER" as const, isPlatformAdmin: false },
+      { name: "Jane Employee", email: "employee@duffers.com", role: "EMPLOYEE" as const, isPlatformAdmin: false },
+      { name: "Bob Baker", email: "bob@duffers.com", role: "EMPLOYEE" as const, isPlatformAdmin: false },
+    ];
 
-  // Link all users to tenant 1
-  for (const user of [owner, manager, employee, bob]) {
-    await prisma.tenantUser.create({
-      data: { tenantId: 1, userId: user.id, role: user.role },
-    });
+    for (const u of users) {
+      const user = await prisma.user.create({
+        data: { name: u.name, email: u.email, passwordHash, role: u.role, isPlatformAdmin: u.isPlatformAdmin },
+      });
+      await prisma.tenantUser.create({
+        data: { tenantId: 1, userId: user.id, role: u.role },
+      });
+    }
+
+    return NextResponse.json({ created: users.length, emails: users.map(u => u.email) });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
-
-  // Make owner a platform admin
-  await prisma.user.update({ where: { id: owner.id }, data: { isPlatformAdmin: true } });
-
-  return NextResponse.json({ created: 4, users: [owner.email, manager.email, employee.email, bob.email] });
 }

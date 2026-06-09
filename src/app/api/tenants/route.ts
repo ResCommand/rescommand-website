@@ -11,7 +11,10 @@ const tenantSchema = z.object({
   ownerName: z.string().min(2),
   ownerEmail: z.string().email(),
   ownerPassword: z.string().min(6),
-  modules: z.array(z.string()).optional(),   // module keys to enable
+  modules: z.array(z.string()).optional(),
+  brandName: z.string().optional(),
+  theme: z.enum(["dark", "light"]).optional(),
+  primaryColor: z.string().optional(),
   teamMembers: z.array(z.object({
     name: z.string(), email: z.string().email(), role: z.enum(["EMPLOYEE", "MANAGER"]).default("EMPLOYEE"),
   })).optional(),
@@ -90,6 +93,12 @@ export async function POST(request: Request) {
       slug: data.slug,
       businessType: data.businessType,
       plan: data.plan,
+      primaryColor: data.primaryColor || "#1A56DB",
+      settings: {
+        brandName: data.brandName || data.name,
+        theme: data.theme || "dark",
+        primaryColor: data.primaryColor || "#1A56DB",
+      },
     },
   });
 

@@ -31,9 +31,14 @@ export default function ImportModal({
     const file = e.target.files?.[0];
     if (file) {
       setError("");
-      const reader = new FileReader();
-      reader.onload = (ev) => setPreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (ev) => setPreview(ev.target?.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        // For non-image files (Excel, PDF, CSV), show filename
+        setPreview(`file:${file.name}`);
+      }
     }
   };
 
@@ -44,7 +49,7 @@ export default function ImportModal({
       return;
     }
 
-    // Client-side resize to reduce upload size
+    // Client-side resize to reduce upload size (images only)
     let processedFile = file;
     if (file.type.startsWith("image/")) {
       processedFile = await resizeImage(file, 800);
@@ -141,11 +146,20 @@ export default function ImportModal({
             }}
           >
             {preview ? (
-              <img
-                src={preview}
-                alt="Preview"
-                style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 4, objectFit: "contain" }}
-              />
+              preview.startsWith("file:") ? (
+                <div style={{ padding: "16px", textAlign: "center" }}>
+                  <div style={{ fontSize: 40, marginBottom: 8 }}>📄</div>
+                  <p style={{ fontSize: 14, color: "#374151", fontWeight: 500, margin: 0, wordBreak: "break-all" }}>
+                    {preview.replace("file:", "")}
+                  </p>
+                </div>
+              ) : (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 4, objectFit: "contain" }}
+                />
+              )
             ) : (
               <>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>📁</div>
@@ -153,17 +167,17 @@ export default function ImportModal({
                   Tap to upload a photo or file
                 </p>
                 <p style={{ fontSize: 12, color: "#9CA3AF", margin: "4px 0 0" }}>
-                  JPG, PNG, WebP, HEIC • Max 10MB
+                  JPG, PNG, WebP, HEIC, PDF, Excel, CSV • Max 10MB
                 </p>
               </>
             )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*,.pdf"
-              onChange={handleFileSelect}
-              style={{ display: "none" }}
-            />
+<input
+                ref={fileRef}
+                type="file"
+                accept="image/*,.pdf,.xlsx,.xls,.csv"
+                onChange={handleFileSelect}
+                style={{ display: "none" }}
+              />
           </div>
 
           {/* Model toggle */}

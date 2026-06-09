@@ -55,6 +55,7 @@ export async function GET() {
 
 // POST /api/tenants — Create new tenant (from onboarding wizard)
 export async function POST(request: Request) {
+  try {
   const body = await request.json();
   const parsed = tenantSchema.safeParse(body);
   if (!parsed.success) {
@@ -150,6 +151,10 @@ export async function POST(request: Request) {
     slug: tenant.slug,
     url: `${tenant.slug}.rescommand.com`,
   }, { status: 201 });
+  } catch (err) {
+    console.error("Tenant creation error:", err);
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+  }
 }
 
 // ─── Seed Helpers ──────────────────────────────────────────

@@ -131,9 +131,9 @@ export default function PlatformAdminPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0F172A", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center", color: "#94A3B8" }}>
-          <div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid #334155", borderTopColor: "#3B82F6", borderRadius: "50%", margin: "0 auto 16px" }} />
+      <div style={{ minHeight: "100vh", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", color: "#64748B" }}>
+          <div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid #E2E8F0", borderTopColor: "#3B82F6", borderRadius: "50%", margin: "0 auto 16px" }} />
           <p>Loading ResCommand Platform...</p>
         </div>
       </div>
@@ -145,9 +145,9 @@ export default function PlatformAdminPage() {
   // ─── Render ───────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0F172A", color: "#E2E8F0" }}>
+    <div style={{ minHeight: "100vh", background: "#F8FAFC", color: "#1E293B" }}>
       {/* Header */}
-      <div style={{ background: "#1E293B", borderBottom: "1px solid #334155", padding: "12px 32px", position: "sticky", top: 0, zIndex: 50 }}>
+      <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E2E8F0", padding: "12px 32px", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14 }}>R</div>
@@ -191,8 +191,8 @@ export default function PlatformAdminPage() {
             {/* Charts Row */}
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 32 }}>
               {/* Plan Distribution */}
-              <div style={{ background: "#1E293B", borderRadius: 12, border: "1px solid #334155", padding: 24 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 20, color: "#94A3B8" }}>Plan Distribution</h3>
+              <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 24 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 20, color: "#64748B" }}>Plan Distribution</h3>
                 <div style={{ display: "flex", gap: 16, alignItems: "flex-end", height: 160 }}>
                   {Object.entries(data.planDistribution).map(([plan, count]) => {
                     const max = Math.max(...Object.values(data.planDistribution), 1);
@@ -200,10 +200,10 @@ export default function PlatformAdminPage() {
                     return (
                       <div key={plan} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: PLAN_COLORS[plan] || "#fff" }}>{count}</span>
-                        <div style={{ width: "100%", background: "#334155", borderRadius: 6, height: Math.max(pct, 10) + "%", minHeight: 16, position: "relative" }}>
+                        <div style={{ width: "100%", background: "#E2E8F0", borderRadius: 6, height: Math.max(pct, 10) + "%", minHeight: 16, position: "relative" }}>
                           <div style={{ position: "absolute", inset: 0, background: PLAN_COLORS[plan] || "#3B82F6", borderRadius: 6, opacity: 0.8 }} />
                         </div>
-                        <span style={{ fontSize: 11, color: "#94A3B8", fontWeight: 500 }}>{plan}</span>
+                        <span style={{ fontSize: 11, color: "#64748B", fontWeight: 500 }}>{plan}</span>
                       </div>
                     );
                   })}
@@ -211,8 +211,8 @@ export default function PlatformAdminPage() {
               </div>
 
               {/* Quick Stats */}
-              <div style={{ background: "#1E293B", borderRadius: 12, border: "1px solid #334155", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: "#94A3B8" }}>Quick Stats</h3>
+              <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: "#64748B" }}>Quick Stats</h3>
                 <QuickStat label="Suspended" value={data.suspendedTenants} color={data.suspendedTenants > 0 ? "#DC2626" : "#475569"} />
                 <QuickStat label="On Trial" value={data.trialTenants} color="#F59E0B" />
                 <QuickStat label="Avg Staff/Tenant" value={data.activeTenants > 0 ? Math.round(data.totalMembers / data.activeTenants) : 0} color="#3B82F6" />
@@ -221,14 +221,14 @@ export default function PlatformAdminPage() {
             </div>
 
             {/* Recent Tenants */}
-            <div style={{ background: "#1E293B", borderRadius: 12, border: "1px solid #334155", padding: 24 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: "#94A3B8" }}>Recent Tenants</h3>
+            <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 24 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: "#64748B" }}>Recent Tenants</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {data.tenants.slice(0, 5).map(t => (
                   <div key={t.id} onClick={() => { setSelectedTenant(t); setActiveTab("tenants"); }}
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "#0F172A", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#1a2744")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "#0F172A")}
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "#F8FAFC", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#F1F5F9")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "#F8FAFC")}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <span style={{ fontSize: 18 }}>{TYPE_ICONS[t.businessType] || "🏪"}</span>
@@ -258,17 +258,17 @@ export default function PlatformAdminPage() {
                 <input
                   value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="Search tenants by name, slug, or type..."
-                  style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 8, border: "1px solid #334155", background: "#1E293B", color: "#E2E8F0", fontSize: 13, outline: "none" }}
+                  style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 8, border: "1px solid #E2E8F0", background: "#FFFFFF", color: "#1E293B", fontSize: 13, outline: "none" }}
                 />
               </div>
               <span style={{ fontSize: 12, color: "#64748B" }}>{filtered.length} tenants</span>
             </div>
 
             {/* Tenants Table */}
-            <div style={{ background: "#1E293B", borderRadius: 12, border: "1px solid #334155", overflow: "hidden" }}>
+            <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", overflow: "hidden" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid #334155" }}>
+                  <tr style={{ borderBottom: "1px solid #E2E8F0" }}>
                     <Th>Business</Th>
                     <Th>Type</Th>
                     <Th>Plan</Th>
@@ -281,7 +281,7 @@ export default function PlatformAdminPage() {
                 </thead>
                 <tbody>
                   {filtered.map(t => (
-                    <tr key={t.id} style={{ borderBottom: "1px solid #1a2744", opacity: t.active ? 1 : 0.5, cursor: "pointer" }}
+                    <tr key={t.id} style={{ borderBottom: "1px solid #F1F5F9", opacity: t.active ? 1 : 0.5, cursor: "pointer" }}
                       onClick={() => setSelectedTenant(t)}
                     >
                       <td style={{ padding: "10px 12px" }}>
@@ -335,7 +335,7 @@ export default function PlatformAdminPage() {
               </button>
             </div>
             {editingPlan.map((plan, i) => (
-              <div key={plan.planKey} style={{ background: "#1E293B", borderRadius: 12, border: `1px solid ${PLAN_COLORS[plan.planKey]}40`, padding: 24 }}>
+              <div key={plan.planKey} style={{ background: "#FFFFFF", borderRadius: 12, border: `1px solid ${PLAN_COLORS[plan.planKey]}40`, padding: 24 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 16, alignItems: "end" }}>
                   <Field label="Plan Key">
                     <input value={plan.planKey} disabled style={inputStyle} />
@@ -350,7 +350,7 @@ export default function PlatformAdminPage() {
                   <Field label="Staff Limit">
                     <input type="number" value={plan.staffLimit ?? ""} placeholder="Unlimited" onChange={e => { const p = [...editingPlan]; p[i] = { ...p[i], staffLimit: e.target.value ? parseInt(e.target.value) : null }; setEditingPlan(p); }} style={inputStyle} />
                   </Field>
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#94A3B8", cursor: "pointer", padding: "20px 0 0" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#64748B", cursor: "pointer", padding: "20px 0 0" }}>
                     <input type="checkbox" checked={plan.active} onChange={e => { const p = [...editingPlan]; p[i] = { ...p[i], active: e.target.checked }; setEditingPlan(p); }} />
                     Active
                   </label>
@@ -378,10 +378,10 @@ export default function PlatformAdminPage() {
       {selectedTenant && (
         <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}>
           <div style={{ flex: 1, background: "rgba(0,0,0,0.5)" }} onClick={() => setSelectedTenant(null)} />
-          <div style={{ width: 420, background: "#1E293B", borderLeft: "1px solid #334155", overflow: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ width: 420, background: "#FFFFFF", borderLeft: "1px solid #E2E8F0", overflow: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ fontSize: 18, fontWeight: 700 }}>{selectedTenant.name}</h2>
-              <button onClick={() => setSelectedTenant(null)} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer" }}><X size={20} /></button>
+              <button onClick={() => setSelectedTenant(null)} style={{ background: "none", border: "none", color: "#64748B", cursor: "pointer" }}><X size={20} /></button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -413,7 +413,7 @@ export default function PlatformAdminPage() {
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <button onClick={() => impersonate(selectedTenant.id)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid #334155", background: "#0F172A", color: "#E2E8F0", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <button onClick={() => impersonate(selectedTenant.id)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid #E2E8F0", background: "#F8FAFC", color: "#1E293B", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                 <Shield size={14} /> Impersonate
               </button>
               <button onClick={() => toggleActive(selectedTenant)} style={{ flex: 1, padding: "10px", borderRadius: 8, border: `1px solid ${selectedTenant.active ? "#DC262640" : "#05966940"}`, background: selectedTenant.active ? "#DC262610" : "#05966910", color: selectedTenant.active ? "#DC2626" : "#059669", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
@@ -431,7 +431,7 @@ export default function PlatformAdminPage() {
 
 function StatCard({ label, value, icon, color, sub }: { label: string; value: string | number; icon: React.ReactNode; color: string; sub?: string }) {
   return (
-    <div style={{ background: "#1E293B", padding: 20, borderRadius: 12, border: "1px solid #334155" }}>
+    <div style={{ background: "#FFFFFF", padding: 20, borderRadius: 12, border: "1px solid #E2E8F0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <span style={{ fontSize: 12, color: "#64748B" }}>{label}</span>
         <div style={{ color }}>{icon}</div>
@@ -444,8 +444,8 @@ function StatCard({ label, value, icon, color, sub }: { label: string; value: st
 
 function QuickStat({ label, value, color }: { label: string; value: string | number; color: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #1a2744" }}>
-      <span style={{ fontSize: 13, color: "#94A3B8" }}>{label}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F1F5F9" }}>
+      <span style={{ fontSize: 13, color: "#64748B" }}>{label}</span>
       <span style={{ fontSize: 15, fontWeight: 600, color }}>{value}</span>
     </div>
   );
@@ -473,7 +473,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   return (
     <div>
       <div style={{ fontSize: 11, color: "#64748B", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 13, color: "#E2E8F0" }}>{children}</div>
+      <div style={{ fontSize: 13, color: "#1E293B" }}>{children}</div>
     </div>
   );
 }
@@ -490,8 +490,8 @@ function Field({ label, children, style }: { label: string; children: React.Reac
 // ─── Helpers ─────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #334155",
-  background: "#0F172A", color: "#E2E8F0", fontSize: 13, outline: "none",
+  width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E2E8F0",
+  background: "#F8FAFC", color: "#1E293B", fontSize: 13, outline: "none",
 };
 
 const iconBtnStyle: React.CSSProperties = {

@@ -18,7 +18,7 @@ const PUBLIC_PATHS = [
 // Platform paths (rescommand.com root — no tenant context)
 const PLATFORM_PATHS = [
   "/signup",
-  "/admin",
+  "/platform",
   "/api/tenants",
   "/api/tenant-resolve",
   "/api/platform",

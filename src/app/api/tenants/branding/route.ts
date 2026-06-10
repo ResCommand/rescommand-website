@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/tenants/branding — returns { brandName, platformName }
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const tenantId = parseInt((session.user as { tenantId?: string }).tenantId || "0");
-  if (!tenantId) return NextResponse.json({ error: "No tenant" }, { status: 400 });
+  const tenantId = await getTenantId();
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -25,15 +25,9 @@ export async function GET() {
 
 // PUT /api/tenants/branding — update brandName
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const tenantId = parseInt((session.user as { tenantId?: string }).tenantId || "0");
-  if (!tenantId) return NextResponse.json({ error: "No tenant" }, { status: 400 });
 
   const body = await request.json();
   const brandName = (body.brandName as string)?.trim();

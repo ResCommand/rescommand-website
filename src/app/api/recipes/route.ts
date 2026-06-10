@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { z } from "zod";
 
 // GET /api/recipes
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
@@ -39,10 +42,7 @@ const recipeSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { userId, tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -72,10 +72,7 @@ const updateRecipeSchema = z.object({
 });
 
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { userId, tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -84,7 +81,7 @@ export async function PUT(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const { id, ...data } = parsed.data;
-  const recipe = await prisma.recipe.update({ where: { id }, data });
+  const recipe = await prisma.recipe.update({ where: { tenantId, id }, data });
   return NextResponse.json(recipe);
 }
 
@@ -92,10 +89,7 @@ export async function PUT(request: Request) {
 const deleteSchema = z.object({ id: z.number() });
 
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { userId, tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -103,6 +97,6 @@ export async function DELETE(request: Request) {
   const parsed = deleteSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  await prisma.recipe.update({ where: { id: parsed.data.id }, data: { active: false } });
+  await prisma.recipe.update({ where: { tenantId, id: parsed.data.id }, data: { active: false } });
   return NextResponse.json({ success: true });
 }

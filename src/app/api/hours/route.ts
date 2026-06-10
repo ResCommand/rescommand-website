@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const userId = Number((session.user as { id?: string }).id);
   const role = (session.user as { role?: string }).role;
@@ -16,7 +19,7 @@ export async function GET() {
   if (role === "OWNER" || role === "MANAGER") {
     // Get all employee hours
     const hours = await prisma.employeeHour.findMany({
-      where: { date: { gte: today } },
+      where: { tenantId, date: { gte: today } },
       include: { user: { select: { name: true, role: true } } },
       orderBy: { clockIn: "desc" },
     });
@@ -25,7 +28,7 @@ export async function GET() {
 
   // Employee sees own hours
   const hours = await prisma.employeeHour.findMany({
-    where: { userId, date: { gte: new Date(today.getTime() - 7 * 86400000) } },
+    where: { tenantId, userId, date: { gte: new Date(today.getTime() - 7 * 86400000) } },
     orderBy: { date: "desc" },
   });
 
@@ -33,11 +36,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = Number((session.user as { id?: string }).id);
-  const { action } = await request.json(); // "clock_in" or "clock_out"
+  const { userId, tenantId } = await getSessionContext();const { action } = await request.json(); // "clock_in" or "clock_out"
 
   const now = new Date();
   const today = new Date(now);
@@ -45,26 +44,26 @@ export async function POST(request: Request) {
 
   if (action === "clock_in") {
     const existing = await prisma.employeeHour.findFirst({
-      where: { userId, clockOut: null },
+      where: { tenantId, userId, clockOut: null },
     });
     if (existing) return NextResponse.json({ error: "Already clocked in" }, { status: 400 });
 
     const hour = await prisma.employeeHour.create({
-      data: { userId, clockIn: now, date: today },
+      data: { tenantId, userId, clockIn: now, date: today },
     });
     return NextResponse.json(hour, { status: 201 });
   }
 
   if (action === "clock_out") {
     const active = await prisma.employeeHour.findFirst({
-      where: { userId, clockOut: null },
+      where: { tenantId, userId, clockOut: null },
       orderBy: { clockIn: "desc" },
     });
     if (!active) return NextResponse.json({ error: "Not clocked in" }, { status: 400 });
 
     const totalHours = (now.getTime() - active.clockIn.getTime()) / (1000 * 60 * 60);
     const hour = await prisma.employeeHour.update({
-      where: { id: active.id },
+      where: { tenantId, id: active.id },
       data: { clockOut: now, totalHours: Math.round(totalHours * 100) / 100 },
     });
     return NextResponse.json(hour);

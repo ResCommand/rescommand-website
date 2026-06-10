@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const tenantId = await getTenantId();
 
   const categories = await prisma.employeeCategory.findMany({
     orderBy: { sortOrder: "asc" },
@@ -18,11 +18,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const body = await request.json();
   const { name, color } = body;
@@ -32,7 +28,7 @@ export async function POST(request: NextRequest) {
   const sortOrder = (maxOrder._max.sortOrder ?? 0) + 1;
 
   const category = await prisma.employeeCategory.create({
-    data: {
+    data: { tenantId,
       name: name.trim(),
       color: color || "#3B82F6",
       sortOrder,
@@ -42,18 +38,14 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const body = await request.json();
   const { id, name, color } = body;
   if (!id) return NextResponse.json({ error: "ID is required" }, { status: 400 });
 
   const category = await prisma.employeeCategory.update({
-    where: { id },
+    where: { tenantId, id },
     data: {
       ...(name && { name: name.trim() }),
       ...(color && { color }),
@@ -63,11 +55,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const { searchParams } = new URL(request.url);
   const id = Number(searchParams.get("id"));
@@ -77,6 +65,6 @@ export async function DELETE(request: NextRequest) {
   if (usersInCategory > 0)
     return NextResponse.json({ error: "Cannot delete category with assigned employees" }, { status: 400 });
 
-  await prisma.employeeCategory.delete({ where: { id } });
+  await prisma.employeeCategory.delete({ where: { tenantId, id } });
   return NextResponse.json({ success: true });
 }

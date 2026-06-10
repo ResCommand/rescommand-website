@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth"
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 

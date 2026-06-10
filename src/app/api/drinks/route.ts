@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { z } from "zod";
 
 const drinkSchema = z.object({
@@ -15,16 +16,12 @@ const drinkSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { userId, tenantId } = await getSessionContext();
 
   const body = await request.json();
   const parsed = drinkSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-
-  const userId = Number((session.user as { id?: string }).id);
-  const log = await prisma.drinkLog.create({
-    data: { userId, ...parsed.data },
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });const log = await prisma.drinkLog.create({
+    data: { tenantId, userId, ...parsed.data },
   });
 
   return NextResponse.json(log, { status: 201 });
@@ -33,6 +30,8 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");

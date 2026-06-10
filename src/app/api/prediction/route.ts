@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const role = (session.user as { role?: string }).role;
   if (role !== "MANAGER" && role !== "OWNER")
@@ -23,13 +26,13 @@ export async function GET() {
   if (!sheet) {
     // Generate one based on historical averages
     const donutCategory = await prisma.productCategory.findFirst({
-      where: { type: "DONUT" },
+      where: { tenantId, type: "DONUT" },
     });
 
     if (!donutCategory) return NextResponse.json({ lines: [] });
 
     const products = await prisma.product.findMany({
-      where: { categoryId: donutCategory.id, active: true },
+      where: { tenantId, categoryId: donutCategory.id, active: true },
     });
 
     const dayOfWeek = today.getDay();
@@ -38,7 +41,7 @@ export async function GET() {
     for (const product of products) {
       // Get average sales for this product on this day of week
       const pastLogs = await prisma.donutLog.findMany({
-        where: {
+        where: { tenantId,
           productId: product.id,
           createdAt: {
             gte: new Date(today.getTime() - 30 * 86400000),
@@ -52,7 +55,7 @@ export async function GET() {
 
       // Apply weather/holiday factor (simplified)
       const weatherCache = await prisma.weatherCache.findFirst({
-        where: { date: today },
+        where: { tenantId, date: today },
       });
 
       let factor = 1.0;
@@ -60,7 +63,7 @@ export async function GET() {
       if (weatherCache && weatherCache.tempHigh < 40) factor *= 0.9;
 
       const holiday = await prisma.holidaySchedule.findFirst({
-        where: { date: today },
+        where: { tenantId, date: today },
       });
       if (holiday) {
         if (holiday.impactLevel === "HIGH") factor *= 1.5;
@@ -78,7 +81,7 @@ export async function GET() {
     }
 
     sheet = await prisma.parSheet.create({
-      data: {
+      data: { tenantId,
         date: today,
         lines: { create: lines },
       },
@@ -90,10 +93,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { userId, tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

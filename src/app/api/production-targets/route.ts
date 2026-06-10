@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // ─── Day-of-week donut targets ────────────────────────────────
 const DAY_TARGETS: Record<string, number> = {
@@ -20,12 +21,7 @@ const TRAY_SIZE = 28;
 
 // PUT /api/production-targets — override target for a specific date
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { userId, tenantId, role } = await getSessionContext();
 
   const body = await request.json();
   const { date, target } = body;
@@ -39,7 +35,7 @@ export async function PUT(request: Request) {
   await prisma.productionTargetOverride.upsert({
     where: { tenantId_date: { tenantId: 1, date: parsed } },
     update: { target },
-    create: { date: parsed, target },
+    create: { tenantId, date: parsed, target },
   });
 
   return NextResponse.json({ success: true, date, target });
@@ -204,7 +200,7 @@ interface SandwichDayInfo {
 // Holiday-aware sandwich info for a specific date
 // makeDate: the date we're viewing (to check if it's a make day)
 // holidays: map of "YYYY-MM-DD" → holiday name for the next ~7 days
-async function getSandwichInfoForDate(viewingDate: Date, dayOfWeek: number): Promise<SandwichDayInfo> {
+async function getSandwichInfoForDate(viewingDate: Date, dayOfWeek: number, tenantId: number): Promise<SandwichDayInfo> {
   const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   // Is today a make day?
@@ -252,7 +248,7 @@ async function getSandwichInfoForDate(viewingDate: Date, dayOfWeek: number): Pro
 
     // Check if this specific date is a holiday
     const holiday = await prisma.holidaySchedule.findFirst({
-      where: { date: coverDate },
+      where: { tenantId, date: coverDate },
     });
     const isHoliday = !!holiday;
     const useWeekendPar = isWeekend || isHoliday;
@@ -348,9 +344,7 @@ export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const role = (session.user as { role?: string }).role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const tenantId = await getTenantId();
 
   // Accept optional ?date=YYYY-MM-DD query param
   const { searchParams } = new URL(request.url);
@@ -369,7 +363,7 @@ export async function GET(request: Request) {
 
   // Check if this date is a holiday → use weekend target
   const holiday = await prisma.holidaySchedule.findFirst({
-    where: { date: targetDate },
+    where: { tenantId, date: targetDate },
   });
 
   const isWeekendOrHoliday = dayOfWeek === 0 || dayOfWeek === 6 || !!holiday;
@@ -392,13 +386,13 @@ export async function GET(request: Request) {
   }));
 
   // Sandwich info — only populated on make days (Mon/Thu)
-  const sandwichToday = await getSandwichInfoForDate(targetDate, dayOfWeek);
+  const sandwichToday = await getSandwichInfoForDate(targetDate, dayOfWeek, tenantId);
 
   // Load prep list from database (editable), fall back to hardcoded if empty
   let prepList = PREP_LIST;
   try {
     const dbPrepItems = await prisma.prepItem.findMany({
-      where: { active: true },
+      where: { tenantId, active: true },
       orderBy: { sortOrder: "asc" },
     });
     if (dbPrepItems.length > 0) {
@@ -414,7 +408,7 @@ export async function GET(request: Request) {
 
   // Load tray overrides for this date
   const trayOverrides = await prisma.trayOverride.findMany({
-    where: { date: targetDate },
+    where: { tenantId, date: targetDate },
   });
   const overrideMap = new Map(trayOverrides.map(o => [o.flavor, o.trays]));
 

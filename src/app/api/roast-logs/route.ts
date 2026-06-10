@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/roast-logs
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get("limit") || "50");
@@ -31,8 +34,7 @@ export async function GET(request: Request) {
 
 // POST — create roast log
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { userId, tenantId } = await getSessionContext();
 
   const body = await request.json();
   const { date, greenCoffeeId, profileId, greenWeightKg, roastedWeightKg, roastLevel, chargeTemp, firstCrackTime, dropTemp, totalDuration, notes, batchNumber } = body;
@@ -40,17 +42,14 @@ export async function POST(request: Request) {
   if (!greenCoffeeId || !greenWeightKg || !roastedWeightKg)
     return NextResponse.json({ error: "Green coffee, input weight, and output weight required" }, { status: 400 });
 
-  const lossPercent = ((parseFloat(greenWeightKg) - parseFloat(roastedWeightKg)) / parseFloat(greenWeightKg) * 100);
-  const userId = parseInt((session.user as { id?: string }).id || "0");
-
-  // Deduct green coffee stock
+  const lossPercent = ((parseFloat(greenWeightKg) - parseFloat(roastedWeightKg)) / parseFloat(greenWeightKg) * 100);// Deduct green coffee stock
   await prisma.greenCoffee.update({
-    where: { id: parseInt(greenCoffeeId) },
+    where: { tenantId, id: parseInt(greenCoffeeId) },
     data: { stockKg: { decrement: parseFloat(greenWeightKg) } },
   });
 
   const log = await prisma.roastLog.create({
-    data: {
+    data: { tenantId,
       date: date ? new Date(date) : new Date(),
       greenCoffeeId: parseInt(greenCoffeeId),
       profileId: profileId ? parseInt(profileId) : null,
@@ -77,11 +76,7 @@ export async function POST(request: Request) {
 
 // PUT — update roast log
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const body = await request.json();
   const { id, ...data } = body;
@@ -102,15 +97,13 @@ export async function PUT(request: Request) {
     updateData.lossPercent = Math.round(((parseFloat(data.greenWeightKg) - parseFloat(data.roastedWeightKg)) / parseFloat(data.greenWeightKg) * 100) * 10) / 10;
   }
 
-  const log = await prisma.roastLog.update({ where: { id }, data: updateData });
+  const log = await prisma.roastLog.update({ where: { tenantId, id }, data: updateData });
   return NextResponse.json(log);
 }
 
 // DELETE
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
+  const { tenantId, role } = await getSessionContext();
   if (role !== "OWNER")
     return NextResponse.json({ error: "Only owners can delete roast logs" }, { status: 403 });
 
@@ -118,6 +111,6 @@ export async function DELETE(request: Request) {
   const id = parseInt(searchParams.get("id") || "0");
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-  await prisma.roastLog.delete({ where: { id } });
+  await prisma.roastLog.delete({ where: { tenantId, id } });
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -24,40 +25,42 @@ const updateUserSchema = z.object({
   categoryId: z.number().nullable().optional(),
 });
 
-// GET /api/users — list all users
+// GET /api/users — list users for this tenant only
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const role = (session.user as { role?: string }).role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const tenantId = await getTenantId();
 
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      phone: true,
-      active: true,
-      createdAt: true,
-      categoryId: true,
-      category: { select: { id: true, name: true, color: true } },
+  // Find users who are members of this tenant
+  const tenantUsers = await prisma.tenantUser.findMany({
+    where: { tenantId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          phone: true,
+          active: true,
+          createdAt: true,
+          categoryId: true,
+          category: { select: { id: true, name: true, color: true } },
+        },
+      },
     },
-    orderBy: { name: "asc" },
+    orderBy: { user: { name: "asc" } },
   });
 
+  const users = tenantUsers.map((tu) => tu.user);
   return NextResponse.json(users);
 }
 
-// POST /api/users — create new user
+// POST /api/users — create new user in this tenant
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
-  if (role !== "MANAGER" && role !== "OWNER")
+  const { userId, tenantId, role: actingRole } = await getSessionContext();
+  if (actingRole !== "MANAGER" && actingRole !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -66,7 +69,23 @@ export async function POST(request: Request) {
 
   // Check for duplicate email
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-  if (existing) return NextResponse.json({ error: "Email already exists" }, { status: 409 });
+  if (existing) {
+    // User exists — just add them to this tenant if not already a member
+    const existingMembership = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId, userId: existing.id } },
+    });
+    if (existingMembership) {
+      return NextResponse.json({ error: "User already exists in this workspace" }, { status: 409 });
+    }
+    // Add existing user to this tenant
+    await prisma.tenantUser.create({
+      data: { tenantId, userId: existing.id, role: parsed.data.role },
+    });
+    return NextResponse.json(
+      { id: existing.id, email: existing.email, name: existing.name, role: parsed.data.role },
+      { status: 201 }
+    );
+  }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
 
@@ -78,6 +97,9 @@ export async function POST(request: Request) {
       role: parsed.data.role,
       phone: parsed.data.phone,
       categoryId: parsed.data.categoryId,
+      tenantMemberships: {
+        create: { tenantId, role: parsed.data.role },
+      },
     },
     select: {
       id: true,
@@ -95,13 +117,10 @@ export async function POST(request: Request) {
   return NextResponse.json(user, { status: 201 });
 }
 
-// PUT /api/users — update user
+// PUT /api/users — update user (must be in same tenant)
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
-  if (role !== "MANAGER" && role !== "OWNER")
+  const { tenantId, role: actingRole } = await getSessionContext();
+  if (actingRole !== "MANAGER" && actingRole !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -109,10 +128,15 @@ export async function PUT(request: Request) {
 
   if (!id) return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
+  // Verify user belongs to this tenant
+  const membership = await prisma.tenantUser.findUnique({
+    where: { tenantId_userId: { tenantId, userId: id } },
+  });
+  if (!membership) return NextResponse.json({ error: "User not in this workspace" }, { status: 403 });
+
   const parsed = updateUserSchema.safeParse(updates);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  // If password is being updated, hash it
   const data: Record<string, unknown> = { ...parsed.data };
   if (data.password) {
     data.passwordHash = await bcrypt.hash(data.password as string, 10);
@@ -138,13 +162,10 @@ export async function PUT(request: Request) {
   return NextResponse.json(user);
 }
 
-// DELETE /api/users — deactivate user (soft delete)
+// DELETE /api/users — deactivate user (must be in same tenant)
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
-  if (role !== "OWNER")
+  const { userId: sessionUserId, tenantId, role: actingRole } = await getSessionContext();
+  if (actingRole !== "OWNER")
     return NextResponse.json({ error: "Only owners can delete users" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
@@ -152,22 +173,20 @@ export async function DELETE(request: Request) {
 
   if (!id) return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-  // Prevent self-deletion
-  const sessionUserId = Number((session.user as { id?: string }).id);
   if (Number(id) === sessionUserId)
     return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
 
-  // Soft delete — deactivate instead of removing
+  // Verify user belongs to this tenant
+  const membership = await prisma.tenantUser.findUnique({
+    where: { tenantId_userId: { tenantId, userId: Number(id) } },
+  });
+  if (!membership) return NextResponse.json({ error: "User not in this workspace" }, { status: 403 });
+
+  // Soft delete — deactivate
   const user = await prisma.user.update({
     where: { id: Number(id) },
     data: { active: false },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      active: true,
-    },
+    select: { id: true, email: true, name: true, role: true, active: true },
   });
 
   return NextResponse.json(user);

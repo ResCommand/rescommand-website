@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { z } from "zod";
 
 // GET /api/inventory/counts — list counts (most recent first)
@@ -9,12 +10,16 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const tenantId = await getTenantId();
+
   const counts = await prisma.inventoryCount.findMany({
+    where: { tenantId },
     orderBy: { date: "desc" },
     take: 20,
     include: {
       counter: { select: { id: true, name: true } },
       lines: {
+        where: { inventoryItem: { tenantId } },
         include: {
           inventoryItem: {
             select: { id: true, name: true, unit: true, parLevel: true, vendor: { select: { id: true, name: true } } },
@@ -41,21 +46,19 @@ const countSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { userId, tenantId } = await getSessionContext();
 
   const body = await request.json();
   const parsed = countSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const userId = Number((session.user as { id?: string }).id);
-  if (!userId) return NextResponse.json({ error: "User ID not found" }, { status: 400 });
-
   const date = new Date(parsed.data.date);
   date.setUTCHours(0, 0, 0, 0);
 
-  // Upsert the count (unique on date)
-  const existingCount = await prisma.inventoryCount.findUnique({ where: { date } });
+  // Upsert the count (unique on tenantId + date)
+  const existingCount = await prisma.inventoryCount.findUnique({
+    where: { tenantId_date: { tenantId, date } },
+  });
 
   let count;
   if (existingCount) {
@@ -67,15 +70,12 @@ export async function POST(request: Request) {
         countedBy: userId,
         notes: parsed.data.notes,
         lines: {
-          create: parsed.data.lines.map((line) => {
-            const item = {} as { parLevel?: number };
-            // We'll calculate amountToOrder in the loop below
-            return {
-              inventoryItemId: line.inventoryItemId,
-              onHand: line.onHand,
-              amountToOrder: 0, // placeholder, updated below
-            };
-          }),
+          create: parsed.data.lines.map((line) => ({
+            tenantId,
+            inventoryItemId: line.inventoryItemId,
+            onHand: line.onHand,
+            amountToOrder: 0,
+          })),
         },
       },
       include: {
@@ -86,11 +86,13 @@ export async function POST(request: Request) {
   } else {
     count = await prisma.inventoryCount.create({
       data: {
+        tenantId,
         date,
         countedBy: userId,
         notes: parsed.data.notes,
         lines: {
           create: parsed.data.lines.map((line) => ({
+            tenantId,
             inventoryItemId: line.inventoryItemId,
             onHand: line.onHand,
             amountToOrder: 0,
@@ -104,7 +106,7 @@ export async function POST(request: Request) {
     });
   }
 
-  // Now calculate amountToOrder = parLevel - onHand (if positive) and update lines
+  // Calculate amountToOrder = parLevel - onHand (if positive)
   for (const line of count.lines) {
     const parLevel = line.inventoryItem.parLevel;
     const amountToOrder = Math.max(0, parLevel - line.onHand);
@@ -114,7 +116,7 @@ export async function POST(request: Request) {
     });
   }
 
-  // Also update currentStock on each InventoryItem
+  // Update currentStock on each InventoryItem
   for (const line of parsed.data.lines) {
     await prisma.inventoryItem.update({
       where: { id: line.inventoryItemId },

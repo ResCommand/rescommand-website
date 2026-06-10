@@ -441,7 +441,7 @@ model InventoryCount {
   counter User                 @relation(fields: [countedBy], references: [id])
   lines   InventoryCountLine[]
 
-  @@unique([date])
+  @@unique([tenantId, date])
   @@map("inventory_counts")
 }
 
@@ -843,7 +843,7 @@ model BatchCompletion {
 
   user User? @relation(fields: [completedBy], references: [id])
 
-  @@unique([date, batchIndex])
+  @@unique([tenantId, date, batchIndex])
   @@map("batch_completions")
 }
 
@@ -856,7 +856,7 @@ model TrayOverride {
   trays     Float     @default(0)
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  @@unique([date, flavor])
+  @@unique([tenantId, date, flavor])
   @@map("tray_overrides")
 }
 

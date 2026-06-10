@@ -2,16 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/time-off — own requests (employee) or all (manager)
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { userId, tenantId, role } = await getSessionContext();
 
-  const userId = parseInt((session.user as { id?: string }).id || "0");
-  const role = (session.user as { role?: string })?.role;
-
-  const where = role === "EMPLOYEE" ? { userId } : {};
+  const where: Record<string, unknown> = { tenantId };
+  if (role === "EMPLOYEE") where.userId = userId;
   const requests = await prisma.timeOffRequest.findMany({
     where,
     include: {
@@ -25,10 +23,7 @@ export async function GET() {
 
 // POST /api/time-off — create request
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = parseInt((session.user as { id?: string }).id || "0");
+  const { userId, tenantId } = await getSessionContext();
   const body = await request.json();
   const { startDate, endDate, reason } = body;
 
@@ -36,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Start and end dates required" }, { status: 400 });
 
   const req = await prisma.timeOffRequest.create({
-    data: {
+    data: { tenantId,
       userId,
       startDate: new Date(startDate + "T00:00:00"),
       endDate: new Date(endDate + "T00:00:00"),
@@ -49,30 +44,24 @@ export async function POST(request: Request) {
 
 // PUT /api/time-off — approve/deny
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string })?.role;
-  const currentUserId = parseInt((session.user as { id?: string }).id || "0");
+  const { userId: currentUserId, tenantId, role } = await getSessionContext();
   const body = await request.json();
   const { id, status, startDate, endDate, reason } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   // Approve/deny flow (managers only)
   if (status) {
-    if (role !== "MANAGER" && role !== "OWNER")
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     if (!["APPROVED", "DENIED"].includes(status))
       return NextResponse.json({ error: "status must be APPROVED or DENIED" }, { status: 400 });
 
     const req = await prisma.timeOffRequest.update({
-      where: { id },
+      where: { tenantId, id },
       data: { status, reviewedBy: currentUserId, reviewedAt: new Date() },
       include: { user: { select: { id: true, name: true } }, reviewer: { select: { id: true, name: true } } },
     });
 
     await prisma.notification.create({
-      data: {
+      data: { tenantId,
         title: `Time-Off ${status === "APPROVED" ? "Approved" : "Denied"}`,
         message: `Your request for ${new Date(req.startDate).toLocaleDateString()} – ${new Date(req.endDate).toLocaleDateString()} has been ${status.toLowerCase()}.`,
         priority: status === "DENIED" ? "HIGH" : "NORMAL",
@@ -85,7 +74,7 @@ export async function PUT(request: Request) {
   }
 
   // Edit flow (own pending requests only)
-  const existing = await prisma.timeOffRequest.findUnique({ where: { id } });
+  const existing = await prisma.timeOffRequest.findUnique({ where: { tenantId, id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.userId !== currentUserId)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -98,7 +87,7 @@ export async function PUT(request: Request) {
   if (reason !== undefined) updateData.reason = reason || null;
 
   const updated = await prisma.timeOffRequest.update({
-    where: { id },
+    where: { tenantId, id },
     data: updateData,
     include: { user: { select: { id: true, name: true } }, reviewer: { select: { id: true, name: true } } },
   });
@@ -107,21 +96,17 @@ export async function PUT(request: Request) {
 
 // DELETE /api/time-off?id=X — cancel own pending request
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = parseInt((session.user as { id?: string }).id || "0");
-  const { searchParams } = new URL(request.url);
+  const { userId, tenantId } = await getSessionContext();const { searchParams } = new URL(request.url);
   const id = Number(searchParams.get("id"));
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-  const req = await prisma.timeOffRequest.findUnique({ where: { id } });
+  const req = await prisma.timeOffRequest.findUnique({ where: { tenantId, id } });
   if (!req) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (req.userId !== userId)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (req.status !== "PENDING")
     return NextResponse.json({ error: "Can only cancel pending requests" }, { status: 400 });
 
-  await prisma.timeOffRequest.delete({ where: { id } });
+  await prisma.timeOffRequest.delete({ where: { tenantId, id } });
   return NextResponse.json({ ok: true });
 }

@@ -2,16 +2,19 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const tenantId = await getTenantId();
+
   const tasks = await prisma.cleaningTask.findMany({
-    where: { active: true },
+    where: { tenantId, active: true },
     include: {
       logs: {
-        where: {
+        where: { tenantId,
           completedAt: {
             gte: new Date(new Date().setHours(0, 0, 0, 0)),
           },
@@ -27,14 +30,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { userId, tenantId } = await getSessionContext();
 
-  const { taskId, notes } = await request.json();
-  const userId = Number((session.user as { id?: string }).id);
-
-  const log = await prisma.cleaningLog.create({
-    data: { taskId, completedBy: userId, notes },
+  const { taskId, notes } = await request.json();const log = await prisma.cleaningLog.create({
+    data: { tenantId, taskId, completedBy: userId, notes },
     include: { user: { select: { name: true } } },
   });
 

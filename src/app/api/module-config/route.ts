@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/module-config — list all module configs
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const configs = await prisma.moduleConfig.findMany({ orderBy: { sortOrder: "asc" } });
 
@@ -37,9 +40,7 @@ export async function GET() {
 
 // PUT /api/module-config — toggle module on/off
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
+  const { tenantId, role } = await getSessionContext();
   if (role !== "OWNER")
     return NextResponse.json({ error: "Only owners can change module settings" }, { status: 403 });
 

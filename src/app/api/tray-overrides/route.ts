@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/tray-overrides?date=YYYY-MM-DD
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const { searchParams } = new URL(request.url);
   const dateParam = searchParams.get("date");
@@ -14,17 +17,14 @@ export async function GET(request: Request) {
 
   const date = new Date(dateParam + "T00:00:00");
   const overrides = await prisma.trayOverride.findMany({
-    where: { date },
+    where: { tenantId, date },
   });
   return NextResponse.json(overrides);
 }
 
 // POST /api/tray-overrides — Save a tray override (upsert)
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const body = await request.json();
   const { date, flavor, trays } = body;
@@ -32,25 +32,22 @@ export async function POST(request: Request) {
 
   const targetDate = new Date(date + "T00:00:00");
   const override = await prisma.trayOverride.upsert({
-    where: { date_flavor: { date: targetDate, flavor } },
+    where: { tenantId_date_flavor: { tenantId, date: targetDate, flavor } },
     update: { trays },
-    create: { date: targetDate, flavor, trays },
+    create: { tenantId, date: targetDate, flavor, trays },
   });
   return NextResponse.json(override);
 }
 
 // DELETE /api/tray-overrides?date=YYYY-MM-DD — Reset all overrides for a date
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const { searchParams } = new URL(request.url);
   const dateParam = searchParams.get("date");
   if (!dateParam) return NextResponse.json({ error: "date required" }, { status: 400 });
 
   const date = new Date(dateParam + "T00:00:00");
-  await prisma.trayOverride.deleteMany({ where: { date } });
+  await prisma.trayOverride.deleteMany({ where: { tenantId, date } });
   return NextResponse.json({ success: true });
 }

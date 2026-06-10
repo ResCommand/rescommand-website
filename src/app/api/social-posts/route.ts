@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/social-posts
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
@@ -25,17 +28,13 @@ export async function GET(request: Request) {
 
 // POST — create post
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = parseInt((session.user as { id?: string }).id || "0");
-  const body = await request.json();
+  const { userId, tenantId } = await getSessionContext();const body = await request.json();
   const { title, description, platform, postDate, status, mediaUrl, linkUrl, notes } = body;
 
   if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
 
   const post = await prisma.socialPost.create({
-    data: {
+    data: { tenantId,
       title,
       description: description || null,
       platform: platform || "ALL",
@@ -56,12 +55,7 @@ export async function POST(request: Request) {
 
 // PUT — update post (approve, schedule, edit)
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  const userId = parseInt((session.user as { id?: string }).id || "0");
-
-  const body = await request.json();
+  const { userId, tenantId, role } = await getSessionContext();const body = await request.json();
   const { id, ...data } = body;
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
@@ -82,7 +76,7 @@ export async function PUT(request: Request) {
   if (data.notes !== undefined) updateData.notes = data.notes || null;
 
   const post = await prisma.socialPost.update({
-    where: { id },
+    where: { tenantId, id },
     data: updateData,
     include: {
       createdByUser: { select: { id: true, name: true } },
@@ -94,16 +88,12 @@ export async function PUT(request: Request) {
 
 // DELETE
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const { searchParams } = new URL(request.url);
   const id = parseInt(searchParams.get("id") || "0");
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-  await prisma.socialPost.delete({ where: { id } });
+  await prisma.socialPost.delete({ where: { tenantId, id } });
   return NextResponse.json({ ok: true });
 }

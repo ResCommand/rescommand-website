@@ -2,15 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // POST /api/schedule-templates/copy-week
 // Body: { sourceWeek: "2026-06-01", targetWeek: "2026-06-08" }
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { userId, tenantId, role } = await getSessionContext();
 
   const { sourceWeek, targetWeek } = await request.json();
   if (!sourceWeek || !targetWeek)
@@ -18,14 +15,14 @@ export async function POST(request: Request) {
 
   const srcMonday = new Date(sourceWeek + "T00:00:00");
   const tgtMonday = new Date(targetWeek + "T00:00:00");
-  const creatorId = parseInt((session.user as { id?: string }).id || "0");
+  const creatorId = userId;
 
   // Fetch source week shifts
   const srcSunday = new Date(tgtMonday);
   srcSunday.setDate(srcSunday.getDate() + 7);
 
   const sourceShifts = await prisma.shift.findMany({
-    where: {
+    where: { tenantId,
       date: { gte: srcMonday, lt: new Date(srcMonday.getTime() + 7 * 86400000) },
     },
   });
@@ -44,12 +41,12 @@ export async function POST(request: Request) {
 
     // Skip if shift already exists for this user on the target date
     const exists = await prisma.shift.findFirst({
-      where: { userId: s.userId, date: newDate, startTime: s.startTime, endTime: s.endTime },
+      where: { tenantId, userId: s.userId, date: newDate, startTime: s.startTime, endTime: s.endTime },
     });
     if (exists) continue;
 
     await prisma.shift.create({
-      data: {
+      data: { tenantId,
         userId: s.userId,
         date: newDate,
         startTime: s.startTime,
@@ -66,7 +63,7 @@ export async function POST(request: Request) {
   // Send one notification per user
   for (const userId of notified) {
     await prisma.notification.create({
-      data: {
+      data: { tenantId,
         title: "Schedule Copied",
         message: `Shifts have been drafted for the week of ${tgtMonday.toLocaleDateString("en-US", { month: "short", day: "numeric" })}. You'll be notified when they're published.`,
         priority: "NORMAL",

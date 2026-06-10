@@ -2,18 +2,21 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { z } from "zod";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const tenantId = await getTenantId();
+
   const today = new Date();
   const future = new Date(today);
   future.setDate(future.getDate() + 35);
 
   const schedules = await prisma.overboardSchedule.findMany({
-    where: { date: { gte: today, lte: future } },
+    where: { tenantId, date: { gte: today, lte: future } },
     include: {
       lines: { include: { product: true } },
       tasks: { include: { assignee: { select: { id: true, name: true } } }, orderBy: { sortOrder: "asc" } },
@@ -36,10 +39,7 @@ const overboardSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { userId, tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const schedule = await prisma.overboardSchedule.create({
-    data: {
+    data: { tenantId,
       date: new Date(parsed.data.date),
       notes: parsed.data.notes,
       lines: {
@@ -62,17 +62,14 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const role = (session.user as { role?: string }).role;
+  const { userId, tenantId, role } = await getSessionContext();
   if (role !== "MANAGER" && role !== "OWNER")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id, status } = await request.json();
 
   const schedule = await prisma.overboardSchedule.update({
-    where: { id },
+    where: { tenantId, id },
     data: { status },
   });
 

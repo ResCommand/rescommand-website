@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -7,16 +8,18 @@ import { authOptions } from "@/lib/auth";
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
   const userId = parseInt((session.user as { id?: string })?.id || "0");
 
   // Get all notifications where user is a recipient, with read status
   const notifications = await prisma.notification.findMany({
-    where: {
+    where: { tenantId,
       recipients: { some: { userId } },
     },
     include: {
       sender: { select: { id: true, name: true } },
-      reads: { where: { userId } },
+      reads: { where: { tenantId, userId } },
       recipients: { select: { userId: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -38,13 +41,8 @@ export async function GET() {
 
 // POST /api/notifications — Send a new notification
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { userId, tenantId } = await getSessionContext();
 
-  const userId = parseInt((session.user as { id?: string })?.id || "0");
   const body = await request.json();
   const { title, message, priority, recipientUserIds, recipientCategoryIds } = body;
 
@@ -73,7 +71,7 @@ export async function POST(request: NextRequest) {
 
   // Create notification with recipients
   const notification = await prisma.notification.create({
-    data: {
+    data: { tenantId,
       title: title.trim(),
       message: message.trim(),
       priority: priority || "normal",
@@ -93,9 +91,7 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/notifications — Mark as read
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = parseInt((session.user as { id?: string })?.id || "0");
+  const { userId, tenantId } = await getSessionContext();
 
   const body = await request.json();
   const { notificationId, markAllRead } = body;
@@ -103,7 +99,7 @@ export async function PUT(request: NextRequest) {
   if (markAllRead) {
     // Mark all unread notifications as read for this user
     const unread = await prisma.notification.findMany({
-      where: {
+      where: { tenantId,
         recipients: { some: { userId } },
         reads: { none: { userId } },
       },
@@ -123,9 +119,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "notificationId required" }, { status: 400 });
 
   await prisma.notificationRead.upsert({
-    where: { notificationId_userId: { notificationId, userId } },
+    where: { tenantId, notificationId_userId: { notificationId, userId } },
     update: {},
-    create: { notificationId, userId },
+    create: { tenantId, notificationId, userId },
   });
 
   return NextResponse.json({ success: true });

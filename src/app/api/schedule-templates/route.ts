@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getTenantId, getSessionContext } from "@/lib/tenant";
 
 // GET /api/schedule-templates
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tenantId = await getTenantId();
 
   const templates = await prisma.scheduleTemplate.findMany({
     include: {
@@ -22,21 +25,17 @@ export async function GET() {
 
 // POST — create or update template
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId, role } = await getSessionContext();
 
   const body = await request.json();
   const { name, shifts } = body;
 
   // Upsert: if a default template exists, update it; otherwise create
-  const existing = await prisma.scheduleTemplate.findFirst({ where: { isDefault: true } });
+  const existing = await prisma.scheduleTemplate.findFirst({ where: { tenantId, isDefault: true } });
 
   if (existing) {
     // Delete old shifts and replace
-    await prisma.templateShift.deleteMany({ where: { templateId: existing.id } });
+    await prisma.templateShift.deleteMany({ where: { tenantId, templateId: existing.id } });
     if (shifts?.length > 0) {
       await prisma.templateShift.createMany({
         data: shifts.map((s: { dayOfWeek: number; startTime: string; endTime: string; position: string; userId: number }) => ({
@@ -50,17 +49,17 @@ export async function POST(request: Request) {
       });
     }
     if (name) {
-      await prisma.scheduleTemplate.update({ where: { id: existing.id }, data: { name } });
+      await prisma.scheduleTemplate.update({ where: { tenantId, id: existing.id }, data: { name } });
     }
     const updated = await prisma.scheduleTemplate.findUnique({
-      where: { id: existing.id },
+      where: { tenantId, id: existing.id },
       include: { shifts: { include: { user: { select: { id: true, name: true } } }, orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }] } },
     });
     return NextResponse.json(updated);
   }
 
   const template = await prisma.scheduleTemplate.create({
-    data: {
+    data: { tenantId,
       name: name || "Default Schedule",
       isDefault: true,
       shifts: {
@@ -80,23 +79,18 @@ export async function POST(request: Request) {
 
 // PATCH — apply template to a specific week
 export async function PATCH(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { userId: creatorId, tenantId } = await getSessionContext();
 
   const body = await request.json();
   const { weekStart: ws, templateId } = body;
   if (!ws) return NextResponse.json({ error: "weekStart required" }, { status: 400 });
 
   const monday = new Date(ws + "T00:00:00");
-  const creatorId = parseInt((session.user as { id?: string }).id || "0");
 
   // Get template
   const template = templateId
     ? await prisma.scheduleTemplate.findUnique({ where: { id: templateId }, include: { shifts: true } })
-    : await prisma.scheduleTemplate.findFirst({ where: { isDefault: true }, include: { shifts: true } });
+    : await prisma.scheduleTemplate.findFirst({ where: { tenantId, isDefault: true }, include: { shifts: true } });
 
   if (!template || template.shifts.length === 0)
     return NextResponse.json({ error: "No template found or template is empty" }, { status: 400 });
@@ -113,7 +107,7 @@ export async function PATCH(request: Request) {
 
     // Check if shift already exists for this user on this date
     const existing = await prisma.shift.findFirst({
-      where: {
+      where: { tenantId,
         userId: ts.userId,
         date: shiftDate,
         startTime: ts.startTime,
@@ -123,7 +117,7 @@ export async function PATCH(request: Request) {
     if (existing) continue;
 
     await prisma.shift.create({
-      data: {
+      data: { tenantId,
         userId: ts.userId,
         date: shiftDate,
         startTime: ts.startTime,
@@ -148,7 +142,7 @@ export async function PATCH(request: Request) {
     }).join(", ");
 
     await prisma.notification.create({
-      data: {
+      data: { tenantId,
         title: "New Weekly Schedule",
         message: `Your schedule for the week of ${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} has been published: ${summary}`,
         priority: "NORMAL",
@@ -163,12 +157,8 @@ export async function PATCH(request: Request) {
 
 // DELETE — clear template
 export async function DELETE() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { tenantId } = await getSessionContext();
 
-  await prisma.scheduleTemplate.deleteMany({});
+  await prisma.scheduleTemplate.deleteMany({ where: { tenantId } });
   return NextResponse.json({ ok: true });
 }

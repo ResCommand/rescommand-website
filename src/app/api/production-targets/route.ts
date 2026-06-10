@@ -37,7 +37,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
 
   await prisma.productionTargetOverride.upsert({
-    where: { date: parsed },
+    where: { tenantId_date: { tenantId: 1, date: parsed } },
     update: { target },
     create: { date: parsed, target },
   });
@@ -377,7 +377,7 @@ export async function GET(request: Request) {
 
   // Check for saved override
   const override = await prisma.productionTargetOverride.findUnique({
-    where: { date: targetDate },
+    where: { tenantId_date: { tenantId: 1, date: targetDate } },
   });
   const target = override ? override.target : defaultTarget;
   const period = isWeekendOrHoliday ? "weekend" : getPeriod(dayOfWeek);

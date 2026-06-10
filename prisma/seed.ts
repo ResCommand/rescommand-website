@@ -8,7 +8,7 @@ async function main() {
   // ─── Vendors ──────────────────────────────────────────────────
   const vendors = await Promise.all([
     prisma.vendor.upsert({
-      where: { name: "US Foods" },
+      where: { tenantId_name: { tenantId: 1, name: "US Foods" } },
       update: {},
       create: {
         tenantId: 1,
@@ -20,7 +20,7 @@ async function main() {
       },
     }),
     prisma.vendor.upsert({
-      where: { name: "Senn Brothers" },
+      where: { tenantId_name: { tenantId: 1, name: "Senn Brothers" } },
       update: {},
       create: {
         tenantId: 1,
@@ -32,7 +32,7 @@ async function main() {
       },
     }),
     prisma.vendor.upsert({
-      where: { name: "GFI" },
+      where: { tenantId_name: { tenantId: 1, name: "GFI" } },
       update: {},
       create: {
         tenantId: 1,
@@ -44,7 +44,7 @@ async function main() {
       },
     }),
     prisma.vendor.upsert({
-      where: { name: "Amazon" },
+      where: { tenantId_name: { tenantId: 1, name: "Amazon" } },
       update: {},
       create: {
         tenantId: 1,
@@ -56,7 +56,7 @@ async function main() {
       },
     }),
     prisma.vendor.upsert({
-      where: { name: "Aldi" },
+      where: { tenantId_name: { tenantId: 1, name: "Aldi" } },
       update: {},
       create: {
         tenantId: 1,

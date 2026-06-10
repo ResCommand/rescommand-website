@@ -128,12 +128,13 @@ model EmployeeCategory {
   tenantId Int @default(1) @map("tenant_id")
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
-  name      String   @unique
+name      String
   color     String   @default("#6B7280")
   sortOrder Int      @default(0) @map("sort_order")
-  active    Boolean  @default(true)
+  active    Boolean   @default(true)
   members   User[]
 
+  @@unique([tenantId, name])
   @@map("employee_categories")
 }
 
@@ -338,7 +339,7 @@ model Vendor {
   tenantId Int @default(1) @map("tenant_id")
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id             Int      @id @default(autoincrement())
-  name           String   @unique
+  name           String
   role           String?  // e.g. "Primary broadline vendor"
   mainUse        String?  // e.g. "Donut ingredients, dairy, supplies"
   cadence        String?  // e.g. "Weekly / near-weekly"
@@ -349,6 +350,7 @@ model Vendor {
 
   inventoryItems InventoryItem[]
 
+  @@unique([tenantId, name])
   @@map("vendors")
 }
 
@@ -468,12 +470,13 @@ model InventorySection {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int              @id @default(autoincrement())
   name      String           // Display name: "Kitchen — Regular Orders"
-  slug      String           @unique  // Internal key: "kitchen_regular"
+  slug      String           // Internal key: "kitchen_regular"
   icon      String           @default("📦")  // Emoji icon
   sortOrder Int              @default(0) @map("sort_order")
   active    Boolean          @default(true)
   items     InventoryItem[]
 
+  @@unique([tenantId, slug])
   @@map("inventory_sections")
 }
 
@@ -535,13 +538,14 @@ model WeatherCache {
   tenantId Int @default(1) @map("tenant_id")
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id           Int      @id @default(autoincrement())
-  date         DateTime @unique
+  date         DateTime
   tempHigh     Float     @map("temp_high") @default(0)
   tempLow      Float     @map("temp_low") @default(0)
   precipitation Float    @default(0)
   conditions   String?
   fetchedAt    DateTime  @map("fetched_at") @default(now())
 
+  @@unique([tenantId, date])
   @@map("weather_cache")
 }
 
@@ -549,11 +553,12 @@ model ParSheet {
   tenantId Int @default(1) @map("tenant_id")
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int      @id @default(autoincrement())
-  date        DateTime @unique
+  date        DateTime
   generatedBy Int?     @map("generated_by")
   notes       String?
   lines       ParSheetLine[]
 
+  @@unique([tenantId, date])
   @@map("par_sheets")
 }
 
@@ -782,13 +787,14 @@ model RecipeCategory {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   name      String
-  slug      String   @unique
+  slug      String
   icon      String   @default("📋")
   color     String   @default("#F9FAFB")   // Background color
   sortOrder Int      @default(0) @map("sort_order")
   active    Boolean  @default(true)
   recipes   Recipe[]
 
+  @@unique([tenantId, slug])
   @@map("recipe_categories")
 }
 
@@ -817,10 +823,11 @@ model ProductionTargetOverride {
   tenantId Int @default(1) @map("tenant_id")
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
-  date      DateTime @unique
+  date      DateTime
   target    Int
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([tenantId, date])
   @@map("production_target_overrides")
 }
 
@@ -1010,7 +1017,7 @@ model ModuleConfig {
   tenantId Int @default(1) @map("tenant_id")
   tenant   Tenant @relation(fields: [tenantId], references: [id])
   id          Int     @id @default(autoincrement())
-  moduleKey   String  @unique @map("module_key")   // e.g. "roasting", "schedule", "inventory"
+  moduleKey   String  @map("module_key")   // e.g. "roasting", "schedule", "inventory"
   name        String  // Display name, e.g. "Coffee Roasting"
   description String? // Short help text
   enabled     Boolean @default(false)
@@ -1018,6 +1025,7 @@ model ModuleConfig {
   sortOrder   Int     @default(0) @map("sort_order")
   group       String  @default("operations")       // "operations" | "management" | "coffee"
 
+  @@unique([tenantId, moduleKey])
   @@map("module_configs")
 }
 

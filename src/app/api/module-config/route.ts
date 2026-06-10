@@ -53,7 +53,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "This module cannot be disabled" }, { status: 400 });
 
   const config = await prisma.moduleConfig.update({
-    where: { moduleKey },
+    where: { tenantId_moduleKey: { tenantId: 1, moduleKey } },
     data: { enabled },
   });
   return NextResponse.json(config);

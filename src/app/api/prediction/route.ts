@@ -16,7 +16,7 @@ export async function GET() {
   today.setHours(0, 0, 0, 0);
 
   let sheet = await prisma.parSheet.findUnique({
-    where: { date: today },
+    where: { tenantId_date: { tenantId: 1, date: today } },
     include: { lines: { include: { product: true } } },
   });
 

@@ -14,6 +14,7 @@ const PUBLIC_PATHS = [
   "/api/fix-users",
   "/api/health",
   "/api/debug-auth",
+  "/api/seed-duffers",
 ];
 
 // Platform paths (rescommand.com root — no tenant context)

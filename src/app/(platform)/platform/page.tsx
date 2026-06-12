@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { signOut } from "next-auth/react";
 import {
   Building2, Users, CreditCard, Settings, Eye, Ban, Check, AlertTriangle,
   TrendingUp, DollarSign, BarChart3, Search, ChevronRight, X, Save,
-  ExternalLink, Clock, Shield,
+  ExternalLink, Clock, Shield, Plus, Trash2, LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,7 +39,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  FREE: "#6B7280", STARTER: "#3B82F6", PROFESSIONAL: "#8B5CF6", ENTERPRISE: "#F59E0B",
+  TEST: "#6B7280", FREE: "#6B7280", STARTER: "#3B82F6", PROFESSIONAL: "#8B5CF6", ENTERPRISE: "#F59E0B",
 };
 
 const TYPE_OPTIONS = ["DONUT_SHOP", "BAKERY", "CAFE", "RESTAURANT", "BAR", "FOOD_TRUCK"];
@@ -57,6 +58,16 @@ export default function PlatformAdminPage() {
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/platform/dashboard");
+      if (res.status === 401) {
+        // Not logged in — redirect to login
+        window.location.href = "/login?callbackUrl=/platform";
+        return;
+      }
+      if (res.status === 403) {
+        // Logged in but not a platform admin
+        setLoading(false);
+        return;
+      }
       if (res.ok) {
         const d = await res.json();
         setData(d);
@@ -67,6 +78,33 @@ export default function PlatformAdminPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // ─── Plan Actions ───────────────────────────────────────
+
+  const addPlan = () => {
+    if (!editingPlan) return;
+    const keyNum = editingPlan.length + 1;
+    const newKey = `PLAN_${keyNum}`;
+    setEditingPlan([...editingPlan, {
+      id: 0, // new plan, will be created on save
+      planKey: newKey,
+      name: "New Plan",
+      price: 0,
+      staffLimit: null,
+      features: null,
+      active: true,
+      sortOrder: editingPlan.length,
+      stripePriceId: null,
+    }]);
+    toast.info("New plan added — edit the Plan Key to something unique, then Save");
+  };
+
+  const removePlan = (index: number) => {
+    if (!editingPlan) return;
+    const plan = editingPlan[index];
+    if (!confirm(`Remove "${plan.name}" (${plan.planKey})? This will take effect after saving.`)) return;
+    setEditingPlan(editingPlan.filter((_, i) => i !== index));
+  };
 
   // ─── Tenant Actions ───────────────────────────────────────
 
@@ -110,8 +148,12 @@ export default function PlatformAdminPage() {
       const res = await fetch("/api/platform/pricing", {
         method: "PUT", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plans: editingPlan.map(p => ({
-          ...p,
-          features: typeof p.features === "string" ? JSON.parse(p.features || "[]") : p.features,
+          planKey: p.planKey,
+          name: p.name,
+          price: p.price,
+          staffLimit: p.staffLimit,
+          features: typeof p.features === "string" ? JSON.parse(p.features || "[]") : (Array.isArray(p.features) ? p.features : []),
+          active: p.active,
         })) }),
       });
       if (res.ok) { toast.success("Pricing saved"); load(); }
@@ -140,7 +182,20 @@ export default function PlatformAdminPage() {
     );
   }
 
-  if (!data) return <div style={{ padding: 48, textAlign: "center", color: "#DC2626" }}>Failed to load data</div>;
+  if (!data) return (
+    <div style={{ minHeight: "100vh", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: 400, padding: 32 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <h2 style={{ fontSize: 18, fontWeight: 600, color: "#1E293B", marginBottom: 8 }}>Platform Admin Required</h2>
+        <p style={{ color: "#64748B", fontSize: 14, marginBottom: 16 }}>
+          You need platform admin privileges to access this page. If you believe this is an error, contact your system administrator.
+        </p>
+        <a href="/login?callbackUrl=/platform" style={{ color: "#2563EB", fontSize: 14, fontWeight: 500 }}>
+          Sign in with an admin account →
+        </a>
+      </div>
+    </div>
+  );
 
   // ─── Render ───────────────────────────────────────────────
 
@@ -156,7 +211,7 @@ export default function PlatformAdminPage() {
               <p style={{ fontSize: 10, color: "#64748B" }}>Venturio LLC</p>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 4 }}>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             {(["dashboard", "tenants", "pricing"] as const).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)}
                 style={{
@@ -171,6 +226,17 @@ export default function PlatformAdminPage() {
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              title="Sign Out"
+              style={{
+                marginLeft: 8, padding: "6px 10px", borderRadius: 6, border: "1px solid #E2E8F0",
+                cursor: "pointer", background: "transparent", color: "#94A3B8",
+                display: "flex", alignItems: "center", gap: 4, fontSize: 13,
+              }}
+            >
+              <LogOut size={14} />
+            </button>
           </div>
         </div>
       </div>
@@ -330,15 +396,39 @@ export default function PlatformAdminPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: 16, fontWeight: 600 }}>Plan Pricing</h3>
-              <button onClick={savePricing} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: "#2563EB", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                <Save size={14} /> Save Changes
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={addPlan} style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid #2563EB", background: "#EFF6FF", color: "#2563EB", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Plus size={14} /> Add Plan
+                </button>
+                <button onClick={savePricing} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: "#2563EB", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Save size={14} /> Save Changes
+                </button>
+              </div>
             </div>
+            {editingPlan.length === 0 && (
+              <div style={{ padding: 48, textAlign: "center", color: "#475569" }}>
+                No plans configured. Click "Add Plan" to create one.
+              </div>
+            )}
             {editingPlan.map((plan, i) => (
-              <div key={plan.planKey} style={{ background: "#FFFFFF", borderRadius: 12, border: `1px solid ${PLAN_COLORS[plan.planKey]}40`, padding: 24 }}>
+              <div key={plan.planKey + i} style={{ background: "#FFFFFF", borderRadius: 12, border: `1px solid ${PLAN_COLORS[plan.planKey] || "#6B7280"}40`, padding: 24, position: "relative" }}>
+                <button
+                  onClick={() => removePlan(i)}
+                  style={{ position: "absolute", top: 12, right: 12, background: "none", border: "none", color: "#94A3B8", cursor: "pointer", padding: 4 }}
+                  title="Remove plan"
+                >
+                  <Trash2 size={14} />
+                </button>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 16, alignItems: "end" }}>
                   <Field label="Plan Key">
-                    <input value={plan.planKey} disabled style={inputStyle} />
+                    <input
+                      value={plan.planKey}
+                      disabled={plan.id !== 0}
+                      onChange={e => { const p = [...editingPlan]; p[i] = { ...p[i], planKey: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "_") }; setEditingPlan(p); }}
+                      style={inputStyle}
+                      placeholder="e.g. STARTER"
+                    />
+                    {plan.id === 0 && <span style={{ fontSize: 10, color: "#F59E0B" }}>New — set key before saving</span>}
                   </Field>
                   <Field label="Display Name">
                     <input value={plan.name} onChange={e => { const p = [...editingPlan]; p[i] = { ...p[i], name: e.target.value }; setEditingPlan(p); }} style={inputStyle} />

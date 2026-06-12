@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronRight, ChevronLeft, Check, Loader2, Plus,
@@ -35,35 +35,58 @@ const TYPE_DEFAULTS: Record<string, string[]> = {
   FOOD_TRUCK: ["production", "inventory", "recipes", "schedule", "sops"],
 };
 
-const PLANS = [
+// Fallback plans used when the API is unreachable
+const FALLBACK_PLANS = [
   {
-    key: "STARTER",
-    name: "Starter",
-    price: 49,
-    period: "/month",
-    desc: "For single-location restaurants",
-    features: ["Inventory & recipes", "Production sheets", "Employee scheduling", "SOPs", "Email support"],
-    highlight: false,
-  },
-  {
-    key: "PROFESSIONAL",
-    name: "Professional",
+    key: "CORE",
+    name: "Core",
     price: 99,
     period: "/month",
-    desc: "For growing operations",
-    features: ["Everything in Starter", "AI recipe & inventory import", "Menu planning", "Social media planner", "Priority support"],
-    highlight: true,
-  },
-  {
-    key: "ENTERPRISE",
-    name: "Enterprise",
-    price: 199,
-    period: "/month",
-    desc: "For multi-location groups",
-    features: ["Everything in Professional", "Multi-location support", "Custom integrations", "Dedicated account manager", "SLA guarantee"],
+    desc: "1 location · up to 15 team members",
+    features: ["Inventory & recipes", "Production sheets", "Employee scheduling", "SOPs", "AI recipe & inventory import", "Menu planning", "Email support"],
     highlight: false,
   },
+  {
+    key: "OPERATOR",
+    name: "Operator",
+    price: 199,
+    period: "/month",
+    desc: "Multiple locations · up to 35 team members",
+    features: ["Everything in Core", "Multi-location support", "Social media planner", "Custom integrations", "Priority support", "Dedicated account manager"],
+    highlight: true,
+  },
 ];
+
+interface PricingPlan {
+  id: number;
+  planKey: string;
+  name: string;
+  price: number; // cents
+  staffLimit: number | null;
+  features: string | string[] | null;
+  active: boolean;
+  sortOrder: number;
+  stripePriceId: string | null;
+}
+
+function parseFeatures(f: string | string[] | null): string[] {
+  if (!f) return [];
+  if (Array.isArray(f)) return f;
+  try { return JSON.parse(f); } catch { return []; }
+}
+
+// Convert DB PlanPricing rows into the display shape the signup wizard uses
+function dbPlansToDisplay(plans: PricingPlan[]) {
+  return plans.map((p, i) => ({
+    key: p.planKey,
+    name: p.name,
+    price: p.price / 100, // convert cents to dollars
+    period: "/month",
+    desc: p.staffLimit ? `Up to ${p.staffLimit} staff` : "Unlimited staff",
+    features: parseFeatures(p.features),
+    highlight: i === plans.length - 1, // highlight the top tier (Operator)
+  }));
+}
 
 const THEME_COLORS = [
   { name: "Blue", value: "#1A56DB" },
@@ -85,12 +108,14 @@ export default function SignupPage() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [plans, setPlans] = useState(FALLBACK_PLANS);
+  const [plansLoading, setPlansLoading] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
     slug: "",
     businessType: "DONUT_SHOP",
-    plan: "PROFESSIONAL",
+    plan: "CORE",
     brandName: "",
     theme: "dark" as "dark" | "light",
     primaryColor: "#1A56DB",
@@ -104,6 +129,32 @@ export default function SignupPage() {
   const [teamName, setTeamName] = useState("");
   const [teamEmail, setTeamEmail] = useState("");
   const [teamRole, setTeamRole] = useState("EMPLOYEE");
+
+  // Fetch active plans from the database (admin-managed pricing)
+  useEffect(() => {
+    fetch("/api/platform/pricing")
+      .then(r => r.json())
+      .then((data: PricingPlan[]) => {
+        // Filter to active, non-TEST plans, sort by sortOrder
+        const active = data
+          .filter(p => p.active && p.planKey !== "TEST" && p.planKey !== "FREE")
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        if (active.length > 0) {
+          const display = dbPlansToDisplay(active);
+          setPlans(display);
+          // If the current default isn't in the fetched plans, pick the first one
+          const keys = display.map(p => p.key);
+          if (!keys.includes(form.plan)) {
+            setForm(f => ({ ...f, plan: keys[0] }));
+          }
+        }
+      })
+      .catch(() => {
+        // Silently fall back to hardcoded plans
+        console.warn("Failed to fetch plans from API, using fallback");
+      })
+      .finally(() => setPlansLoading(false));
+  }, []);
 
   const steps = ["Business", "Features", "Plan", "Branding", "Account", "Team", "Done"];
   const slugPreview = form.slug || slugify(form.name) || "your-business";
@@ -150,7 +201,7 @@ export default function SignupPage() {
       // Step 2: Create Stripe checkout session for paid plans
       if (form.plan !== "FREE") {
         try {
-          const checkoutRes = await fetch("/api/stripe/checkout", {
+          const checkoutRes = await fetch("/api/stripe/signup-checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -303,8 +354,14 @@ export default function SignupPage() {
               <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Choose your plan</h2>
               <p style={{ color: "#6B7280", fontSize: 14, marginBottom: 24 }}>Start with any plan. Upgrade or cancel anytime.</p>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                {PLANS.map(plan => (
+              {plansLoading ? (
+                <div style={{ textAlign: "center", padding: 40, color: "#6B7280" }}>
+                  <Loader2 size={24} className="animate-spin" style={{ margin: "0 auto 12px" }} />
+                  <p>Loading plans...</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(plans.length, 3)}, 1fr)`, gap: 12 }}>
+                  {plans.map(plan => (
                   <button
                     key={plan.key}
                     onClick={() => setForm({ ...form, plan: plan.key })}
@@ -319,7 +376,7 @@ export default function SignupPage() {
                         position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)",
                         background: "#3B82F6", color: "#fff", fontSize: 10, fontWeight: 700,
                         padding: "2px 10px", borderRadius: 10,
-                      }}>POPULAR</div>
+                      }}>BEST VALUE</div>
                     )}
                     <div style={{ fontSize: 16, fontWeight: 600, color: "#374151", marginBottom: 4 }}>{plan.name}</div>
                     <div style={{ fontSize: 28, fontWeight: 700, color: "#111827" }}>
@@ -336,6 +393,7 @@ export default function SignupPage() {
                   </button>
                 ))}
               </div>
+              )}
             </div>
           )}
 
@@ -497,7 +555,7 @@ export default function SignupPage() {
                   <span>🏢 <strong>{form.name}</strong> — {BUSINESS_TYPES.find(b => b.key === form.businessType)?.label}</span>
                   <span>🏷️ <strong>{form.brandName || form.name}</strong> by ResCommand</span>
                   <span>🌐 {slugPreview}.rescommand.com</span>
-                  <span>💰 {PLANS.find(p => p.key === form.plan)?.name} — ${PLANS.find(p => p.key === form.plan)?.price}/mo</span>
+                  <span>💰 {plans.find(p => p.key === form.plan)?.name} — ${plans.find(p => p.key === form.plan)?.price}/mo</span>
                   <span>👤 {form.ownerName} ({form.ownerEmail})</span>
                   {form.teamMembers.length > 0 && <span>👥 {form.teamMembers.length} team member(s)</span>}
                 </div>
@@ -549,7 +607,7 @@ export default function SignupPage() {
                 </button>
               ) : (
                 <button className="btn btn-primary" onClick={submit} disabled={submitting}>
-                  {submitting ? <><Loader2 size={14} className="animate-spin" /> Creating...</> : `Create Workspace — $${PLANS.find(p => p.key === form.plan)?.price}/mo`}
+                  {submitting ? <><Loader2 size={14} className="animate-spin" /> Creating...</> : `Create Workspace — $${plans.find(p => p.key === form.plan)?.price}/mo`}
                 </button>
               )}
             </div>

@@ -21,8 +21,19 @@ export async function PUT(request: Request) {
     staffLimit: number | null; features: string[]; active: boolean;
   }> };
 
+  // Delete plans that are no longer in the submitted list
+  const submittedKeys = plans.map(p => p.planKey);
+  const existingPlans = await prisma.planPricing.findMany({ select: { planKey: true } });
+  for (const existing of existingPlans) {
+    if (!submittedKeys.includes(existing.planKey)) {
+      await prisma.planPricing.delete({ where: { planKey: existing.planKey } });
+    }
+  }
+
+  // Upsert all submitted plans with sortOrder
   const results = [];
-  for (const plan of plans) {
+  for (let i = 0; i < plans.length; i++) {
+    const plan = plans[i];
     const updated = await prisma.planPricing.upsert({
       where: { planKey: plan.planKey },
       update: {
@@ -31,6 +42,7 @@ export async function PUT(request: Request) {
         staffLimit: plan.staffLimit,
         features: plan.features ? JSON.stringify(plan.features) : undefined,
         active: plan.active,
+        sortOrder: i,
       },
       create: {
         planKey: plan.planKey,
@@ -39,6 +51,7 @@ export async function PUT(request: Request) {
         staffLimit: plan.staffLimit,
         features: plan.features ? JSON.stringify(plan.features) : undefined,
         active: plan.active,
+        sortOrder: i,
       },
     });
     results.push(updated);

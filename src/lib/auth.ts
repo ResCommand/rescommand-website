@@ -44,14 +44,29 @@ export const authOptions: NextAuthOptions = {
           if (found) targetTenant = found;
         }
 
-        if (!targetTenant) return null;
+        // If no tenant membership found, allow login for platform admins
+        if (!targetTenant) {
+          if (user.isPlatformAdmin) {
+            return {
+              id: String(user.id),
+              email: user.email,
+              name: user.name,
+              role: "PLATFORM_ADMIN",
+              tenantId: undefined,
+              tenantSlug: undefined,
+              tenantName: undefined,
+            };
+          }
+          return null;
+        }
+
         if (!targetTenant.tenant.active) return null;
 
         return {
           id: String(user.id),
           email: user.email,
           name: user.name,
-          role: targetTenant.role,
+          role: user.isPlatformAdmin ? "PLATFORM_ADMIN" : targetTenant.role,
           tenantId: String(targetTenant.tenant.id),
           tenantSlug: targetTenant.tenant.slug,
           tenantName: targetTenant.tenant.name,

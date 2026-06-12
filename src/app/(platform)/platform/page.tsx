@@ -39,11 +39,11 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  TEST: "#6B7280", FREE: "#6B7280", STARTER: "#3B82F6", PROFESSIONAL: "#8B5CF6", ENTERPRISE: "#F59E0B",
+  TEST: "#6B7280", FREE: "#6B7280", CORE: "#3B82F6", OPERATOR: "#8B5CF6",
 };
 
 const TYPE_OPTIONS = ["DONUT_SHOP", "BAKERY", "CAFE", "RESTAURANT", "BAR", "FOOD_TRUCK"];
-const PLAN_OPTIONS = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"];
+const PLAN_OPTIONS = ["FREE", "CORE", "OPERATOR"];
 
 // ─── Component ────────────────────────────────────────────────
 

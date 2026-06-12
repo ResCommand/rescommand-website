@@ -1,8 +1,36 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+import { Suspense } from "react";
+
+function LoginFallback() {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+    }}>
+      <div style={{ textAlign: "center", color: "#94A3B8" }}>
+        <div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid #475569", borderTopColor: "#3B82F6", borderRadius: "50%", margin: "0 auto 16px" }} />
+        <p>Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -48,7 +76,7 @@ export default function LoginPage() {
       }
       const res = await signIn("credentials", { email, password, tenantId, redirect: false });
       if (res?.error) setError("Invalid email or password");
-      else window.location.href = "/";
+      else window.location.href = callbackUrl;
     } catch {
       setError("Something went wrong");
     }

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
           where: { id: parseInt(tenantId) },
           data: {
             stripeCustomerId,
-            plan: session.metadata?.plan || "STARTER",
+            plan: session.metadata?.plan || "CORE",
           },
         });
 

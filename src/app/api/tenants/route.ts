@@ -7,7 +7,7 @@ const tenantSchema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes"),
   businessType: z.enum(["DONUT_SHOP", "BAKERY", "CAFE", "RESTAURANT", "BAR", "FOOD_TRUCK"]),
-  plan: z.enum(["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"]).default("STARTER"),
+  plan: z.enum(["FREE", "CORE", "OPERATOR"]).default("CORE"),
   ownerName: z.string().min(2),
   ownerEmail: z.string().email(),
   ownerPassword: z.string().min(6),

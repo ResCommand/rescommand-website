@@ -1017,9 +1017,8 @@ async function main() {
   const plans = [
     { planKey: "TEST", name: "Test / Internal", price: 100, stripePriceId: "price_1TfTxRFFrCACOpIZc2q1fp0S", features: ["Full access", "Testing only", "$1/month"], staffLimit: null, active: true, sortOrder: -1 },
     { planKey: "FREE", name: "Free", price: 0, stripePriceId: null, features: ["Basic production", "Inventory tracking", "Up to 5 staff"], staffLimit: 5, active: true, sortOrder: 0 },
-    { planKey: "STARTER", name: "Starter", price: 4900, stripePriceId: "price_1TfTxSFFrCACOpIZ6NMv7AsP", features: ["Everything in Free", "Recipe management", "Employee scheduling", "SOPs", "Up to 15 staff"], staffLimit: 15, active: true, sortOrder: 1 },
-    { planKey: "PROFESSIONAL", name: "Professional", price: 9900, stripePriceId: "price_1TfTxSFFrCACOpIZ8yXAlWBJ", features: ["Everything in Starter", "Menu planning", "Social media planner", "Espresso dialing", "Priority support", "Up to 50 staff"], staffLimit: 50, active: true, sortOrder: 2 },
-    { planKey: "ENTERPRISE", name: "Enterprise", price: 19900, stripePriceId: "price_1TfTxSFFrCACOpIZtoVGEGU3", features: ["Everything in Professional", "Coffee roasting", "Custom integrations", "Dedicated support", "Unlimited staff", "Multi-location"], staffLimit: null, active: true, sortOrder: 3 },
+    { planKey: "CORE", name: "Core", price: 9900, stripePriceId: "price_1TfTxSFFrCACOpIZ6NMv7AsP", features: ["Inventory & recipes", "Production sheets", "Employee scheduling", "SOPs", "AI recipe & inventory import", "Menu planning", "Email support"], staffLimit: 15, active: true, sortOrder: 1 },
+    { planKey: "OPERATOR", name: "Operator", price: 19900, stripePriceId: "price_1TfTxSFFrCACOpIZ8yXAlWBJ", features: ["Everything in Core", "Multi-location support", "Social media planner", "Custom integrations", "Priority support", "Dedicated account manager"], staffLimit: 35, active: true, sortOrder: 2 },
   ];
 
   for (const plan of plans) {

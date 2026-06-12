@@ -82,7 +82,7 @@ function isTenantHost(hostname: string): boolean {
     return false;
   }
   if (hostname.endsWith(".rescommand.com")) {
-    return hostname !== "rescommand.com" && hostname !== "www.rescommand.com";
+    return hostname !== "rescommand.com" && hostname !== "www.rescommand.com" && hostname !== "app.rescommand.com";
   }
   return true;
 }

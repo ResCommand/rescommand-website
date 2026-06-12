@@ -807,7 +807,7 @@ model Recipe {
   categoryId  Int?     @map("category_id")
   description String?
   ingredients Json     // Array of { name, amount, unit }
-  instructions String?
+  instructions String? @db.Text
   yield       String?  // e.g. "Makes 1 quart"
   sortOrder   Int      @default(0) @map("sort_order")
   active      Boolean  @default(true)

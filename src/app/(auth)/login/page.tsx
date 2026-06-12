@@ -13,8 +13,9 @@ export default function LoginPage() {
     // Try to resolve tenant name from subdomain
     const hostname = window.location.hostname;
     const parts = hostname.split(".");
-    if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1") && !hostname.endsWith(".drytis.dev")) {
-      // Subdomain like duffersdonutshop.rescommand.com
+    const platformHosts = ["rescommand.com", "www.rescommand.com", "app.rescommand.com"];
+    if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1") && !hostname.endsWith(".drytis.dev") && !platformHosts.includes(hostname)) {
+      // Subdomain like duffersdonutshop.rescommand.com (not platform hosts)
       const slug = parts[0];
       // Capitalize slug for display
       setTenantName(slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()));
@@ -35,7 +36,8 @@ export default function LoginPage() {
       let tenantId: string | undefined;
       const hostname = window.location.hostname;
       const parts = hostname.split(".");
-      if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1") && !hostname.endsWith(".drytis.dev")) {
+      const platformHosts = ["rescommand.com", "www.rescommand.com", "app.rescommand.com"];
+      if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1") && !hostname.endsWith(".drytis.dev") && !platformHosts.includes(hostname)) {
         try {
           const res = await fetch("/api/tenant-resolve?slug=" + parts[0]);
           if (res.ok) {

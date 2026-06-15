@@ -300,7 +300,7 @@ export default function PlatformAdminPage() {
                       <span style={{ fontSize: 18 }}>{TYPE_ICONS[t.businessType] || "🏪"}</span>
                       <div>
                         <div style={{ fontWeight: 500, fontSize: 13 }}>{t.name}</div>
-                        <div style={{ fontSize: 11, color: "#64748B" }}>{t.slug}.rescommand.com</div>
+                        <div style={{ fontSize: 11, color: "#64748B" }}>/{t.slug}</div>
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -352,7 +352,7 @@ export default function PlatformAdminPage() {
                     >
                       <td style={{ padding: "10px 12px" }}>
                         <div style={{ fontWeight: 500, fontSize: 13 }}>{t.name}</div>
-                        <div style={{ fontSize: 11, color: "#64748B" }}>{t.slug}.rescommand.com</div>
+                        <div style={{ fontSize: 11, color: "#64748B" }}>/{t.slug}</div>
                       </td>
                       <td style={{ padding: "10px 12px", fontSize: 12 }}>
                         {TYPE_ICONS[t.businessType] || "🏪"} {t.businessType.replace(/_/g, " ")}
@@ -493,7 +493,7 @@ export default function PlatformAdminPage() {
               <Detail label="Staff Members">
                 <span style={{ fontSize: 13, fontWeight: 500 }}>{selectedTenant.members}</span>
               </Detail>
-              <Detail label="Subdomain">{selectedTenant.slug}.rescommand.com</Detail>
+              <Detail label="Slug">{selectedTenant.slug}</Detail>
               <Detail label="Custom Domain">{selectedTenant.domain || "None"}</Detail>
               <Detail label="Stripe Customer">{selectedTenant.stripeCustomerId || "Not linked"}</Detail>
               <Detail label="Created">{new Date(selectedTenant.createdAt).toLocaleDateString()}</Detail>

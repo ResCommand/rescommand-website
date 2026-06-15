@@ -284,7 +284,7 @@ export default function SignupPage() {
 
               <div style={{ marginBottom: 16, padding: "10px 14px", background: "#F0FDF4", borderRadius: 6, border: "1px solid #BBF7D0" }}>
                 <span style={{ fontSize: 13, color: "#374151" }}>Your URL: </span>
-                <span style={{ fontWeight: 600, color: "#059669" }}>{slugPreview}.rescommand.com</span>
+                <span style={{ fontWeight: 600, color: "#059669" }}>app.rescommand.com</span>
                 <div style={{ marginTop: 4 }}>
                   <input
                     className="form-input" style={{ fontSize: 13, padding: "6px 10px" }}
@@ -554,7 +554,7 @@ export default function SignupPage() {
                 <div style={{ fontSize: 12, color: "#374151", display: "flex", flexDirection: "column", gap: 4 }}>
                   <span>🏢 <strong>{form.name}</strong> — {BUSINESS_TYPES.find(b => b.key === form.businessType)?.label}</span>
                   <span>🏷️ <strong>{form.brandName || form.name}</strong> by ResCommand</span>
-                  <span>🌐 {slugPreview}.rescommand.com</span>
+                  <span>🌐 app.rescommand.com</span>
                   <span>💰 {plans.find(p => p.key === form.plan)?.name} — ${plans.find(p => p.key === form.plan)?.price}/mo</span>
                   <span>👤 {form.ownerName} ({form.ownerEmail})</span>
                   {form.teamMembers.length > 0 && <span>👥 {form.teamMembers.length} team member(s)</span>}
@@ -569,7 +569,7 @@ export default function SignupPage() {
               <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
               <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Welcome to ResCommand!</h2>
               <p style={{ color: "#6B7280", fontSize: 14, marginBottom: 24 }}>
-                Your workspace is ready at <strong>{slugPreview}.rescommand.com</strong>
+                Your workspace is ready! Log in at <strong>app.rescommand.com</strong>
               </p>
               <div style={{ padding: 16, background: "#F0FDF4", borderRadius: 8, marginBottom: 24 }}>
                 <p style={{ fontSize: 14, color: "#374151", marginBottom: 8 }}>Next steps:</p>

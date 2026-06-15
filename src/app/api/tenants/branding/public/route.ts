@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/tenants/branding/public — returns { brandName, platformName } without auth
-// Uses the host header to resolve the tenant
-export async function GET(request: Request) {
+// GET /api/tenants/branding/public — returns { brandName, platformName }
+// Single-domain architecture: authenticated users get their tenant branding,
+// unauthenticated users get the default platform branding.
+export async function GET() {
   // If authenticated, use session tenantId
   const session = await auth();
   if (session?.user) {
@@ -19,36 +20,6 @@ export async function GET(request: Request) {
         const brandName = settings.brandName || `${tenant.name} OS`;
         return NextResponse.json({ brandName, platformName: "ResCommand" });
       }
-    }
-  }
-
-  // Unauthenticated — try to resolve from host header or domain
-  const host = request.headers.get("host") || "";
-  const hostname = host.split(":")[0];
-
-  // Try custom domain match
-  const tenantByDomain = await prisma.tenant.findFirst({
-    where: { domain: hostname, active: true },
-    select: { name: true, settings: true },
-  });
-  if (tenantByDomain) {
-    const settings = (tenantByDomain.settings as Record<string, string>) || {};
-    const brandName = settings.brandName || `${tenantByDomain.name} OS`;
-    return NextResponse.json({ brandName, platformName: "ResCommand" });
-  }
-
-  // Try slug from subdomain (e.g. duffersdonutshop.rescommand.com)
-  const parts = hostname.split(".");
-  if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1")) {
-    const slug = parts[0];
-    const tenantBySlug = await prisma.tenant.findFirst({
-      where: { slug, active: true },
-      select: { name: true, settings: true },
-    });
-    if (tenantBySlug) {
-      const settings = (tenantBySlug.settings as Record<string, string>) || {};
-      const brandName = settings.brandName || `${tenantBySlug.name} OS`;
-      return NextResponse.json({ brandName, platformName: "ResCommand" });
     }
   }
 

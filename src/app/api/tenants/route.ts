@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     id: tenant.id,
     name: tenant.name,
     slug: tenant.slug,
-    url: `${tenant.slug}.rescommand.com`,
+    url: `app.rescommand.com`,
   }, { status: 201 });
   } catch (err) {
     console.error("Tenant creation error:", err);

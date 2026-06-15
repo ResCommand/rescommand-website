@@ -1,6 +1,7 @@
 "use client";
 import { signIn } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
@@ -11,8 +12,6 @@ export default function LoginPage() {
   );
 }
 
-import { Suspense } from "react";
-
 function LoginFallback() {
   return (
     <div style={{
@@ -21,7 +20,6 @@ function LoginFallback() {
       display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
     }}>
       <div style={{ textAlign: "center", color: "#94A3B8" }}>
-        <div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid #475569", borderTopColor: "#3B82F6", borderRadius: "50%", margin: "0 auto 16px" }} />
         <p>Loading...</p>
       </div>
     </div>
@@ -35,46 +33,13 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tenantName, setTenantName] = useState("");
-
-  useEffect(() => {
-    // Try to resolve tenant name from subdomain
-    const hostname = window.location.hostname;
-    const parts = hostname.split(".");
-    const platformHosts = ["rescommand.com", "www.rescommand.com", "app.rescommand.com"];
-    if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1") && !hostname.endsWith(".drytis.dev") && !platformHosts.includes(hostname)) {
-      // Subdomain like duffersdonutshop.rescommand.com (not platform hosts)
-      const slug = parts[0];
-      // Capitalize slug for display
-      setTenantName(slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()));
-    }
-    // Also try fetching public branding for custom domains (e.g. ops.duffersdonutshop.com)
-    fetch("/api/tenants/branding/public")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.brandName) setTenantName(data.brandName); })
-      .catch(() => {});
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      // If on a subdomain, resolve tenant and pass tenantId
-      let tenantId: string | undefined;
-      const hostname = window.location.hostname;
-      const parts = hostname.split(".");
-      const platformHosts = ["rescommand.com", "www.rescommand.com", "app.rescommand.com"];
-      if (parts.length >= 2 && !hostname.includes("localhost") && !hostname.includes("127.0.0.1") && !hostname.endsWith(".drytis.dev") && !platformHosts.includes(hostname)) {
-        try {
-          const res = await fetch("/api/tenant-resolve?slug=" + parts[0]);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.id) tenantId = String(data.id);
-          }
-        } catch { /* ignore — login will still work without tenant context */ }
-      }
-      const res = await signIn("credentials", { email, password, tenantId, redirect: false });
+      const res = await signIn("credentials", { email, password, redirect: false });
       if (res?.error) setError("Invalid email or password");
       else window.location.href = callbackUrl;
     } catch {
@@ -82,8 +47,6 @@ function LoginContent() {
     }
     setLoading(false);
   }
-
-  const brandName = tenantName || "ResCommand";
 
   return (
     <div style={{
@@ -93,11 +56,8 @@ function LoginContent() {
     }}>
       <div style={{ maxWidth: 400, width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#fff" }}>
-            {tenantName || "ResCommand"}
-          </h1>
-          {!tenantName && <p style={{ color: "#94A3B8", fontSize: 14 }}>Restaurant operations, simplified</p>}
-          {tenantName && <p style={{ color: "#94A3B8", fontSize: 14 }}>Sign in to your workspace</p>}
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#fff" }}>ResCommand</h1>
+          <p style={{ color: "#94A3B8", fontSize: 14 }}>Restaurant operations, simplified</p>
         </div>
 
         <div style={{ background: "#fff", borderRadius: 12, padding: 32, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>

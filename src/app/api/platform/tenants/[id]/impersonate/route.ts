@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { encode } from "next-auth/jwt";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -43,9 +43,8 @@ export async function POST(
     salt: "authjs.session-token",
   });
 
-  const domain = membership.tenant.domain || `${membership.tenant.slug}.rescommand.com`;
-  const protocol = "https";
-  const url = `${protocol}://${domain}/api/auth/impersonate?token=${token}`;
+  // Single-domain: relative URL, same domain for all tenants
+  const url = `/api/auth/impersonate?token=${token}`;
 
   return NextResponse.json({ url, tenantName: membership.tenant.name });
 }

@@ -2,23 +2,26 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { Toaster } from "sonner";
+import { auth } from "@/auth";
 
 export const metadata: Metadata = {
-  title: "Duffers OS",
-  description: "Duffera Donuts Operations — inventory, counts, orders, and daily ops",
+  title: "ResCommand",
+  description: "Restaurant operations, simplified",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Duffers OS",
+    title: "ResCommand",
   },
   openGraph: {
-    title: "Duffers OS",
-    description: "Duffera Donuts Operations",
+    title: "ResCommand",
+    description: "Restaurant operations, simplified",
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <head>
@@ -26,17 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider session={session}>{children}</AuthProvider>
         <Toaster position="bottom-right" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
+            __html: `if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); }); }`,
           }}
         />
       </body>

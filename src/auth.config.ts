@@ -6,6 +6,7 @@ import Credentials from "next-auth/providers/credentials";
  * Used in proxy.ts (Next.js 16 middleware) — MUST NOT import Prisma, bcryptjs,
  * or any Node.js-only API. The full config with DB access lives in src/auth.ts.
  */
+
 export const authConfig = {
   providers: [
     Credentials({

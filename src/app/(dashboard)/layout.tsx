@@ -5,7 +5,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import {
   LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
   Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
-  ShoppingCart, ChefHat, Bell, CalendarClock, Settings, Thermometer,
+  ShoppingCart, ChefHat, Bell, CalendarClock, Thermometer,
   Megaphone, CreditCard,
 } from "lucide-react";
 
@@ -29,15 +29,18 @@ const allNav = [
   { href: "/admin/users", icon: Users, label: "Admin", roles: ["MANAGER", "OWNER"], moduleKey: "settings" },
   { href: "/billing", icon: CreditCard, label: "Billing", roles: ["OWNER"], moduleKey: "settings" },
   { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER"], moduleKey: "operations" },
-  
 ];
+
+const ALL_MODULE_KEYS = new Set(allNav.map(n => n.moduleKey));
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [enabledModules, setEnabledModules] = useState<Set<string>>(new Set());
+  // Default to ALL modules enabled so the sidebar is never blank.
+  // The API response will narrow this down.
+  const [enabledModules, setEnabledModules] = useState<Set<string>>(ALL_MODULE_KEYS);
   const [brandName, setBrandName] = useState<string>("");
 
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
@@ -45,30 +48,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Fetch branding on mount
   useEffect(() => {
     fetch("/api/tenants/branding")
-      .then(r => r.json())
-      .then(data => { if (data.brandName) setBrandName(data.brandName); })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.brandName) setBrandName(data.brandName); })
       .catch(() => {});
   }, []);
 
-  // Fetch enabled modules on mount
+  // Fetch enabled modules — narrows from the default (all enabled)
   useEffect(() => {
     fetch("/api/module-config")
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setEnabledModules(new Set(data.filter((c: { enabled: boolean; moduleKey: string }) => c.enabled).map((c: { moduleKey: string }) => c.moduleKey)));
         }
       })
       .catch(() => {
-        // If fetch fails, show all modules
-        setEnabledModules(new Set(allNav.map(n => n.moduleKey)));
+        // If fetch fails, keep showing all modules (already the default)
       });
   }, []);
 
   // Filter by role AND enabled modules
   const nav = allNav.filter(n => {
     if (!n.roles.includes(role)) return false;
-    // Always show items that don't have a moduleKey or whose module is enabled
     if (!n.moduleKey) return true;
     return enabledModules.has(n.moduleKey);
   });
@@ -80,7 +84,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Mobile top bar */}
       <div className="mobile-topbar">
         <button onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
-        <h2>{brandName}</h2>
+        <h2>{brandName || PLATFORM_NAME}</h2>
         <button onClick={() => signOut({ callbackUrl: "/login" })}><LogOut size={18} /></button>
       </div>
 
@@ -90,7 +94,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <nav className={`sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebar-brand">
-          <h2>{brandName}</h2>
+          <h2>{brandName || PLATFORM_NAME}</h2>
           <span className="sidebar-brand-sub">by {PLATFORM_NAME}</span>
         </div>
         <div className="sidebar-nav">
@@ -129,7 +133,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <main className="main-content">
         <div className="page-container">{children}</div>
         <footer className="app-footer">
-          <span>{brandName} &middot; Powered by {PLATFORM_NAME}</span>
+          <span>{brandName || PLATFORM_NAME} &middot; Powered by {PLATFORM_NAME}</span>
         </footer>
       </main>
     </div>

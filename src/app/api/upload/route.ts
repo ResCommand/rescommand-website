@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/auth";
 import { getTenantId, getSessionContext } from "@/lib/tenant";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -9,7 +8,7 @@ const ALLOWED_TYPES = ["application/pdf"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const role = (session.user as { role?: string })?.role;
   if (role !== "MANAGER" && role !== "OWNER")

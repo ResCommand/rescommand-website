@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-// Public paths that don't require authentication
+/**
+ * Next.js 16 proxy (formerly middleware.ts).
+ * Uses edge-safe authConfig (NO Prisma/bcryptjs imports).
+ */
+
 const PUBLIC_PATHS = [
   "/login",
   "/qr-sign",
@@ -13,23 +19,40 @@ const PUBLIC_PATHS = [
   "/api/setup-users",
   "/api/fix-users",
   "/api/health",
-  "/api/debug-auth",
-  "/api/seed-duffers",
-  "/api/stripe/signup-checkout",
 ];
 
-// Platform paths (rescommand.com root — no tenant context)
 const PLATFORM_PATHS = [
   "/signup",
-  "/platform",
+  "/admin",
   "/api/tenants",
   "/api/tenant-resolve",
   "/api/platform",
 ];
 
-export async function middleware(request: NextRequest) {
-  const { pathname, host } = request.nextUrl;
-  const hostname = request.headers.get("host") || host;
+function isTenantHost(hostname: string): boolean {
+  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+    return false;
+  }
+  if (hostname.endsWith(".drytis.dev")) {
+    return false;
+  }
+  if (hostname.endsWith(".rescommand.com")) {
+    return hostname !== "rescommand.com" && hostname !== "www.rescommand.com";
+  }
+  return true;
+}
+
+function extractSubdomain(hostname: string): string | null {
+  const match = hostname.match(/^([a-z0-9-]+)\.rescommand\.com$/);
+  if (match) return match[1];
+  return null;
+}
+
+const { auth } = NextAuth(authConfig);
+
+export default auth((request: NextRequest & { auth: unknown }) => {
+  const { pathname } = request.nextUrl;
+  const hostname = request.headers.get("host") || request.nextUrl.host;
 
   // Allow static files and Next.js internals
   if (
@@ -40,11 +63,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Detect if this is a subdomain request vs platform (root domain)
   const isTenantSubdomain = isTenantHost(hostname);
 
   // Platform routes are always accessible
-  if (PLATFORM_PATHS.some(p => pathname.startsWith(p))) {
+  if (PLATFORM_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
@@ -59,14 +81,14 @@ export async function middleware(request: NextRequest) {
   }
 
   // Allow public paths
-  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // Check for a session cookie
+  // Check for a session cookie (v5 uses authjs.* prefix)
   const hasSession =
-    request.cookies.has("next-auth.session-token") ||
-    request.cookies.has("__Secure-next-auth.session-token");
+    request.cookies.has("authjs.session-token") ||
+    request.cookies.has("__Secure-authjs.session-token");
 
   if (!hasSession) {
     const loginUrl = new URL("/login", request.url);
@@ -75,29 +97,8 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
-
-function isTenantHost(hostname: string): boolean {
-  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-    return false;
-  }
-  if (hostname.endsWith(".drytis.dev")) {
-    return false;
-  }
-  if (hostname.endsWith(".rescommand.com")) {
-    return hostname !== "rescommand.com" && hostname !== "www.rescommand.com" && hostname !== "app.rescommand.com";
-  }
-  return true;
-}
-
-function extractSubdomain(hostname: string): string | null {
-  const match = hostname.match(/^([a-z0-9-]+)\.rescommand\.com$/);
-  if (match) return match[1];
-  return null;
-}
+});
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
 };

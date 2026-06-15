@@ -35,11 +35,11 @@ export async function POST(request: Request) {
   // Free plan — just update the tenant directly
   if (plan.price === 0) {
     await prisma.tenant.update({ where: { id: tenant.id }, data: { plan: planKey, trialEndsAt: null } });
-    const origin = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const origin = process.env.AUTH_URL || "http://localhost:3000";
     return NextResponse.json({ url: `${origin}/login?signup=success` });
   }
 
-  const origin = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const origin = process.env.AUTH_URL || "http://localhost:3000";
 
   try {
     // Create or retrieve Stripe customer

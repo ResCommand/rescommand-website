@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 const fmt = (n: number) => "$" + n.toFixed(2);
@@ -11,7 +10,7 @@ function startOfPrevMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth
 function endOfPrevMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 0, 23, 59, 59, 999); }
 
 export default async function OwnerPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   const now = new Date();
   const today = startOfDay(now);
   const monthStart = startOfMonth(now);

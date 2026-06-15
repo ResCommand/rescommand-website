@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { planKey } = await request.json();
@@ -20,7 +19,7 @@ export async function POST(request: Request) {
   const plan = await prisma.planPricing.findUnique({ where: { planKey } });
   if (!plan) return NextResponse.json({ error: "Plan not found" }, { status: 404 });
 
-  const origin = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const origin = process.env.AUTH_URL || "http://localhost:3000";
 
   try {
     // Create or retrieve Stripe customer

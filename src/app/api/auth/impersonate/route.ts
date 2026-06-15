@@ -8,15 +8,15 @@ export async function GET(request: Request) {
   if (!token) return NextResponse.redirect(new URL("/login", request.url));
 
   try {
-    const secret = process.env.NEXTAUTH_SECRET!;
-    const decoded = await decode({ token, secret });
+    const secret = process.env.AUTH_SECRET!;
+    const decoded = await decode({ token, secret, salt: "authjs.session-token" });
     if (!decoded || !decoded.impersonatedBy) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Set the session cookie and redirect to dashboard
+    // Set the session cookie (v5 uses authjs.* prefix) and redirect to dashboard
     const response = NextResponse.redirect(new URL("/", request.url));
-    response.cookies.set("next-auth.session-token", token, {
+    response.cookies.set("authjs.session-token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",

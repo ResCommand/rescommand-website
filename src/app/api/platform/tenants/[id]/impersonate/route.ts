@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 import { encode } from "next-auth/jwt";
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
@@ -26,7 +25,7 @@ export async function POST(
   if (!membership) return NextResponse.json({ error: "No owner found for this tenant" }, { status: 404 });
 
   // Create a JWT for the tenant owner
-  const secret = process.env.NEXTAUTH_SECRET!;
+  const secret = process.env.AUTH_SECRET!;
   const token = await encode({
     secret,
     token: {
@@ -41,6 +40,7 @@ export async function POST(
       impersonatedBy: user.id,
     },
     maxAge: 60 * 60, // 1 hour
+    salt: "authjs.session-token",
   });
 
   const domain = membership.tenant.domain || `${membership.tenant.slug}.rescommand.com`;

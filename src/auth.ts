@@ -1,12 +1,19 @@
-import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth from "next-auth";
 import bcrypt from "bcryptjs";
-import { prisma } from "./prisma";
+import { authConfig } from "./auth.config";
+import { prisma } from "./lib/prisma";
 
-export const authOptions: NextAuthOptions = {
+/**
+ * Full auth configuration with database access.
+ * Imported everywhere EXCEPT proxy.ts (which imports auth.config.ts for Edge compatibility).
+ */
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
-    CredentialsProvider({
+    {
+      id: "credentials",
       name: "Credentials",
+      type: "credentials" as const,
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
@@ -16,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email as string },
           include: {
             tenantMemberships: {
               where: { active: true },
@@ -28,18 +35,17 @@ export const authOptions: NextAuthOptions = {
         if (!user || !user.active) return null;
 
         const isValid = await bcrypt.compare(
-          credentials.password,
+          credentials.password as string,
           user.passwordHash
         );
         if (!isValid) return null;
 
         // Determine which tenant to use
-        // If tenantId provided (login form), use that
-        // Otherwise default to first active membership
         let targetTenant = user.tenantMemberships[0];
-        if (credentials.tenantId) {
+        const tenantId = credentials.tenantId as string | undefined;
+        if (tenantId) {
           const found = user.tenantMemberships.find(
-            (m) => m.tenant.id === parseInt(credentials.tenantId!)
+            (m) => m.tenant.id === parseInt(tenantId)
           );
           if (found) targetTenant = found;
         }
@@ -55,7 +61,7 @@ export const authOptions: NextAuthOptions = {
               tenantId: undefined,
               tenantSlug: undefined,
               tenantName: undefined,
-            };
+            } as const;
           }
           return null;
         }
@@ -72,42 +78,11 @@ export const authOptions: NextAuthOptions = {
           tenantName: targetTenant.tenant.name,
         };
       },
-    }),
+    },
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as { role: string }).role;
-        token.id = user.id;
-        token.tenantId = (user as { tenantId: string }).tenantId;
-        token.tenantSlug = (user as { tenantSlug: string }).tenantSlug;
-        token.tenantName = (user as { tenantName: string }).tenantName;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as { role?: string }).role = token.role as string;
-        (session.user as { id?: string }).id = token.id as string;
-        (session.user as { tenantId?: string }).tenantId = token.tenantId as string;
-        (session.user as { tenantSlug?: string }).tenantSlug = token.tenantSlug as string;
-        (session.user as { tenantName?: string }).tenantName = token.tenantName as string;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login",
-    newUser: "/signup",
-  },
-  session: {
-    strategy: "jwt",
-  },
-  // Trust the Caddy reverse proxy — it terminates TLS and forwards as HTTP.
-  useSecureCookies: true,
   cookies: {
     sessionToken: {
-      name: "next-auth.session-token",
+      name: "authjs.session-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -116,7 +91,7 @@ export const authOptions: NextAuthOptions = {
       },
     },
     csrfToken: {
-      name: "next-auth.csrf-token",
+      name: "authjs.csrf-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -125,7 +100,7 @@ export const authOptions: NextAuthOptions = {
       },
     },
     callbackUrl: {
-      name: "next-auth.callback-url",
+      name: "authjs.callback-url",
       options: {
         sameSite: "lax",
         path: "/",
@@ -133,7 +108,7 @@ export const authOptions: NextAuthOptions = {
       },
     },
     pkceCodeVerifier: {
-      name: "next-auth.pkce.code-verifier",
+      name: "authjs.pkce.code-verifier",
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -142,15 +117,10 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-};
+});
 
-// Extend NextAuth types
+// Type augmentations for v5
 declare module "next-auth" {
-  interface User {
-    tenantId?: string;
-    tenantSlug?: string;
-    tenantName?: string;
-  }
   interface Session {
     user: {
       id?: string;
@@ -163,11 +133,18 @@ declare module "next-auth" {
       tenantName?: string;
     };
   }
+
+  interface User {
+    tenantId?: string;
+    tenantSlug?: string;
+    tenantName?: string;
+  }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     role?: string;
+    id?: string;
     tenantId?: string;
     tenantSlug?: string;
     tenantName?: string;

@@ -21,7 +21,7 @@
     "date-fns": "^4.3.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
-    "next-auth": "^4.24.14",
+    "next-auth": "^5.0.0-beta.31",
     "next-themes": "^0.4.6",
     "novel": "^1.0.2",
     "openai": "^6.42.0",

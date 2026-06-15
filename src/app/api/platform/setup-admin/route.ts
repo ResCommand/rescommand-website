@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/auth";
 
 // POST /api/platform/setup-admin — Set current user as platform admin
 // Only works if no platform admin exists yet (one-time setup)
@@ -19,7 +18,7 @@ export async function POST() {
   }
 
   // Must be logged in
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Must be logged in" }, { status: 401 });
   }

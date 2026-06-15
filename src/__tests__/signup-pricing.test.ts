@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "@jest/globals";
 
 // ─── Inline the pure functions from signup/page.tsx for testing ───
 

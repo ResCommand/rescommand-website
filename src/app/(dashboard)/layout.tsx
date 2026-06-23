@@ -92,9 +92,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetch("/api/module-config")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (Array.isArray(d)) {
-          const keys = d.filter((c: { enabled: boolean }) => c.enabled).map((c: { key: ModuleKey }) => c.key);
-          if (keys.length > 0) setEnabledModules(new Set(keys));
+        if (Array.isArray(d) && d.length > 0) {
+          // Build a set of disabled keys. Everything else stays visible by default.
+          const disabledKeys = new Set<string>(
+            d
+              .filter((c: { enabled?: boolean; moduleKey?: string }) => c.enabled === false)
+              .map((c: { moduleKey?: string }) => c.moduleKey || "")
+          );
+          // Start from ALL keys, remove only explicitly disabled ones
+          const activeKeys = ALL_MODULE_KEYS.filter((k) => !disabledKeys.has(k));
+          if (activeKeys.length > 0) setEnabledModules(new Set(activeKeys));
         }
       })
       .catch(() => {});

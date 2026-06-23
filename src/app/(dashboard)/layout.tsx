@@ -92,19 +92,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetch("/api/module-config")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (Array.isArray(d) && d.length > 0) {
-          // Build a set of disabled keys. Everything else stays visible by default.
-          const disabledKeys = new Set<string>(
-            d
-              .filter((c: { enabled?: boolean; moduleKey?: string }) => c.enabled === false)
-              .map((c: { moduleKey?: string }) => c.moduleKey || "")
-          );
-          // Start from ALL keys, remove only explicitly disabled ones
-          const activeKeys = ALL_MODULE_KEYS.filter((k) => !disabledKeys.has(k));
-          if (activeKeys.length > 0) setEnabledModules(new Set(activeKeys));
+        if (!Array.isArray(d) || d.length === 0) return; // keep defaults
+        // Build a set of disabled module keys from the API.
+        // Only hide a nav item if the API explicitly says it's disabled.
+        const disabledKeys = new Set<string>();
+        for (const c of d) {
+          const key = c.moduleKey || c.key || "";
+          if (key && c.enabled === false) disabledKeys.add(key);
         }
+        // Start from ALL keys, remove only explicitly disabled ones
+        const activeKeys = ALL_MODULE_KEYS.filter((k) => !disabledKeys.has(k));
+        setEnabledModules(new Set(activeKeys as readonly ModuleKey[]));
       })
-      .catch(() => {});
+      .catch(() => {}); // keep defaults on error
   }, []);
 
   const role = session?.user?.role as string | undefined;

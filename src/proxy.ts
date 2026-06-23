@@ -19,6 +19,7 @@ const PUBLIC_PATHS = [
   "/api/setup-users",
   "/api/fix-users",
   "/api/health",
+  "/mockup",
 ];
 
 const { auth } = NextAuth(authConfig);

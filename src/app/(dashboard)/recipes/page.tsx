@@ -32,7 +32,7 @@ const DEFAULT_CATEGORY_LABELS: Record<string, string> = {
 const DEFAULT_CATEGORY_COLORS: Record<string, { bg: string; border: string }> = {
   base: { bg: "#FFF7ED", border: "#FED7AA" },
   filling: { bg: "#F5F3FF", border: "#DDD6FE" },
-  topping: { bg: "#EFF6FF", border: "#BFDBFE" },
+  topping: { bg: "#F3EEFF", border: "#DDD6FE" },
   general: { bg: "#F9FAFB", border: "#E5E7EB" },
 };
 

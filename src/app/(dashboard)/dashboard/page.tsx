@@ -167,8 +167,8 @@ export default function DashboardPage() {
                   style={{
                     display: "flex", alignItems: "center", gap: 10,
                     padding: "8px 12px", borderRadius: 6,
-                    border: dragOverIdx === idx ? "2px solid #1A56DB" : "1px solid #E5E7EB",
-                    background: dragOverIdx === idx ? "#EFF6FF" : "#fff",
+                    border: dragOverIdx === idx ? "2px solid #7C3AED" : "1px solid #E5E7EB",
+                    background: dragOverIdx === idx ? "#F3EEFF" : "#fff",
                     opacity: item.visible ? 1 : 0.5,
                     cursor: "grab",
                   }}
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                   <XAxis dataKey="hour" tick={{ fontSize: 12, fill: "#6B7280" }} />
                   <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} tickFormatter={(v: number) => "$" + v.toFixed(2)} />
                   <Tooltip formatter={((v: any) => "$" + Number(v).toFixed(2)) as any} />
-                  <Bar dataKey="sales" fill="#1A56DB" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="sales" fill="#7C3AED" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

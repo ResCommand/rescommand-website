@@ -278,7 +278,7 @@ export default function ProductionPage() {
   const [prepFormCategory, setPrepFormCategory] = useState("Glazes");
   const [prepFormNewCat, setPrepFormNewCat] = useState("");
   const [prepFormShelfLife, setPrepFormShelfLife] = useState(48);
-  const [prepFormCatColor, setPrepFormCatColor] = useState("#DBEAFE");
+  const [prepFormCatColor, setPrepFormCatColor] = useState("#F3EEFF");
   const [submittingPrep, setSubmittingPrep] = useState(false);
   const [showPrepCatModal, setShowPrepCatModal] = useState(false);
   const [editingPrepCategory, setEditingPrepCategory] = useState<string | null>(null);
@@ -292,7 +292,7 @@ export default function ProductionPage() {
 
   const resetPrepForm = () => {
     setPrepFormName(""); setPrepFormAmount(""); setPrepFormCategory("Glazes");
-    setPrepFormNewCat(""); setPrepFormShelfLife(48); setPrepFormCatColor("#DBEAFE");
+    setPrepFormNewCat(""); setPrepFormShelfLife(48); setPrepFormCatColor("#F3EEFF");
     setEditingPrepItem(null);
   };
 
@@ -571,8 +571,8 @@ export default function ProductionPage() {
 	                  </tr>
 	                  <tr style={{ borderTop: "2px solid #E5E7EB" }}>
 	                    <td colSpan={3} className="font-semibold">Total</td>
-	                    <td className="font-bold" style={{ color: "#1A56DB" }}>{effectiveBatches.large + effectiveBatches.small}</td>
-	                    <td className="font-bold" style={{ color: "#1A56DB" }}>{effectiveBatches.totalDonuts}</td>
+	                    <td className="font-bold" style={{ color: "#7C3AED" }}>{effectiveBatches.large + effectiveBatches.small}</td>
+	                    <td className="font-bold" style={{ color: "#7C3AED" }}>{effectiveBatches.totalDonuts}</td>
 	                  </tr>
 	                </tbody>
 	              </table>
@@ -636,8 +636,8 @@ export default function ProductionPage() {
                       style={{
                         display: "flex", alignItems: "center", gap: 10,
                         padding: "10px 12px", borderRadius: 6, cursor: "pointer",
-                        background: checked ? "#F9FAFB" : (o.mixer === "Large" ? "#EFF6FF" : "#ECFDF5"),
-                        border: `1px solid ${checked ? "#E5E7EB" : (o.mixer === "Large" ? "#BFDBFE" : "#A7F3D0")}`,
+                        background: checked ? "#F9FAFB" : (o.mixer === "Large" ? "#F3EEFF" : "#ECFDF5"),
+                        border: `1px solid ${checked ? "#E5E7EB" : (o.mixer === "Large" ? "#DDD6FE" : "#A7F3D0")}`,
                         opacity: checked ? 0.45 : 1,
                         transition: "opacity 0.2s, background 0.2s",
                         textDecoration: checked ? "line-through" : "none",
@@ -779,14 +779,14 @@ export default function ProductionPage() {
           {data.sandwichToday?.isMakeDay ? (
             <>
               {/* Make Day Banner */}
-              <div className="card" style={{ padding: 20, background: "#EFF6FF", border: "1px solid #BFDBFE" }}>
+              <div className="card" style={{ padding: 20, background: "#F3EEFF", border: "1px solid #DDD6FE" }}>
                 <div className="flex items-center gap-3 mb-2">
                   <span style={{ fontSize: 20 }}>🥪</span>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, color: "#1E40AF" }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: "#6D28D9" }}>
                     Sandwich Make Day — {data.sandwichToday.makeDayLabel}
                   </h3>
                 </div>
-                <p className="text-sm" style={{ color: "#3B82F6" }}>
+                <p className="text-sm" style={{ color: "#A855F7" }}>
                   Making today for: {data.sandwichToday.covers.join(" · ")}
                 </p>
               </div>
@@ -925,7 +925,7 @@ export default function ProductionPage() {
 
           {/* Add/Edit Prep Item Form */}
           {showPrepForm && isManager && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>
                 {editingPrepItem ? "Edit Prep Item" : "Add New Prep Item"}
               </h3>

@@ -79,9 +79,9 @@ interface PrepItem {
 
 const PREP_LIST: PrepItem[] = [
   // Glazes
-  { category: "Glazes", categoryColor: "#DBEAFE", name: "Vanilla Glaze", amount: "8-10 Qts", shelfLifeHours: 48 },
-  { category: "Glazes", categoryColor: "#DBEAFE", name: "Lemon Glaze", amount: "8-10 Qts", shelfLifeHours: 48 },
-  { category: "Glazes", categoryColor: "#DBEAFE", name: "Brown Butter Cinnamon Glaze", amount: "8-10 Qts", shelfLifeHours: 48 },
+  { category: "Glazes", categoryColor: "#F3EEFF", name: "Vanilla Glaze", amount: "8-10 Qts", shelfLifeHours: 48 },
+  { category: "Glazes", categoryColor: "#F3EEFF", name: "Lemon Glaze", amount: "8-10 Qts", shelfLifeHours: 48 },
+  { category: "Glazes", categoryColor: "#F3EEFF", name: "Brown Butter Cinnamon Glaze", amount: "8-10 Qts", shelfLifeHours: 48 },
   // Icings
   { category: "Icings", categoryColor: "#E8DEF8", name: "Vanilla Icing", amount: "3 #6 Pans", shelfLifeHours: 72 },
   { category: "Icings", categoryColor: "#E8DEF8", name: "Maple Icing", amount: "2 #6 Pans", shelfLifeHours: 72 },

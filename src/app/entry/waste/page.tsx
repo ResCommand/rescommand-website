@@ -76,8 +76,8 @@ export default function WastePage() {
               <button key={r} type="button" onClick={() => setWasteReason(r)}
                 style={{
                   padding: "6px 14px", borderRadius: 6, fontSize: 12, fontWeight: 500,
-                  border: wasteReason === r ? "1px solid #1A56DB" : "1px solid #D1D5DB",
-                  background: wasteReason === r ? "#1A56DB" : "#fff",
+                  border: wasteReason === r ? "1px solid #7C3AED" : "1px solid #D1D5DB",
+                  background: wasteReason === r ? "#7C3AED" : "#fff",
                   color: wasteReason === r ? "#fff" : "#374151",
                 }}
               >{r}</button>

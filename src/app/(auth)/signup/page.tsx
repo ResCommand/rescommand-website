@@ -89,9 +89,9 @@ function dbPlansToDisplay(plans: PricingPlan[]) {
 }
 
 const THEME_COLORS = [
-  { name: "Blue", value: "#1A56DB" },
+  { name: "Violet", value: "#7C3AED" },
   { name: "Green", value: "#059669" },
-  { name: "Purple", value: "#7C3AED" },
+  { name: "Indigo", value: "#4F46E5" },
   { name: "Red", value: "#DC2626" },
   { name: "Orange", value: "#EA580C" },
   { name: "Teal", value: "#0D9488" },
@@ -118,7 +118,7 @@ export default function SignupPage() {
     plan: "CORE",
     brandName: "",
     theme: "dark" as "dark" | "light",
-    primaryColor: "#1A56DB",
+    primaryColor: "#7C3AED",
     ownerName: "",
     ownerEmail: "",
     ownerPassword: "",
@@ -232,7 +232,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1E1033 0%, #2D1B4E 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <div style={{ maxWidth: 640, width: "100%" }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -248,7 +248,7 @@ export default function SignupPage() {
                 <div style={{
                   width: 28, height: 28, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 12, fontWeight: 600,
-                  background: i < step ? "#059669" : i === step ? "#3B82F6" : "#334155",
+                  background: i < step ? "#059669" : i === step ? "#A855F7" : "#334155",
                   color: i <= step ? "#fff" : "#64748B",
                 }}>
                   {i < step ? <Check size={14} /> : i + 1}
@@ -303,8 +303,8 @@ export default function SignupPage() {
                       key={bt.key}
                       onClick={() => handleBusinessTypeChange(bt.key)}
                       style={{
-                        padding: 16, borderRadius: 8, border: `2px solid ${form.businessType === bt.key ? "#3B82F6" : "#E5E7EB"}`,
-                        background: form.businessType === bt.key ? "#EFF6FF" : "#fff",
+                        padding: 16, borderRadius: 8, border: `2px solid ${form.businessType === bt.key ? "#A855F7" : "#E5E7EB"}`,
+                        background: form.businessType === bt.key ? "#F3EEFF" : "#fff",
                         cursor: "pointer", textAlign: "center", transition: "all 0.15s",
                       }}
                     >
@@ -330,15 +330,15 @@ export default function SignupPage() {
                     key={m.key}
                     onClick={() => toggleModule(m.key)}
                     style={{
-                      padding: 12, borderRadius: 8, border: `1px solid ${form.modules.includes(m.key) ? "#3B82F6" : "#E5E7EB"}`,
-                      background: form.modules.includes(m.key) ? "#EFF6FF" : "#fff",
+                      padding: 12, borderRadius: 8, border: `1px solid ${form.modules.includes(m.key) ? "#A855F7" : "#E5E7EB"}`,
+                      background: form.modules.includes(m.key) ? "#F3EEFF" : "#fff",
                       cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10,
                     }}
                   >
                     <span style={{ fontSize: 20 }}>{m.icon}</span>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>{m.name}</div>
-                      <div style={{ fontSize: 11, color: form.modules.includes(m.key) ? "#2563EB" : "#9CA3AF" }}>
+                      <div style={{ fontSize: 11, color: form.modules.includes(m.key) ? "#7C3AED" : "#9CA3AF" }}>
                         {form.modules.includes(m.key) ? "Enabled" : "Disabled"}
                       </div>
                     </div>
@@ -366,15 +366,15 @@ export default function SignupPage() {
                     key={plan.key}
                     onClick={() => setForm({ ...form, plan: plan.key })}
                     style={{
-                      padding: 20, borderRadius: 10, border: `2px solid ${form.plan === plan.key ? "#3B82F6" : "#E5E7EB"}`,
-                      background: form.plan === plan.key ? "#EFF6FF" : "#fff",
+                      padding: 20, borderRadius: 10, border: `2px solid ${form.plan === plan.key ? "#A855F7" : "#E5E7EB"}`,
+                      background: form.plan === plan.key ? "#F3EEFF" : "#fff",
                       cursor: "pointer", textAlign: "center", position: "relative", transition: "all 0.15s",
                     }}
                   >
                     {plan.highlight && (
                       <div style={{
                         position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)",
-                        background: "#3B82F6", color: "#fff", fontSize: 10, fontWeight: 700,
+                        background: "#A855F7", color: "#fff", fontSize: 10, fontWeight: 700,
                         padding: "2px 10px", borderRadius: 10,
                       }}>BEST VALUE</div>
                     )}
@@ -423,20 +423,20 @@ export default function SignupPage() {
                     onClick={() => setForm({ ...form, theme: "dark" })}
                     style={{
                       flex: 1, padding: 16, borderRadius: 8,
-                      border: `2px solid ${form.theme === "dark" ? "#3B82F6" : "#E5E7EB"}`,
-                      background: form.theme === "dark" ? "#EFF6FF" : "#fff",
+                      border: `2px solid ${form.theme === "dark" ? "#A855F7" : "#E5E7EB"}`,
+                      background: form.theme === "dark" ? "#F3EEFF" : "#fff",
                       cursor: "pointer",
                     }}
                   >
-                    <div style={{ width: 40, height: 24, background: "#1e3a5f", borderRadius: 4, margin: "0 auto 8px" }} />
+                    <div style={{ width: 40, height: 24, background: "#1E1033", borderRadius: 4, margin: "0 auto 8px" }} />
                     <div style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>Dark Mode</div>
                   </button>
                   <button
                     onClick={() => setForm({ ...form, theme: "light" })}
                     style={{
                       flex: 1, padding: 16, borderRadius: 8,
-                      border: `2px solid ${form.theme === "light" ? "#3B82F6" : "#E5E7EB"}`,
-                      background: form.theme === "light" ? "#EFF6FF" : "#fff",
+                      border: `2px solid ${form.theme === "light" ? "#A855F7" : "#E5E7EB"}`,
+                      background: form.theme === "light" ? "#F3EEFF" : "#fff",
                       cursor: "pointer",
                     }}
                   >
@@ -457,7 +457,7 @@ export default function SignupPage() {
                         width: 36, height: 36, borderRadius: 18,
                         background: c.value,
                         border: form.primaryColor === c.value ? "3px solid #111827" : "3px solid transparent",
-                        cursor: "pointer", outline: form.primaryColor === c.value ? "2px solid #3B82F6" : "none",
+                        cursor: "pointer", outline: form.primaryColor === c.value ? "2px solid #A855F7" : "none",
                         outlineOffset: 2,
                       }}
                       title={c.name}
@@ -534,7 +534,7 @@ export default function SignupPage() {
                         <span style={{ fontSize: 12, color: "#6B7280", marginLeft: 8 }}>{m.email}</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 10, background: "#DBEAFE", color: "#1D4ED8", padding: "2px 8px", borderRadius: 10 }}>{m.role}</span>
+                        <span style={{ fontSize: 10, background: "#F3EEFF", color: "#6D28D9", padding: "2px 8px", borderRadius: 10 }}>{m.role}</span>
                         <button onClick={() => setForm({ ...form, teamMembers: form.teamMembers.filter((_, j) => j !== i) })} style={{ color: "#DC2626", background: "none", border: "none", cursor: "pointer" }}>✕</button>
                       </div>
                     </div>

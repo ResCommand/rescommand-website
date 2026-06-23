@@ -250,7 +250,7 @@ export default function ImportModal({
               padding: "8px 20px",
               borderRadius: 6,
               border: "none",
-              background: loading || !preview ? "#9CA3AF" : "#2563EB",
+              background: loading || !preview ? "#9CA3AF" : "#7C3AED",
               color: "#fff",
               fontSize: 14,
               fontWeight: 600,

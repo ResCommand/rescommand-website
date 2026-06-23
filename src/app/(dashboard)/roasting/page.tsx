@@ -203,7 +203,7 @@ export default function RoastingPage() {
             <div className="text-xs text-gray">Green Stock</div>
             <div className="font-semibold">{totalStockKg.toFixed(1)} kg</div>
           </div>
-          <div className="stat-card" style={{ padding: "8px 16px", borderRadius: 8, background: "#EFF6FF", border: "1px solid #BFDBFE" }}>
+          <div className="stat-card" style={{ padding: "8px 16px", borderRadius: 8, background: "#F3EEFF", border: "1px solid #DDD6FE" }}>
             <div className="text-xs text-gray">Total Roasts</div>
             <div className="font-semibold">{totalRoasts}</div>
           </div>
@@ -227,7 +227,7 @@ export default function RoastingPage() {
           )}
 
           {showGreenForm && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingGreen ? "Edit" : "Add"} Green Coffee</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div><label className="form-label">Name *</label><input className="form-input" value={greenForm.name} onChange={e => setGreenForm({ ...greenForm, name: e.target.value })} placeholder="e.g. Ethiopia Yirgacheffe" /></div>
@@ -271,7 +271,7 @@ export default function RoastingPage() {
                       {isManager && (
                         <td>
                           <div className="flex gap-1">
-                            <button onClick={() => openEditGreen(g)} className="btn-icon" style={{ color: "#2563EB" }}><Pencil size={14} /></button>
+                            <button onClick={() => openEditGreen(g)} className="btn-icon" style={{ color: "#7C3AED" }}><Pencil size={14} /></button>
                             <button onClick={() => deleteGreen(g.id)} className="btn-icon" style={{ color: "#DC2626" }}><Trash2 size={14} /></button>
                           </div>
                         </td>
@@ -295,7 +295,7 @@ export default function RoastingPage() {
           )}
 
           {showProfileForm && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingProfile ? "Edit" : "New"} Roast Profile</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div><label className="form-label">Profile Name *</label><input className="form-input" value={profileForm.name} onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="e.g. Med Roast Ethiopian" /></div>
@@ -363,7 +363,7 @@ export default function RoastingPage() {
           )}
 
           {showLogForm && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Log a Roast</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div><label className="form-label">Date *</label><input type="date" className="form-input" value={logForm.date} onChange={e => setLogForm({ ...logForm, date: e.target.value })} /></div>

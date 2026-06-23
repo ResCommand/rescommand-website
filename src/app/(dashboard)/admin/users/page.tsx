@@ -56,7 +56,7 @@ export default function AdminPage() {
   const [memberRole, setMemberRole] = useState("EMPLOYEE"); const [phone, setPhone] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [catName, setCatName] = useState(""); const [catColor, setCatColor] = useState("#3B82F6");
+  const [catName, setCatName] = useState(""); const [catColor, setCatColor] = useState("#A855F7");
 
   // Modules state
   const [configs, setConfigs] = useState<ModuleConfigItem[]>([]);
@@ -101,7 +101,7 @@ export default function AdminPage() {
   }
 
   // Category CRUD
-  function openCatCreate() { setEditingCat(null); setCatName(""); setCatColor("#3B82F6"); setCatDialogOpen(true); }
+  function openCatCreate() { setEditingCat(null); setCatName(""); setCatColor("#A855F7"); setCatDialogOpen(true); }
   function openCatEdit(c: EmployeeCategory) { setEditingCat(c); setCatName(c.name); setCatColor(c.color); setCatDialogOpen(true); }
 
   async function handleCatSubmit(e: React.FormEvent) {
@@ -289,15 +289,15 @@ export default function AdminPage() {
       {/* ═══ Permissions Tab ═════════════════════════════════ */}
       {activeTab === "permissions" && (
         <div className="space-y-4">
-          <div className="card" style={{ padding: 16, background: "#EFF6FF", border: "1px solid #BFDBFE" }}>
-            <p className="text-sm" style={{ color: "#1E40AF" }}>
+          <div className="card" style={{ padding: 16, background: "#F3EEFF", border: "1px solid #DDD6FE" }}>
+            <p className="text-sm" style={{ color: "#6D28D9" }}>
               <strong>Role Permissions Reference</strong> — This shows what each role can access. Roles are assigned when adding or editing team members.
             </p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
             {Object.entries(ROLE_LABELS).map(([roleKey, desc]) => (
-              <div key={roleKey} className="card" style={{ padding: 20, borderTop: `4px solid ${roleKey === "OWNER" ? "#7C3AED" : roleKey === "MANAGER" ? "#2563EB" : "#059669"}` }}>
+              <div key={roleKey} className="card" style={{ padding: 20, borderTop: `4px solid ${roleKey === "OWNER" ? "#7C3AED" : roleKey === "MANAGER" ? "#7C3AED" : "#059669"}` }}>
                 <div className="flex items-center gap-2" style={{ marginBottom: 8 }}>
                   <span className={`badge ${roleStyle[roleKey]}`}>{roleKey}</span>
                 </div>

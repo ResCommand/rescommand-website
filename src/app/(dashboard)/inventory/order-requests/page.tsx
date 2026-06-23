@@ -375,7 +375,7 @@ export default function OrderRequestsPage() {
                         <div className="flex gap-1" style={{ flexWrap: "wrap" }}>
                           <button
                             className="btn btn-sm"
-                            style={{ background: "#1A56DB", color: "#fff", padding: "3px 8px", fontSize: 11 }}
+                            style={{ background: "#7C3AED", color: "#fff", padding: "3px 8px", fontSize: 11 }}
                             onClick={() => updateStatus(req.id, "APPROVED")}
                           >
                             Approve

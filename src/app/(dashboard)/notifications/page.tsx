@@ -270,7 +270,7 @@ export default function NotificationsPage() {
             const myRecipient = n.recipients.find(r => String(r.user.id) === String((session?.user as { id?: string })?.id));
             const isUnread = myRecipient && !myRecipient.read;
             return (
-              <div key={n.id} className={`list-item ${isUnread ? "bg-blue-50" : ""}`} style={{ borderLeft: isUnread ? "3px solid #3B82F6" : "3px solid transparent" }}>
+              <div key={n.id} className={`list-item ${isUnread ? "bg-blue-50" : ""}`} style={{ borderLeft: isUnread ? "3px solid #A855F7" : "3px solid transparent" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="flex items-center gap-2 mb-1">
                     {isUnread && <span className="w-2 h-2 rounded-full bg-blue-500" />}

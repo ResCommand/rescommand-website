@@ -23,7 +23,7 @@ export default function HoursPage() {
         <div className="card" style={{ padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div className="text-sm font-medium">{clockedIn ? "🟢 Clocked In" : "🔴 Clocked Out"}</div>
           {clockedIn
-            ? <button onClick={() => clock("clock_out")} className="btn btn-sm" style={{ background: "#111827", color: "#fff" }}><LogOut size={14} /> Out</button>
+            ? <button onClick={() => clock("clock_out")} className="btn btn-sm" style={{ background: "#7C3AED", color: "#fff" }}><LogOut size={14} /> Out</button>
             : <button onClick={() => clock("clock_in")} className="btn btn-sm btn-primary"><LogIn size={14} /> In</button>}
         </div>
       )}

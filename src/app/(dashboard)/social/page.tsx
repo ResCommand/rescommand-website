@@ -19,8 +19,8 @@ interface SocialPostItem {
 
 const PLATFORMS = ["ALL", "INSTAGRAM", "FACEBOOK", "TIKTOK", "TWITTER"];
 const PLATFORM_ICONS: Record<string, string> = { ALL: "📱", INSTAGRAM: "📸", FACEBOOK: "📘", TIKTOK: "🎵", TWITTER: "🐦" };
-const STATUS_COLORS: Record<string, string> = { DRAFT: "#E5E7EB", SCHEDULED: "#DBEAFE", PUBLISHED: "#D1FAE5", CANCELLED: "#FEE2E2" };
-const STATUS_TEXT: Record<string, string> = { DRAFT: "#374151", SCHEDULED: "#1E40AF", PUBLISHED: "#065F46", CANCELLED: "#991B1B" };
+const STATUS_COLORS: Record<string, string> = { DRAFT: "#E5E7EB", SCHEDULED: "#F3EEFF", PUBLISHED: "#D1FAE5", CANCELLED: "#FEE2E2" };
+const STATUS_TEXT: Record<string, string> = { DRAFT: "#374151", SCHEDULED: "#6D28D9", PUBLISHED: "#065F46", CANCELLED: "#991B1B" };
 
 export default function SocialMediaPage() {
   const { data: session } = useSession();
@@ -125,7 +125,7 @@ export default function SocialMediaPage() {
             <div className="text-xs text-gray">Drafts</div>
             <div className="font-semibold">{drafts}</div>
           </div>
-          <div className="stat-card" style={{ padding: "8px 16px", borderRadius: 8, background: STATUS_COLORS.SCHEDULED, border: "1px solid #93C5FD" }}>
+          <div className="stat-card" style={{ padding: "8px 16px", borderRadius: 8, background: STATUS_COLORS.SCHEDULED, border: "1px solid #C4B5FD" }}>
             <div className="text-xs text-gray">Scheduled</div>
             <div className="font-semibold">{scheduled}</div>
           </div>
@@ -151,7 +151,7 @@ export default function SocialMediaPage() {
 
       {/* Form */}
       {showForm && (
-        <div className="card" style={{ padding: 20, border: "2px solid #1A56DB", marginBottom: 16 }}>
+        <div className="card" style={{ padding: 20, border: "2px solid #7C3AED", marginBottom: 16 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingPost ? "Edit Post" : "New Social Media Post"}</h3>
           <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
             <div>
@@ -237,13 +237,13 @@ export default function SocialMediaPage() {
                 )}
 
                 {p.mediaUrl && (
-                  <div className="flex items-center gap-1 text-xs" style={{ color: "#2563EB", marginBottom: 4 }}>
+                  <div className="flex items-center gap-1 text-xs" style={{ color: "#7C3AED", marginBottom: 4 }}>
                     <ExternalLink size={10} /> Media attached
                   </div>
                 )}
 
                 {p.linkUrl && (
-                  <div className="flex items-center gap-1 text-xs" style={{ color: "#2563EB", marginBottom: 4 }}>
+                  <div className="flex items-center gap-1 text-xs" style={{ color: "#7C3AED", marginBottom: 4 }}>
                     <ExternalLink size={10} /> {p.linkUrl.length > 40 ? p.linkUrl.substring(0, 40) + "..." : p.linkUrl}
                   </div>
                 )}
@@ -271,7 +271,7 @@ export default function SocialMediaPage() {
                   <Eye size={11} /> Share
                 </button>
                 {isManager && p.status === "DRAFT" && (
-                  <button className="btn btn-sm" style={{ padding: "2px 8px", fontSize: 11, background: "#DBEAFE", color: "#1E40AF" }} onClick={() => updateStatus(p.id, "SCHEDULED")}>
+                  <button className="btn btn-sm" style={{ padding: "2px 8px", fontSize: 11, background: "#F3EEFF", color: "#6D28D9" }} onClick={() => updateStatus(p.id, "SCHEDULED")}>
                     <Clock size={11} /> Schedule
                   </button>
                 )}
@@ -313,13 +313,13 @@ export default function SocialMediaPage() {
               {sharePost.mediaUrl && (
                 <div>
                   <label className="form-label" style={{ fontSize: 11 }}>Media</label>
-                  <a href={sharePost.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "#2563EB" }}>{sharePost.mediaUrl}</a>
+                  <a href={sharePost.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "#7C3AED" }}>{sharePost.mediaUrl}</a>
                 </div>
               )}
               {sharePost.linkUrl && (
                 <div>
                   <label className="form-label" style={{ fontSize: 11 }}>Link</label>
-                  <a href={sharePost.linkUrl} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "#2563EB" }}>{sharePost.linkUrl}</a>
+                  <a href={sharePost.linkUrl} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "#7C3AED" }}>{sharePost.linkUrl}</a>
                 </div>
               )}
               <div>

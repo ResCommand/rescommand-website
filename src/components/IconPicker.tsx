@@ -91,8 +91,8 @@ export default function IconPicker({ value, onChange, label = "Icon" }: IconPick
                       width: 36, height: 36, fontSize: 20,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       border: "none", borderRadius: 4, cursor: "pointer",
-                      background: icon === value ? "#EFF6FF" : "transparent",
-                      outline: icon === value ? "2px solid #1A56DB" : "none",
+                      background: icon === value ? "#F3EEFF" : "transparent",
+                      outline: icon === value ? "2px solid #7C3AED" : "none",
                     }}
                     title={icon}
                   >

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   const category = await prisma.employeeCategory.create({
     data: { tenantId,
       name: name.trim(),
-      color: color || "#3B82F6",
+      color: color || "#A855F7",
       sortOrder,
     },
   });

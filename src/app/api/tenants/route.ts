@@ -94,11 +94,11 @@ export async function POST(request: Request) {
       slug: data.slug,
       businessType: data.businessType,
       plan: data.plan,
-      primaryColor: data.primaryColor || "#1A56DB",
+      primaryColor: data.primaryColor || "#7C3AED",
       settings: {
         brandName: data.brandName || data.name,
         theme: data.theme || "dark",
-        primaryColor: data.primaryColor || "#1A56DB",
+        primaryColor: data.primaryColor || "#7C3AED",
       },
     },
   });
@@ -196,34 +196,34 @@ async function seedBusinessTemplates(tenantId: number, businessType: string) {
   // Seed employee categories based on business type
   const categoryMap: Record<string, Array<{ name: string; color: string }>> = {
     DONUT_SHOP: [
-      { name: "Front of House", color: "#3B82F6" },
+      { name: "Front of House", color: "#A855F7" },
       { name: "Back of House", color: "#F59E0B" },
       { name: "Chef", color: "#8B5CF6" },
     ],
     BAKERY: [
       { name: "Bakers", color: "#F59E0B" },
-      { name: "Front of House", color: "#3B82F6" },
+      { name: "Front of House", color: "#A855F7" },
       { name: "Pastry Chef", color: "#8B5CF6" },
     ],
     CAFE: [
-      { name: "Baristas", color: "#3B82F6" },
+      { name: "Baristas", color: "#A855F7" },
       { name: "Kitchen", color: "#F59E0B" },
       { name: "Manager", color: "#8B5CF6" },
     ],
     RESTAURANT: [
-      { name: "Front of House", color: "#3B82F6" },
+      { name: "Front of House", color: "#A855F7" },
       { name: "Back of House", color: "#F59E0B" },
       { name: "Chef", color: "#8B5CF6" },
       { name: "Bartender", color: "#059669" },
     ],
     BAR: [
-      { name: "Bartenders", color: "#3B82F6" },
+      { name: "Bartenders", color: "#A855F7" },
       { name: "Barbacks", color: "#F59E0B" },
       { name: "Security", color: "#DC2626" },
     ],
     FOOD_TRUCK: [
       { name: "Kitchen", color: "#F59E0B" },
-      { name: "Service", color: "#3B82F6" },
+      { name: "Service", color: "#A855F7" },
       { name: "Driver", color: "#8B5CF6" },
     ],
   };

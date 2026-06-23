@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResCommand — Redesign Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Inter', sans-serif; }
+  body { background: #F6F5FB; }
+  .gravy-purple { color: #7C3AED; }
+  .bg-gravy { background: #7C3AED; }
+  .bg-gravy-light { background: #F3EEFF; }
+  .gravy-border { border-color: #7C3AED; }
+  .card-shadow { box-shadow: 0 2px 12px rgba(124, 58, 237, 0.06); }
+  .card-shadow-lg { box-shadow: 0 8px 30px rgba(124, 58, 237, 0.10); }
+  .sidebar-gradient { background: linear-gradient(180deg, #1E1033 0%, #2D1B4E 100%); }
+  .pill { border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+  .nav-item { transition: all 0.15s ease; }
+  .nav-item:hover { background: rgba(124, 58, 237, 0.15); }
+  .nav-item.active { background: rgba(124, 58, 237, 0.2); border-left: 3px solid #7C3AED; }
+  .stat-number { font-weight: 800; font-size: 32px; letter-spacing: -0.02em; }
+  .scroll-snap { scroll-snap-type: y mandatory; }
+  .snap-section { scroll-snap-align: start; }
+  .gradient-text { background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .glow { box-shadow: 0 0 30px rgba(124, 58, 237, 0.15); }
+  .animate-float { animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .checkmark-purple { width: 20px; height: 20px; background: #7C3AED; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #F6F5FB; }
+  ::-webkit-scrollbar-thumb { background: #D1C5F0; border-radius: 4px; }
+</style>
+</head>
+<body class="text-gray-900">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 1: DASHBOARD
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="snap-section min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar-gradient w-64 min-h-screen flex flex-col py-6 px-4 sticky top-0 h-screen overflow-y-auto">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-3 mb-8">
+      <div class="w-10 h-10 bg-gravy rounded-xl flex items-center justify-center glow">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <div>
+        <div class="text-white font-bold text-lg tracking-tight">ResCommand</div>
+        <div class="text-purple-300 text-xs">Duffers Donut Shop</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="space-y-1">
+      <div class="px-3 py-2 text-purple-400 text-xs font-semibold uppercase tracking-wider">Main</div>
+
+      <a class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-white">
+        <span>📊</span> Dashboard
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>📦</span> Inventory
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>📋</span> Recipes
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>✅</span> Par Sheets
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>📅</span> Schedule
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>🎯</span> Production
+      </a>
+
+      <div class="px-3 py-2 pt-5 text-purple-400 text-xs font-semibold uppercase tracking-wider">Insights</div>
+
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>💰</span> Labor Costs
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>📈</span> Reports
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>🏪</span> Locations
+      </a>
+
+      <div class="px-3 py-2 pt-5 text-purple-400 text-xs font-semibold uppercase tracking-wider">Team</div>
+
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>👥</span> Employees
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>💬</span> <span class="flex-1">Messages</span> <span class="bg-gravy text-white pill">3</span>
+      </a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-purple-200 hover:text-white cursor-pointer">
+        <span>🎓</span> Training
+      </a>
+    </nav>
+
+    <!-- User -->
+    <div class="mt-auto pt-6">
+      <div class="bg-purple-900/40 rounded-2xl p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">SG</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-white text-sm font-semibold truncate">Shawn Garrison</div>
+            <div class="text-purple-400 text-xs">Platform Admin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 p-8 overflow-x-hidden">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight">Good morning, Shawn 👋</h1>
+        <p class="text-gray-500 mt-1">Here's what's happening at Duffers Donut Shop today.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="bg-white card-shadow px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+          <span>📥</span> Export
+        </button>
+        <button class="bg-gravy text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700 card-shadow flex items-center gap-2">
+          <span>+</span> New Shift
+        </button>
+      </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-4 gap-5 mb-6">
+      <!-- Sales Today -->
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-lg">💵</div>
+          <span class="pill bg-green-100 text-green-700">+12%</span>
+        </div>
+        <div class="text-gray-500 text-sm font-medium">Sales Today</div>
+        <div class="stat-number text-gray-900 mt-1">$2,847</div>
+        <div class="text-green-600 text-xs mt-1 font-medium">vs. $2,542 yesterday</div>
+      </div>
+
+      <!-- Labor Cost % -->
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 bg-gravy-light rounded-xl flex items-center justify-center text-lg">👥</div>
+          <span class="pill bg-green-100 text-green-700">-2.1%</span>
+        </div>
+        <div class="text-gray-500 text-sm font-medium">Labor Cost %</div>
+        <div class="stat-number gravy-purple mt-1">18.3%</div>
+        <div class="text-gray-400 text-xs mt-1 font-medium">Target: 22.0%</div>
+      </div>
+
+      <!-- Inventory Health -->
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-lg">📦</div>
+          <span class="pill bg-amber-100 text-amber-700">3 Low</span>
+        </div>
+        <div class="text-gray-500 text-sm font-medium">Inventory Health</div>
+        <div class="stat-number text-gray-900 mt-1">94%</div>
+        <div class="text-gray-400 text-xs mt-1 font-medium">3 items below par</div>
+      </div>
+
+      <!-- Production -->
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-lg">🍩</div>
+          <span class="pill bg-green-100 text-green-700">On Track</span>
+        </div>
+        <div class="text-gray-500 text-sm font-medium">Production</div>
+        <div class="stat-number text-gray-900 mt-1">812 / 950</div>
+        <div class="text-gray-400 text-xs mt-1 font-medium">85% of daily target</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-3 gap-5 mb-6">
+
+      <!-- Sales Chart -->
+      <div class="col-span-2 bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="font-bold text-lg">Weekly Performance</h3>
+            <p class="text-gray-500 text-sm">Sales vs. Labor Cost</p>
+          </div>
+          <div class="flex gap-2">
+            <span class="flex items-center gap-1.5 text-xs text-gray-600"><span class="w-3 h-3 bg-gravy rounded-full"></span> Sales</span>
+            <span class="flex items-center gap-1.5 text-xs text-gray-600"><span class="w-3 h-3 bg-purple-200 rounded-full"></span> Labor</span>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="flex items-end justify-between gap-3 h-48">
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 45px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg" style="height: 100px;"></div>
+            </div>
+            <span class="text-xs text-gray-500 font-medium">Mon</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 50px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg" style="height: 120px;"></div>
+            </div>
+            <span class="text-xs text-gray-500 font-medium">Tue</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 40px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg" style="height: 95px;"></div>
+            </div>
+            <span class="text-xs text-gray-500 font-medium">Wed</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 55px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg" style="height: 140px;"></div>
+            </div>
+            <span class="text-xs text-gray-500 font-medium">Thu</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 60px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg" style="height: 160px;"></div>
+            </div>
+            <span class="text-xs text-gray-500 font-medium">Fri</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 65px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg" style="height: 175px;"></div>
+            </div>
+            <span class="text-xs text-gray-500 font-medium">Sat</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full flex flex-col items-center gap-1">
+              <div class="w-full bg-purple-200 rounded-t-lg" style="height: 48px;"></div>
+              <div class="w-full bg-gravy rounded-b-lg opacity-60" style="height: 110px;"></div>
+            </div>
+            <span class="text-xs text-gravy font-bold">Today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Schedule -->
+      <div class="bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="font-bold text-lg">Today's Shift</h3>
+          <span class="pill bg-gravy-light gravy-purple">5 scheduled</span>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50">
+            <div class="w-9 h-9 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">MJ</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold truncate">Maria Johnson</div>
+              <div class="text-xs text-gray-500">6:00 AM – 2:00 PM</div>
+            </div>
+            <span class="pill bg-green-100 text-green-700">Open</span>
+          </div>
+          <div class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50">
+            <div class="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">TC</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold truncate">Tom Chen</div>
+              <div class="text-xs text-gray-500">6:00 AM – 2:00 PM</div>
+            </div>
+            <span class="pill bg-green-100 text-green-700">Open</span>
+          </div>
+          <div class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50">
+            <div class="w-9 h-9 bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-bold">SR</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold truncate">Sarah Reyes</div>
+              <div class="text-xs text-gray-500">10:00 AM – 6:00 PM</div>
+            </div>
+            <span class="pill bg-blue-100 text-blue-700">Mid</span>
+          </div>
+          <div class="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-gray-50">
+            <div class="w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold">DK</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold truncate">Dave Kim</div>
+              <div class="text-xs text-gray-500">2:00 PM – 10:00 PM</div>
+            </div>
+            <span class="pill bg-purple-100 gravy-purple">Close</span>
+          </div>
+        </div>
+
+        <button class="w-full mt-4 text-gravy text-sm font-semibold hover:bg-gravy-light py-2 rounded-xl transition">
+          View full schedule →
+        </button>
+      </div>
+    </div>
+
+    <!-- Low Stock + Quick Actions -->
+    <div class="grid grid-cols-3 gap-5">
+
+      <!-- Low Stock Alert -->
+      <div class="col-span-2 bg-white rounded-2xl p-6 card-shadow">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <h3 class="font-bold text-lg">Inventory Alerts</h3>
+            <span class="pill bg-red-100 text-red-600">3 items low</span>
+          </div>
+          <button class="text-gravy text-sm font-semibold hover:underline">Manage →</button>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center gap-4 p-3 bg-red-50 rounded-xl">
+            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-lg">🥛</div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Whole Milk</div>
+              <div class="text-xs text-gray-500">2 gal remaining · Par: 8 gal</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-red-500 rounded-full" style="width: 25%"></div>
+              </div>
+              <span class="text-xs font-bold text-red-600 w-8">25%</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 p-3 bg-amber-50 rounded-xl">
+            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-lg">🍩</div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Glaze Mix</div>
+              <div class="text-xs text-gray-500">5 lbs remaining · Par: 15 lbs</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: 33%"></div>
+              </div>
+              <span class="text-xs font-bold text-amber-600 w-8">33%</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 p-3 bg-amber-50 rounded-xl">
+            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-lg">🥤</div>
+            <div class="flex-1">
+              <div class="font-semibold text-sm">Coffee Cups (16oz)</div>
+              <div class="text-xs text-gray-500">120 remaining · Par: 300</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: 40%"></div>
+              </div>
+              <span class="text-xs font-bold text-amber-600 w-8">40%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Assistant Card -->
+      <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-6 text-white card-shadow-lg relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-12 -mt-12"></div>
+        <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+        <div class="relative z-10">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl mb-4 animate-float">🤖</div>
+          <h3 class="font-bold text-lg mb-1">Ask ResCommand AI</h3>
+          <p class="text-purple-200 text-sm mb-4">Get instant answers from your recipes, policies, and operations data.</p>
+
+          <div class="bg-white/10 rounded-xl p-3 mb-3">
+            <p class="text-xs text-purple-200 mb-1">Try asking:</p>
+            <p class="text-sm font-medium">"What's the recipe cost for a maple bacon donut?"</p>
+          </div>
+
+          <button class="w-full bg-white text-purple-700 py-2.5 rounded-xl text-sm font-bold hover:bg-purple-50 transition">
+            Ask a question →
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 2: INVENTORY PAGE
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="snap-section min-h-screen bg-[#F6F5FB] p-8 pt-16">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+      <span>Dashboard</span> <span>›</span> <span class="text-gray-900 font-medium">Inventory</span>
+    </div>
+
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h2 class="text-3xl font-extrabold tracking-tight">Inventory Management</h2>
+        <p class="text-gray-500 mt-1">Track stock levels, manage suppliers, and prevent waste.</p>
+      </div>
+      <div class="flex gap-3">
+        <button class="bg-white card-shadow px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+          <span>📤</span> Import CSV
+        </button>
+        <button class="bg-gravy text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-700 card-shadow flex items-center gap-2">
+          <span>+</span> Add Item
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter pills -->
+    <div class="flex gap-2 mb-6">
+      <span class="pill bg-gravy text-white">All Items (47)</span>
+      <span class="pill bg-white text-gray-600 card-shadow cursor-pointer">Low Stock (3)</span>
+      <span class="pill bg-white text-gray-600 card-shadow cursor-pointer">Dry Goods (18)</span>
+      <span class="pill bg-white text-gray-600 card-shadow cursor-pointer">Dairy (8)</span>
+      <span class="pill bg-white text-gray-600 card-shadow cursor-pointer">Produce (12)</span>
+      <span class="pill bg-white text-gray-600 card-shadow cursor-pointer">Supplies (9)</span>
+    </div>
+
+    <!-- Inventory table -->
+    <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Item</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Category</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">In Stock</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Par Level</th>
+            <th class="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Status</th>
+            <th class="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center text-lg">🥛</div>
+                <span class="font-semibold text-sm">Whole Milk</span>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="pill bg-blue-50 text-blue-600">Dairy</span></td>
+            <td class="px-6 py-4 text-sm font-medium">2 gal</td>
+            <td class="px-6 py-4 text-sm text-gray-500">8 gal</td>
+            <td class="px-6 py-4"><span class="pill bg-red-100 text-red-600">⚠ Low</span></td>
+            <td class="px-6 py-4 text-right"><button class="text-gravy text-sm font-semibold hover:underline">Order</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center text-lg">🍩</div>
+                <span class="font-semibold text-sm">Glaze Mix</span>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="pill bg-orange-50 text-orange-600">Dry Goods</span></td>
+            <td class="px-6 py-4 text-sm font-medium">5 lbs</td>
+            <td class="px-6 py-4 text-sm text-gray-500">15 lbs</td>
+            <td class="px-6 py-4"><span class="pill bg-amber-100 text-amber-600">⚠ Low</span></td>
+            <td class="px-6 py-4 text-right"><button class="text-gravy text-sm font-semibold hover:underline">Order</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center text-lg">🌾</div>
+                <span class="font-semibold text-sm">All-Purpose Flour</span>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="pill bg-orange-50 text-orange-600">Dry Goods</span></td>
+            <td class="px-6 py-4 text-sm font-medium">45 lbs</td>
+            <td class="px-6 py-4 text-sm text-gray-500">30 lbs</td>
+            <td class="px-6 py-4"><span class="pill bg-green-100 text-green-600">✓ Good</span></td>
+            <td class="px-6 py-4 text-right"><button class="text-gray-400 text-sm font-medium hover:text-gray-600">Edit</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-yellow-50 rounded-lg flex items-center justify-center text-lg">🧈</div>
+                <span class="font-semibold text-sm">Butter (Unsalted)</span>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="pill bg-blue-50 text-blue-600">Dairy</span></td>
+            <td class="px-6 py-4 text-sm font-medium">12 lbs</td>
+            <td class="px-6 py-4 text-sm text-gray-500">10 lbs</td>
+            <td class="px-6 py-4"><span class="pill bg-green-100 text-green-600">✓ Good</span></td>
+            <td class="px-6 py-4 text-right"><button class="text-gray-400 text-sm font-medium hover:text-gray-600">Edit</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-brown-50 rounded-lg flex items-center justify-center text-lg" style="background:#F5EEE6">🍫</div>
+                <span class="font-semibold text-sm">Chocolate Ganache</span>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="pill bg-orange-50 text-orange-600">Dry Goods</span></td>
+            <td class="px-6 py-4 text-sm font-medium">8 lbs</td>
+            <td class="px-6 py-4 text-sm text-gray-500">12 lbs</td>
+            <td class="px-6 py-4"><span class="pill bg-amber-100 text-amber-600">⚠ Low</span></td>
+            <td class="px-6 py-4 text-right"><button class="text-gravy text-sm font-semibold hover:underline">Order</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center text-lg">🥚</div>
+                <span class="font-semibold text-sm">Eggs (Large)</span>
+              </div>
+            </td>
+            <td class="px-6 py-4"><span class="pill bg-blue-50 text-blue-600">Dairy</span></td>
+            <td class="px-6 py-4 text-sm font-medium">24 dozen</td>
+            <td class="px-6 py-4 text-sm text-gray-500">15 dozen</td>
+            <td class="px-6 py-4"><span class="pill bg-green-100 text-green-600">✓ Good</span></td>
+            <td class="px-6 py-4 text-right"><button class="text-gray-400 text-sm font-medium hover:text-gray-600">Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 3: AI ASSISTANT (NEW FEATURE)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="snap-section min-h-screen sidebar-gradient p-8 pt-16">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="text-center mb-10">
+      <div class="inline-block mb-4">
+        <span class="pill bg-white/10 text-purple-200">✨ New Feature</span>
+      </div>
+      <h2 class="text-4xl font-extrabold tracking-tight text-white mb-3">ResCommand AI</h2>
+      <p class="text-purple-300 text-lg max-w-2xl mx-auto">Your operations copilot — trained on your recipes, inventory, labor data, and policies. Ask anything, get instant answers.</p>
+    </div>
+
+    <!-- Chat preview -->
+    <div class="bg-white rounded-3xl p-8 card-shadow-lg">
+
+      <!-- Message: User -->
+      <div class="flex justify-end mb-6">
+        <div class="bg-gravy-light rounded-2xl rounded-tr-sm px-5 py-3 max-w-md">
+          <p class="text-sm text-gray-800">What's our food cost percentage on the maple bacon donut?</p>
+        </div>
+      </div>
+
+      <!-- Message: AI -->
+      <div class="flex gap-3 mb-6">
+        <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0">🤖</div>
+        <div class="flex-1">
+          <div class="bg-gray-50 rounded-2xl rounded-tl-sm px-5 py-4">
+            <p class="text-sm text-gray-800 mb-3">Your food cost on the **Maple Bacon Donut** is **24.3%**.</p>
+            <div class="bg-white rounded-xl p-4 border border-gray-100">
+              <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cost Breakdown</div>
+              <div class="space-y-1.5 text-sm">
+                <div class="flex justify-between"><span class="text-gray-600">Dough (2.5 oz)</span><span class="font-medium">$0.18</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Maple Glaze</span><span class="font-medium">$0.22</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Bacon (1 slice)</span><span class="font-medium">$0.31</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Packaging</span><span class="font-medium">$0.05</span></div>
+                <div class="flex justify-between pt-2 border-t border-gray-100"><span class="font-semibold">Total Cost</span><span class="font-bold gravy-purple">$0.76</span></div>
+                <div class="flex justify-between"><span class="text-gray-500 text-xs">Sells for $3.25</span><span class="text-green-600 text-xs font-bold">24.3% food cost</span></div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-3">💡 Tip: Bacon is your highest-cost ingredient. Swapping to a thinner cut could save $0.08/unit.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick suggestions -->
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span class="pill bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">📊 Today's labor cost vs. target</span>
+        <span class="pill bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">🍩 Top 5 most profitable items</span>
+        <span class="pill bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200">📦 What should I order this week?</span>
+      </div>
+
+      <!-- Input -->
+      <div class="flex gap-3">
+        <div class="flex-1 bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-3 border border-gray-200">
+          <span class="text-gray-400">💬</span>
+          <span class="text-gray-400 text-sm flex-1">Ask about recipes, inventory, costs...</span>
+        </div>
+        <button class="bg-gravy text-white w-12 h-12 rounded-xl hover:bg-purple-700 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="grid grid-cols-3 gap-4 mt-8">
+      <div class="bg-white/5 rounded-2xl p-5 border border-white/10">
+        <div class="text-2xl mb-2">📖</div>
+        <h4 class="text-white font-bold text-sm mb-1">Knows Your Recipes</h4>
+        <p class="text-purple-300 text-xs">Every recipe, ingredient cost, and yield — instantly queryable.</p>
+      </div>
+      <div class="bg-white/5 rounded-2xl p-5 border border-white/10">
+        <div class="text-2xl mb-2">📊</div>
+        <h4 class="text-white font-bold text-sm mb-1">Analyzes Your Data</h4>
+        <p class="text-purple-300 text-xs">Labor %, COGS, waste trends — ask in plain English.</p>
+      </div>
+      <div class="bg-white/5 rounded-2xl p-5 border border-white/10">
+        <div class="text-2xl mb-2">⚡</div>
+        <h4 class="text-white font-bold text-sm mb-1">Saves Hours</h4>
+        <p class="text-purple-300 text-xs">No more spreadsheet hunting. Get answers in seconds.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 4: BEFORE & AFTER
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="snap-section min-h-screen bg-[#F6F5FB] p-8 pt-16">
+  <div class="max-w-5xl mx-auto">
+
+    <div class="text-center mb-10">
+      <h2 class="text-3xl font-extrabold tracking-tight">Design Transformation</h2>
+      <p class="text-gray-500 mt-2">What changes when we apply the All Gravy aesthetic to ResCommand</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6">
+
+      <!-- Before -->
+      <div>
+        <div class="text-sm font-semibold text-gray-400 mb-3">BEFORE — Current Design</div>
+        <div class="bg-gray-100 rounded-2xl p-6 border-2 border-dashed border-gray-300">
+          <div class="bg-white rounded-lg p-4" style="filter: grayscale(0.5);">
+            <div class="flex gap-4">
+              <div class="w-32 space-y-2">
+                <div class="h-6 bg-gray-300 rounded"></div>
+                <div class="h-4 bg-gray-200 rounded"></div>
+                <div class="h-4 bg-gray-200 rounded"></div>
+                <div class="h-4 bg-gray-200 rounded"></div>
+                <div class="h-4 bg-gray-200 rounded"></div>
+              </div>
+              <div class="flex-1 space-y-2">
+                <div class="h-6 bg-gray-300 rounded w-1/2"></div>
+                <div class="grid grid-cols-2 gap-2 mt-3">
+                  <div class="h-20 bg-gray-200 rounded"></div>
+                  <div class="h-20 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex items-center gap-2 text-xs text-gray-500"><span>✗</span> Flat, utilitarian sidebar</div>
+            <div class="flex items-center gap-2 text-xs text-gray-500"><span>✗</span> No visual hierarchy</div>
+            <div class="flex items-center gap-2 text-xs text-gray-500"><span>✗</span> Dense tables without breathing room</div>
+            <div class="flex items-center gap-2 text-xs text-gray-500"><span>✗</span> Gray-on-gray color scheme</div>
+            <div class="flex items-center gap-2 text-xs text-gray-500"><span>✗</span> No personality or warmth</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div>
+        <div class="text-sm font-semibold text-gravy mb-3">AFTER — All Gravy Style</div>
+        <div class="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+          <div class="sidebar-gradient rounded-lg overflow-hidden" style="filter: none;">
+            <div class="flex gap-4 p-4">
+              <div class="w-32 space-y-2">
+                <div class="h-8 bg-gravy rounded-lg"></div>
+                <div class="h-4 bg-purple-400 rounded"></div>
+                <div class="h-4 bg-purple-600 rounded ml-2"></div>
+                <div class="h-4 bg-purple-400 rounded"></div>
+                <div class="h-4 bg-purple-400 rounded"></div>
+              </div>
+              <div class="flex-1 bg-[#F6F5FB] rounded-lg p-3 space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="h-16 bg-white rounded-xl card-shadow"></div>
+                  <div class="h-16 bg-white rounded-xl card-shadow"></div>
+                </div>
+                <div class="h-20 bg-white rounded-xl card-shadow"></div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex items-center gap-2 text-xs text-gray-700"><span class="checkmark-purple text-white text-[10px]">✓</span> Deep purple gradient sidebar</div>
+            <div class="flex items-center gap-2 text-xs text-gray-700"><span class="checkmark-purple text-white text-[10px]">✓</span> Card-based stat layouts with icons</div>
+            <div class="flex items-center gap-2 text-xs text-gray-700"><span class="checkmark-purple text-white text-[10px]">✓</span> Color-coded status pills</div>
+            <div class="flex items-center gap-2 text-xs text-gray-700"><span class="checkmark-purple text-white text-[10px]">✓</span> Soft shadows, rounded corners (16px)</div>
+            <div class="flex items-center gap-2 text-xs text-gray-700"><span class="checkmark-purple text-white text-[10px]">✓</span> Playful emoji icons + micro-interactions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Design System -->
+    <div class="mt-10 bg-white rounded-2xl p-8 card-shadow">
+      <h3 class="font-bold text-lg mb-6">🎨 Design System Extracted from All Gravy</h3>
+      <div class="grid grid-cols-4 gap-6">
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase mb-3">Primary Palette</div>
+          <div class="flex gap-2">
+            <div class="w-12 h-12 rounded-xl" style="background:#1E1033"></div>
+            <div class="w-12 h-12 rounded-xl" style="background:#7C3AED"></div>
+            <div class="w-12 h-12 rounded-xl" style="background:#A855F7"></div>
+            <div class="w-12 h-12 rounded-xl" style="background:#F3EEFF"></div>
+          </div>
+          <div class="text-xs text-gray-500 mt-2">Dark · Primary · Light · Bg</div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase mb-3">Status Colors</div>
+          <div class="flex gap-2">
+            <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600 text-xs font-bold">OK</div>
+            <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 text-xs font-bold">LOW</div>
+            <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 text-xs font-bold">OUT</div>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase mb-3">Typography</div>
+          <div class="space-y-1">
+            <div class="font-extrabold text-lg">Inter Bold</div>
+            <div class="font-medium text-sm">Inter Medium</div>
+            <div class="text-xs text-gray-500">Inter Regular</div>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase mb-3">Corner Radius</div>
+          <div class="flex gap-2 items-end">
+            <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+            <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+            <div class="w-10 h-10 bg-gray-200 rounded-2xl"></div>
+          </div>
+          <div class="text-xs text-gray-500 mt-2">8 · 12 · 16px</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="mt-8 text-center pb-16">
+      <p class="text-gray-500 text-sm">Scroll up to explore the full dashboard, inventory page, and AI assistant mockup ↑</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

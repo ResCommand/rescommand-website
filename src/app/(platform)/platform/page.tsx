@@ -39,7 +39,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  TEST: "#6B7280", FREE: "#6B7280", CORE: "#3B82F6", OPERATOR: "#8B5CF6",
+  TEST: "#6B7280", FREE: "#6B7280", CORE: "#A855F7", OPERATOR: "#8B5CF6",
 };
 
 const TYPE_OPTIONS = ["DONUT_SHOP", "BAKERY", "CAFE", "RESTAURANT", "BAR", "FOOD_TRUCK"];
@@ -175,7 +175,7 @@ export default function PlatformAdminPage() {
     return (
       <div style={{ minHeight: "100vh", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center", color: "#64748B" }}>
-          <div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid #E2E8F0", borderTopColor: "#3B82F6", borderRadius: "50%", margin: "0 auto 16px" }} />
+          <div className="animate-spin" style={{ width: 32, height: 32, border: "3px solid #E2E8F0", borderTopColor: "#A855F7", borderRadius: "50%", margin: "0 auto 16px" }} />
           <p>Loading ResCommand Platform...</p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function PlatformAdminPage() {
         <p style={{ color: "#64748B", fontSize: 14, marginBottom: 16 }}>
           You need platform admin privileges to access this page. If you believe this is an error, contact your system administrator.
         </p>
-        <a href="/login?callbackUrl=/platform" style={{ color: "#2563EB", fontSize: 14, fontWeight: 500 }}>
+        <a href="/login?callbackUrl=/platform" style={{ color: "#7C3AED", fontSize: 14, fontWeight: 500 }}>
           Sign in with an admin account →
         </a>
       </div>
@@ -205,7 +205,7 @@ export default function PlatformAdminPage() {
       <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E2E8F0", padding: "12px 32px", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14 }}>R</div>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "#7C3AED", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14 }}>R</div>
             <div>
               <h1 style={{ fontSize: 16, fontWeight: 700, color: "#F8FAFC", lineHeight: 1.2 }}>ResCommand</h1>
               <p style={{ fontSize: 10, color: "#64748B" }}>Venturio LLC</p>
@@ -216,7 +216,7 @@ export default function PlatformAdminPage() {
               <button key={tab} onClick={() => setActiveTab(tab)}
                 style={{
                   padding: "6px 14px", borderRadius: 6, border: "none", cursor: "pointer",
-                  background: activeTab === tab ? "#3B82F6" : "transparent",
+                  background: activeTab === tab ? "#A855F7" : "transparent",
                   color: activeTab === tab ? "#fff" : "#94A3B8",
                   fontWeight: activeTab === tab ? 600 : 400, fontSize: 13,
                   display: "flex", alignItems: "center", gap: 6,
@@ -247,7 +247,7 @@ export default function PlatformAdminPage() {
           <>
             {/* Stats Row */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 32 }}>
-              <StatCard label="Active Tenants" value={data.activeTenants} icon={<Building2 size={18} />} color="#3B82F6" />
+              <StatCard label="Active Tenants" value={data.activeTenants} icon={<Building2 size={18} />} color="#A855F7" />
               <StatCard label="Monthly Revenue" value={`$${data.totalMRR.toLocaleString()}`} icon={<DollarSign size={18} />} color="#059669" />
               <StatCard label="Annual Revenue" value={`$${data.totalARR.toLocaleString()}`} icon={<TrendingUp size={18} />} color="#8B5CF6" />
               <StatCard label="Total Staff" value={data.totalMembers} icon={<Users size={18} />} color="#F59E0B" />
@@ -267,7 +267,7 @@ export default function PlatformAdminPage() {
                       <div key={plan} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 20, fontWeight: 700, color: PLAN_COLORS[plan] || "#fff" }}>{count}</span>
                         <div style={{ width: "100%", background: "#E2E8F0", borderRadius: 6, height: Math.max(pct, 10) + "%", minHeight: 16, position: "relative" }}>
-                          <div style={{ position: "absolute", inset: 0, background: PLAN_COLORS[plan] || "#3B82F6", borderRadius: 6, opacity: 0.8 }} />
+                          <div style={{ position: "absolute", inset: 0, background: PLAN_COLORS[plan] || "#A855F7", borderRadius: 6, opacity: 0.8 }} />
                         </div>
                         <span style={{ fontSize: 11, color: "#64748B", fontWeight: 500 }}>{plan}</span>
                       </div>
@@ -281,7 +281,7 @@ export default function PlatformAdminPage() {
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: "#64748B" }}>Quick Stats</h3>
                 <QuickStat label="Suspended" value={data.suspendedTenants} color={data.suspendedTenants > 0 ? "#DC2626" : "#475569"} />
                 <QuickStat label="On Trial" value={data.trialTenants} color="#F59E0B" />
-                <QuickStat label="Avg Staff/Tenant" value={data.activeTenants > 0 ? Math.round(data.totalMembers / data.activeTenants) : 0} color="#3B82F6" />
+                <QuickStat label="Avg Staff/Tenant" value={data.activeTenants > 0 ? Math.round(data.totalMembers / data.activeTenants) : 0} color="#A855F7" />
                 <QuickStat label="ARPU" value={`$${data.activeTenants > 0 ? (data.totalMRR / data.activeTenants).toFixed(0) : 0}/mo`} color="#059669" />
               </div>
             </div>
@@ -397,10 +397,10 @@ export default function PlatformAdminPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: 16, fontWeight: 600 }}>Plan Pricing</h3>
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={addPlan} style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid #2563EB", background: "#EFF6FF", color: "#2563EB", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                <button onClick={addPlan} style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid #7C3AED", background: "#F3EEFF", color: "#7C3AED", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                   <Plus size={14} /> Add Plan
                 </button>
-                <button onClick={savePricing} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: "#2563EB", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                <button onClick={savePricing} style={{ padding: "8px 16px", borderRadius: 6, border: "none", background: "#7C3AED", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
                   <Save size={14} /> Save Changes
                 </button>
               </div>

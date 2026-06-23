@@ -45,7 +45,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const POSITIONS = ["GENERAL", "OPENING", "CLOSING", "FOH", "BOH"];
 const POSITION_COLORS: Record<string, string> = {
-  GENERAL: "#F3F4F6", OPENING: "#DBEAFE", CLOSING: "#E0E7FF",
+  GENERAL: "#F3F4F6", OPENING: "#F3EEFF", CLOSING: "#E0E7FF",
   FOH: "#FEF3C7", BOH: "#D1FAE5",
 };
 
@@ -436,7 +436,7 @@ export default function SchedulePage() {
 
           {/* Copy Week Modal */}
           {showCopyWeek && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}><Copy size={16} /> Copy Week</h3>
               <p className="text-sm text-gray" style={{ marginBottom: 12 }}>
                 Copy all shifts from the week of <strong>{weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</strong> to another week. Copied shifts are created as drafts.
@@ -454,7 +454,7 @@ export default function SchedulePage() {
 
           {/* Apply Template Modal */}
           {showApplyTemplate && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}><LayoutTemplate size={16} /> Apply Template</h3>
               <p className="text-sm text-gray" style={{ marginBottom: 12 }}>
                 Apply your default schedule template to the week of <strong>{weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</strong>. 
@@ -470,7 +470,7 @@ export default function SchedulePage() {
 
           {/* Add shift form */}
           {showShiftForm && isManager && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingShift ? "Edit Shift" : "Add Shift"}</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div>
@@ -525,10 +525,10 @@ export default function SchedulePage() {
                 const dayShifts = shiftsByDate.get(key) || [];
                 const isToday = key === fmtDate(new Date());
                 return (
-                  <div key={i} style={{ background: isToday ? "#EFF6FF" : "#fff", borderRadius: 8, border: isToday ? "2px solid #1A56DB" : "1px solid #E5E7EB", minHeight: 120 }}>
+                  <div key={i} style={{ background: isToday ? "#F3EEFF" : "#fff", borderRadius: 8, border: isToday ? "2px solid #7C3AED" : "1px solid #E5E7EB", minHeight: 120 }}>
                     <div style={{ padding: "8px 10px", borderBottom: "1px solid #E5E7EB", textAlign: "center" }}>
                       <div className="text-xs" style={{ color: "#6B7280", fontWeight: 500 }}>{DAYS[d.getDay()]}</div>
-                      <div style={{ fontSize: 16, fontWeight: 600, color: isToday ? "#1A56DB" : "#374151" }}>{d.getDate()}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: isToday ? "#7C3AED" : "#374151" }}>{d.getDate()}</div>
                     </div>
                     <div style={{ padding: 4 }}>
                       {dayShifts.length === 0 && (
@@ -548,7 +548,7 @@ export default function SchedulePage() {
                             {!s.published && <div className="text-xs" style={{ color: "#D97706" }}>Draft</div>}
                             {isManager && (
                               <div className="flex gap-1" style={{ marginTop: 2 }}>
-                                <button onClick={() => openEditShift(s)} style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", padding: 0 }}>
+                                <button onClick={() => openEditShift(s)} style={{ background: "none", border: "none", cursor: "pointer", color: "#7C3AED", padding: 0 }}>
                                   <Pencil size={10} />
                                 </button>
                                 <button onClick={() => deleteShift(s.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#DC2626", padding: 0 }}>
@@ -579,7 +579,7 @@ export default function SchedulePage() {
           </div>
 
           {showBlockForm && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Add Availability Block</h3>
               <div className="grid-2" style={{ gap: 12, marginBottom: 12 }}>
                 <div>
@@ -653,7 +653,7 @@ export default function SchedulePage() {
           </div>
 
           {showTimeOffForm && (
-            <div className="card" style={{ padding: 20, border: "2px solid #1A56DB" }}>
+            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>{editingTimeOff ? "Edit Request" : "Request Time Off"}</h3>
               <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
                 <div>

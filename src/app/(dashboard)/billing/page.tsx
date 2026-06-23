@@ -27,13 +27,13 @@ interface BillingData {
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  TEST: "#6B7280", FREE: "#6B7280", CORE: "#3B82F6", OPERATOR: "#8B5CF6",
+  TEST: "#6B7280", FREE: "#6B7280", CORE: "#A855F7", OPERATOR: "#8B5CF6",
 };
 
 const PLAN_ICONS: Record<string, React.ReactNode> = {
   TEST: <span style={{ fontSize: 24 }}>🧪</span>,
   FREE: <span style={{ fontSize: 24 }}>🆓</span>,
-  CORE: <Sparkles size={24} style={{ color: "#3B82F6" }} />,
+  CORE: <Sparkles size={24} style={{ color: "#A855F7" }} />,
   OPERATOR: <Crown size={24} style={{ color: "#8B5CF6" }} />,
 };
 
@@ -147,16 +147,16 @@ export default function BillingPage() {
 
           return (
             <div key={plan.planKey} style={{
-              background: isCurrent ? "#EFF6FF" : "#fff",
+              background: isCurrent ? "#F3EEFF" : "#fff",
               borderRadius: 12,
-              border: `2px solid ${isCurrent ? "#2563EB" : "#E5E7EB"}`,
+              border: `2px solid ${isCurrent ? "#7C3AED" : "#E5E7EB"}`,
               padding: 24,
               display: "flex",
               flexDirection: "column",
               position: "relative",
             }}>
               {isCurrent && (
-                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", padding: "2px 12px", background: "#2563EB", borderRadius: 10, fontSize: 10, fontWeight: 700, color: "#fff" }}>CURRENT</div>
+                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", padding: "2px 12px", background: "#7C3AED", borderRadius: 10, fontSize: 10, fontWeight: 700, color: "#fff" }}>CURRENT</div>
               )}
               <div style={{ textAlign: "center", marginBottom: 16 }}>
                 <div style={{ marginBottom: 8 }}>{PLAN_ICONS[plan.planKey] || "📦"}</div>
@@ -182,7 +182,7 @@ export default function BillingPage() {
                 <button onClick={() => handleUpgrade(plan.planKey)} disabled={upgrading === plan.planKey}
                   style={{
                     width: "100%", padding: 10, borderRadius: 8, border: "none",
-                    background: isDowngrade ? "#6B7280" : "#2563EB",
+                    background: isDowngrade ? "#6B7280" : "#7C3AED",
                     color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer",
                     opacity: upgrading === plan.planKey ? 0.6 : 1,
                   }}
@@ -197,7 +197,7 @@ export default function BillingPage() {
 
       {/* Footer */}
       <div style={{ textAlign: "center", fontSize: 12, color: "#9CA3AF" }}>
-        <p>Questions? Contact <a href="mailto:support@rescommand.com" style={{ color: "#2563EB" }}>support@rescommand.com</a></p>
+        <p>Questions? Contact <a href="mailto:support@rescommand.com" style={{ color: "#7C3AED" }}>support@rescommand.com</a></p>
         <p style={{ marginTop: 4 }}>© {new Date().getFullYear()} Venturio LLC. All rights reserved.</p>
       </div>
     </div>

@@ -1,141 +1,217 @@
 "use client";
+
+import { useEffect, useState, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter, usePathname } from "next/navigation";
-import { useState, useEffect, type ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Package, ClipboardList, Calendar, Sparkles,
-  Users, DollarSign, Menu, LogOut, QrCode, BookOpen, Coffee,
-  ShoppingCart, ChefHat, Bell, CalendarClock, Thermometer,
-  Megaphone, CreditCard,
+  LayoutDashboard,
+  Package,
+  ClipboardList,
+  CheckSquare,
+  Calendar,
+  Target,
+  DollarSign,
+  BarChart3,
+  Building2,
+  Users,
+  MessageSquare,
+  GraduationCap,
+  Settings,
+  LogOut,
+  Menu,
+  X,
 } from "lucide-react";
+
+/* ── Module keys (must match backend module-config) ── */
+const ALL_MODULE_KEYS = [
+  "dashboard",
+  "inventory",
+  "recipes",
+  "parSheets",
+  "schedule",
+  "production",
+  "laborCost",
+  "overboards",
+  "roasting",
+  "social",
+  "sops",
+  "admin",
+  "billing",
+  "signup",
+  "notifications",
+] as const;
+
+type ModuleKey = (typeof ALL_MODULE_KEYS)[number];
+
+/* ── Nav items with emoji + Lucide fallback ── */
+const allNav: {
+  href: string;
+  emoji: string;
+  icon: React.ElementType;
+  label: string;
+  section: string;
+  roles: string[];
+  moduleKey: ModuleKey;
+}[] = [
+  { href: "/dashboard", emoji: "📊", icon: LayoutDashboard, label: "Dashboard", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "dashboard" },
+  { href: "/inventory", emoji: "📦", icon: Package, label: "Inventory", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "inventory" },
+  { href: "/recipes", emoji: "📋", icon: ClipboardList, label: "Recipes", section: "Main", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "recipes" },
+  { href: "/par-sheets", emoji: "✅", icon: CheckSquare, label: "Par Sheets", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "parSheets" },
+  { href: "/schedule", emoji: "📅", icon: Calendar, label: "Schedule", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "schedule" },
+  { href: "/production", emoji: "🎯", icon: Target, label: "Production", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production" },
+  { href: "/labor-cost", emoji: "💰", icon: DollarSign, label: "Labor Costs", section: "Insights", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "laborCost" },
+  { href: "/overboards", emoji: "📈", icon: BarChart3, label: "Overboards", section: "Insights", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "overboards" },
+  { href: "/roasting", emoji: "☕", icon: BarChart3, label: "Roasting", section: "Insights", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "roasting" },
+  { href: "/social", emoji: "💬", icon: MessageSquare, label: "Messages", section: "Team", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "social" },
+  { href: "/sops", emoji: "🎓", icon: GraduationCap, label: "Training", section: "Team", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "sops" },
+  { href: "/admin", emoji: "⚙️", icon: Settings, label: "Admin", section: "Admin", roles: ["OWNER", "PLATFORM_ADMIN"], moduleKey: "admin" },
+  { href: "/billing", emoji: "💳", icon: DollarSign, label: "Billing", section: "Admin", roles: ["OWNER", "PLATFORM_ADMIN"], moduleKey: "billing" },
+];
 
 const PLATFORM_NAME = "ResCommand";
 
-const allNav = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "dashboard" },
-  { href: "/espresso-dial", icon: Coffee, label: "Espresso Dial", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "espresso" },
-  { href: "/owner", icon: DollarSign, label: "Financials", roles: ["OWNER", "PLATFORM_ADMIN"], moduleKey: "owner" },
-  { href: "/inventory", icon: Package, label: "Inventory", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "inventory" },
-  { href: "/inventory/order-requests", icon: ShoppingCart, label: "Order Requests", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "inventory" },
-  { href: "/recipes", icon: ChefHat, label: "Recipes", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "recipes" },
-  { href: "/production", icon: ClipboardList, label: "Par Sheets", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production" },
-  { href: "/schedule", icon: CalendarClock, label: "Schedule", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "schedule" },
-  { href: "/overboards", icon: Calendar, label: "Menu Planning", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "overboards" },
-  { href: "/sops", icon: BookOpen, label: "SOPs", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "sops" },
-  { href: "/cleaning", icon: Sparkles, label: "Cleaning", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "operations" },
-  { href: "/roasting", icon: Thermometer, label: "Roasting", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "roasting" },
-  { href: "/social", icon: Megaphone, label: "Social Media", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "social" },
-  { href: "/notifications", icon: Bell, label: "Notifications", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "notifications" },
-  { href: "/admin/users", icon: Users, label: "Admin", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "settings" },
-  { href: "/billing", icon: CreditCard, label: "Billing", roles: ["OWNER", "PLATFORM_ADMIN"], moduleKey: "settings" },
-  { href: "/qr-sign", icon: QrCode, label: "QR Sign", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "operations" },
-];
-
-const ALL_MODULE_KEYS = new Set(allNav.map(n => n.moduleKey));
-
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { data: session } = useSession();
-  const router = useRouter();
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Default to ALL modules enabled so the sidebar is never blank.
-  // The API response will narrow this down.
-  const [enabledModules, setEnabledModules] = useState<Set<string>>(ALL_MODULE_KEYS);
-  const [brandName, setBrandName] = useState<string>("");
+  const [brandName, setBrandName] = useState(PLATFORM_NAME);
+  const [enabledModules, setEnabledModules] = useState<Set<ModuleKey>>(new Set(ALL_MODULE_KEYS));
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-  const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-
-  // Fetch branding on mount
+  /* Fetch branding */
   useEffect(() => {
     fetch("/api/tenants/branding")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.brandName) setBrandName(data.brandName); })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.name) setBrandName(d.name); })
       .catch(() => {});
   }, []);
 
-  // Fetch enabled modules — narrows from the default (all enabled)
+  /* Fetch module config — default to ALL enabled */
   useEffect(() => {
     fetch("/api/module-config")
-      .then(r => {
-        if (!r.ok) throw new Error(String(r.status));
-        return r.json();
-      })
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setEnabledModules(new Set(data.filter((c: { enabled: boolean; moduleKey: string }) => c.enabled).map((c: { moduleKey: string }) => c.moduleKey)));
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (Array.isArray(d)) {
+          const keys = d.filter((c: { enabled: boolean }) => c.enabled).map((c: { key: ModuleKey }) => c.key);
+          if (keys.length > 0) setEnabledModules(new Set(keys));
         }
       })
-      .catch(() => {
-        // If fetch fails, keep showing all modules (already the default)
-      });
+      .catch(() => {});
   }, []);
 
-  // Filter by role AND enabled modules
-  const nav = allNav.filter(n => {
-    if (!n.roles.includes(role)) return false;
-    if (!n.moduleKey) return true;
-    return enabledModules.has(n.moduleKey);
-  });
+  const role = session?.user?.role as string | undefined;
+  const filteredNav = allNav.filter(
+    (n) => (!role || n.roles.includes(role)) && enabledModules.has(n.moduleKey)
+  );
 
-  const initials = session?.user?.name?.split(" ").map(w => w[0]).join("") || "?";
+  /* Group nav by section */
+  const sections = filteredNav.reduce<Record<string, typeof filteredNav>>((acc, item) => {
+    if (!acc[item.section]) acc[item.section] = [];
+    acc[item.section].push(item);
+    return acc;
+  }, {});
+
+  const initials = session?.user?.name
+    ? session.user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
 
   return (
     <div className="app-layout">
       {/* Mobile top bar */}
       <div className="mobile-topbar">
-        <button onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
-        <h2>{brandName || PLATFORM_NAME}</h2>
-        <button onClick={() => signOut({ callbackUrl: "/login" })}><LogOut size={18} /></button>
+        <button onClick={() => setSidebarOpen(true)} aria-label="Open menu"><Menu size={20} /></button>
+        <h2>{brandName}</h2>
+        <div style={{ width: 36 }} />
       </div>
 
-      {/* Mobile overlay */}
-      {sidebarOpen && <div className="sidebar-overlay open" onClick={() => setSidebarOpen(false)} />}
+      {/* Overlay */}
+      <div
+        ref={overlayRef}
+        className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
       {/* Sidebar */}
-      <nav className={`sidebar${sidebarOpen ? " open" : ""}`}>
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        {/* Brand */}
         <div className="sidebar-brand">
-          <h2>{brandName || PLATFORM_NAME}</h2>
-          <span className="sidebar-brand-sub">by {PLATFORM_NAME}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: "#7C3AED",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 20px rgba(124, 58, 237, 0.3)",
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h2>{brandName}</h2>
+              <span className="sidebar-brand-sub">by {PLATFORM_NAME}</span>
+            </div>
+          </div>
         </div>
-        <div className="sidebar-nav">
-          {nav.map(n => {
-            const Icon = n.icon;
-            const active = pathname === n.href || (n.href !== "/" && pathname.startsWith(n.href + "/"));
-            return (
-              <a
-                key={n.href}
-                href={n.href}
-                className={active ? "active" : ""}
-                onClick={() => { router.push(n.href); setSidebarOpen(false); }}
-              >
-                <Icon size={18} />
-                {n.label}
-              </a>
-            );
-          })}
-        </div>
+
+        {/* Nav */}
+        <nav className="sidebar-nav">
+          {Object.entries(sections).map(([section, items]) => (
+            <div key={section} style={{ marginBottom: 8 }}>
+              <div style={{
+                padding: "8px 12px 4px",
+                fontSize: 11, fontWeight: 600, color: "#A78BFA",
+                textTransform: "uppercase" as const, letterSpacing: "0.05em",
+              }}>
+                {section}
+              </div>
+              {items.map((item) => {
+                const Icon = item.icon;
+                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={active ? "active" : ""}
+                    onClick={() => setSidebarOpen(false)}
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>{item.emoji}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* User */}
         <div className="sidebar-user">
           <div className="sidebar-user-avatar">{initials}</div>
           <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{session?.user?.name || "User"}</div>
-            <div className="sidebar-user-role">{role.toLowerCase()}</div>
+            <div className="sidebar-user-name">{session?.user?.name || "..."}</div>
+            <div className="sidebar-user-role">{role?.replace("_", " ").toLowerCase() || "..."}</div>
           </div>
-          <button onClick={() => signOut({ callbackUrl: "/login" })} className="btn-icon" title="Sign out">
-            <LogOut size={16} style={{ color: "#6B7280" }} />
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            title="Sign out"
+            style={{ color: "#7C6FA8", padding: 4, marginLeft: "auto" }}
+          >
+            <LogOut size={16} />
           </button>
         </div>
+
+        {/* Powered by */}
         <div className="sidebar-poweredby">
-          <span>Powered by {PLATFORM_NAME}</span>
+          <span>⚡ Powered by {PLATFORM_NAME}</span>
         </div>
-      </nav>
+      </aside>
 
       {/* Main */}
-      <main className="main-content">
+      <div className="main-content">
         <div className="page-container">{children}</div>
-        <footer className="app-footer">
-          <span>{brandName || PLATFORM_NAME} &middot; Powered by {PLATFORM_NAME}</span>
-        </footer>
-      </main>
+        <div className="app-footer">© {new Date().getFullYear()} {PLATFORM_NAME}</div>
+      </div>
     </div>
   );
 }

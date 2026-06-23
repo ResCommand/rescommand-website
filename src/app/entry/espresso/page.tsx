@@ -68,7 +68,7 @@ export default function EspressoDialPage() {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Meridian Blend */}
         <div className="card" style={{ padding: 16 }}>
-          <h3 className="font-semibold text-sm mb-3" style={{ color: "#1A56DB" }}>Meridian Blend Espresso</h3>
+          <h3 className="font-semibold text-sm mb-3" style={{ color: "#7C3AED" }}>Meridian Blend Espresso</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <label className={labelStyle}>Grounds Weight (g)</label>

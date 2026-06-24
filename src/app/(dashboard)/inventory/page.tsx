@@ -565,14 +565,13 @@ export default function InventoryPage() {
       )}
 
       {/* Bottom save button (mobile convenience) */}
-      <div style={{ marginTop: 16, display: "flex", gap: 12, justifyContent: "stretch" }}>
+      <div style={{ marginTop: 16, display: "flex", gap: 12, justifyContent: "center" }}>
         <button
-          className="btn btn-primary"
+          className="btn btn-secondary btn-sm"
           onClick={save}
           disabled={saving}
-          style={{ width: "100%", maxWidth: 220 }}
         >
-          {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
+          {saving ? "Saving..." : saved ? "✓ All Saved" : "💾 Save Changes"}
         </button>
       </div>
 

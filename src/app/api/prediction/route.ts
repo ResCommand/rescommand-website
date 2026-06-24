@@ -10,7 +10,7 @@ export async function GET() {
   const tenantId = await getTenantId();
 
   const role = (session.user as { role?: string }).role;
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   // Check if we already have a par sheet for today
@@ -18,7 +18,7 @@ export async function GET() {
   today.setHours(0, 0, 0, 0);
 
   let sheet = await prisma.parSheet.findUnique({
-    where: { tenantId_date: { tenantId: 1, date: today } },
+    where: { tenantId_date: { tenantId, date: today } },
     include: { lines: { include: { product: true } } },
   });
 
@@ -93,7 +93,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const { userId, tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { lineId, onHand } = await request.json();

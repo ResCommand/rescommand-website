@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { ChefHat, LayoutGrid, Beaker, ListChecks, Calendar, ChevronLeft, ChevronRight, Settings, Pencil, Trash2 } from "lucide-react";
+import { ChefHat, LayoutGrid, ListChecks, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface BatchInfo {
@@ -17,14 +17,6 @@ interface TrayAllocation {
   donuts: number;
 }
 
-interface PrepItem {
-  category: string;
-  categoryColor: string;
-  name: string;
-  amount: string;
-  shelfLifeHours?: number;
-}
-
 interface ProductionData {
   date: string;
   dayOfWeek: number;
@@ -37,8 +29,6 @@ interface ProductionData {
   traySize: number;
   totalTrays: number;
   trayAllocations: TrayAllocation[];
-  prepList: PrepItem[];
-  sandwichToday?: unknown;
 }
 
 // Existing prediction data
@@ -69,7 +59,7 @@ const canEdit = true; // all roles can edit production counts
   const [data, setData] = useState<ProductionData | null>(null);
   const [parLines, setParLines] = useState<ParLine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"batches" | "trays" | "sandwiches" | "prep" | "predictions">("batches");
+  const [activeTab, setActiveTab] = useState<"batches" | "trays" | "predictions">("batches");
   const [checkedBatches, setCheckedBatches] = useState<Set<number>>(new Set());
   const [customTarget, setCustomTarget] = useState<number | null>(null);
   const [targetSaved, setTargetSaved] = useState(false);
@@ -251,109 +241,10 @@ const canEdit = true; // all roles can edit production counts
     return override !== undefined ? { ...t, trays: override, donuts: Math.round(override * TRAY_SIZE) } : t;
   });
 
-  // ─── Prep item management state ────────────────────────
-  const [showPrepForm, setShowPrepForm] = useState(false);
-  const [editingPrepItem, setEditingPrepItem] = useState<PrepItem | null>(null);
-  const [prepFormName, setPrepFormName] = useState("");
-  const [prepFormAmount, setPrepFormAmount] = useState("");
-  const [prepFormCategory, setPrepFormCategory] = useState("Glazes");
-  const [prepFormNewCat, setPrepFormNewCat] = useState("");
-  const [prepFormShelfLife, setPrepFormShelfLife] = useState(48);
-  const [prepFormCatColor, setPrepFormCatColor] = useState("#F3EEFF");
-  const [submittingPrep, setSubmittingPrep] = useState(false);
-  const [showPrepCatModal, setShowPrepCatModal] = useState(false);
-  const [editingPrepCategory, setEditingPrepCategory] = useState<string | null>(null);
-  const [prepCatEditName, setPrepCatEditName] = useState("");
-  const [prepCatEditColor, setPrepCatEditColor] = useState("#F3F4F6");
-  const [showPrepCatEdit, setShowPrepCatEdit] = useState(false);
-
-  const prepCategoriesList = data?.prepList
-    ? [...new Set(data.prepList.map(i => i.category))]
-    : ["Glazes", "Icings", "Jams/Creams", "Syrups/Sugar-Free"];
-
-  const resetPrepForm = () => {
-    setPrepFormName(""); setPrepFormAmount(""); setPrepFormCategory("Glazes");
-    setPrepFormNewCat(""); setPrepFormShelfLife(48); setPrepFormCatColor("#F3EEFF");
-    setEditingPrepItem(null);
-  };
-
-  const openEditPrepItem = (item: PrepItem, category: string) => {
-    setEditingPrepItem(item);
-    setPrepFormName(item.name);
-    setPrepFormAmount(item.amount);
-    setPrepFormCategory(category);
-    setPrepFormShelfLife(item.shelfLifeHours || 0);
-    setPrepFormCatColor(item.categoryColor || "#F3F4F6");
-    setShowPrepForm(true);
-  };
-
-  const savePrepItem = async () => {
-    if (!prepFormName.trim()) return;
-    setSubmittingPrep(true);
-    try {
-      const cat = prepFormCategory === "__new__" ? prepFormNewCat.trim() : prepFormCategory;
-      if (!cat) { setSubmittingPrep(false); return; }
-
-      // For editing, find the DB item by name
-      if (editingPrepItem) {
-        // Find matching DB prep item
-        const dbItems = await fetch("/api/prep-items").then(r => r.json());
-        const match = Array.isArray(dbItems) ? dbItems.find((i: { name: string }) => i.name === editingPrepItem.name) : null;
-        if (match) {
-          await fetch("/api/prep-items", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: match.id, name: prepFormName.trim(), category: cat, categoryColor: prepFormCatColor, amount: prepFormAmount.trim(), shelfLifeHours: prepFormShelfLife }),
-          });
-        }
-      } else {
-        await fetch("/api/prep-items", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: prepFormName.trim(), category: cat, categoryColor: prepFormCatColor, amount: prepFormAmount.trim(), shelfLifeHours: prepFormShelfLife }),
-        });
-      }
-      setShowPrepForm(false);
-      resetPrepForm();
-      fetchProductionData(selectedDate);
-    } catch { /* ignore */ }
-    setSubmittingPrep(false);
-  };
-
-  const deletePrepItem = async (name: string) => {
-    if (!confirm(`Delete "${name}"?`)) return;
-    try {
-      const dbItems = await fetch("/api/prep-items").then(r => r.json());
-      const match = Array.isArray(dbItems) ? dbItems.find((i: { name: string }) => i.name === name) : null;
-      if (match) {
-        await fetch(`/api/prep-items?id=${match.id}`, { method: "DELETE" });
-        fetchProductionData(selectedDate);
-      }
-    } catch { /* ignore */ }
-  };
-
-  const renamePrepCategory = async () => {
-    if (!editingPrepCategory || !prepCatEditName.trim()) return;
-    try {
-      const dbItems = await fetch("/api/prep-items").then(r => r.json());
-      const toUpdate = Array.isArray(dbItems) ? dbItems.filter((i: { category: string }) => i.category === editingPrepCategory) : [];
-      for (const item of toUpdate) {
-        await fetch("/api/prep-items", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: item.id, category: prepCatEditName.trim(), categoryColor: prepCatEditColor }),
-        });
-      }
-      setShowPrepCatEdit(false);
-      setEditingPrepCategory(null);
-      fetchProductionData(selectedDate);
-    } catch { /* ignore */ }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="page-header"><h1>Par Sheets</h1><p className="text-sm text-gray">Loading production data…</p></div>
+        <div className="page-header"><h1>Donut Production</h1><p className="text-sm text-gray">Loading production data…</p></div>
         <div className="card"><div className="empty-state">Loading…</div></div>
       </div>
     );
@@ -362,18 +253,11 @@ const canEdit = true; // all roles can edit production counts
   if (!data) {
     return (
       <div className="space-y-6">
-        <div className="page-header"><h1>Par Sheets</h1><p className="text-sm text-gray">Production planning</p></div>
+        <div className="page-header"><h1>Donut Production</h1><p className="text-sm text-gray">Production planning</p></div>
         <div className="card"><div className="empty-state">No production data available</div></div>
       </div>
     );
   }
-
-  // Group prep items by category
-  const prepCategories = data.prepList.reduce<Record<string, PrepItem[]>>((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
-    return acc;
-  }, {});
 
   return (
     <div className="space-y-6">
@@ -381,7 +265,7 @@ const canEdit = true; // all roles can edit production counts
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1>Par Sheets</h1>
+            <h1>Donut Production</h1>
             <p className="text-sm text-gray">
               {data.dayLabel} &middot; Target: {data.target} donuts
               {data.isHoliday && <span className="badge badge-orange" style={{ marginLeft: 8 }}>{data.holidayName}</span>}
@@ -547,14 +431,9 @@ const canEdit = true; // all roles can edit production counts
 	                    <td className="font-bold" style={{ color: "#7C3AED" }}>{effectiveBatches.large + effectiveBatches.small}</td>
 	                    <td className="font-bold" style={{ color: "#7C3AED" }}>{effectiveBatches.totalDonuts}</td>
 	                  </tr>
-	                </tbody>
-	              </table>
-	            </div>
-	            {effectiveBatches.overProduction > 0 && (
-	              <div style={{ marginTop: 12, padding: "10px 14px", background: "#FFFBEB", borderRadius: 6, fontSize: 13, color: "#92400E" }}>
-	                ⚠️ Over-production of {effectiveBatches.overProduction} donuts ({((effectiveBatches.overProduction / effectiveTarget) * 100).toFixed(1)}% above target)
-	              </div>
-	            )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Mixing order suggestion */}
@@ -781,58 +660,6 @@ const canEdit = true; // all roles can edit production counts
                 )}
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Prep Category Rename Modal */}
-      {showPrepCatEdit && editingPrepCategory && (
-        <div className="modal-backdrop" onClick={() => setShowPrepCatEdit(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 360 }}>
-            <div className="modal-header"><h2>Rename "{editingPrepCategory}"</h2></div>
-            <div className="modal-body space-y-3">
-              <div>
-                <label className="form-label">Category Name</label>
-                <input className="form-input" value={prepCatEditName} onChange={e => setPrepCatEditName(e.target.value)} />
-              </div>
-              <div>
-                <label className="form-label">Color</label>
-                <input type="color" className="form-input" value={prepCatEditColor} onChange={e => setPrepCatEditColor(e.target.value)} style={{ height: 36, padding: 2 }} />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowPrepCatEdit(false)}>Cancel</button>
-              <button className="btn btn-primary btn-sm" onClick={renamePrepCategory}>Save</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Prep Category List Modal */}
-      {showPrepCatModal && (
-        <div className="modal-backdrop" onClick={() => setShowPrepCatModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
-            <div className="modal-header"><h2>Prep Categories</h2></div>
-            <div className="modal-body">
-              <div className="space-y-2">
-                {prepCategoriesList.map(c => (
-                  <div key={c} className="list-item">
-                    <span className="font-medium text-sm">{c}</span>
-                    <button onClick={() => {
-                      const items = data?.prepList?.filter(i => i.category === c) || [];
-                      setEditingPrepCategory(c);
-                      setPrepCatEditName(c);
-                      setPrepCatEditColor(items[0]?.categoryColor || "#F3F4F6");
-                      setShowPrepCatModal(false);
-                      setShowPrepCatEdit(true);
-                    }} className="btn-icon"><Pencil size={12} /></button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowPrepCatModal(false)}>Done</button>
-            </div>
           </div>
         </div>
       )}

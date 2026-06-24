@@ -216,7 +216,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div>
               <h2>{brandName}</h2>
-              <span className="sidebar-brand-sub">by {PLATFORM_NAME}</span>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { ChefHat, LayoutGrid, Beaker, ListChecks, Calendar, ChevronLeft, ChevronRight, Sandwich, Settings, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface BatchInfo {
   large: number;
@@ -235,14 +236,15 @@ export default function ProductionPage() {
   const saveTargetOverride = async () => {
     if (customTarget === null) return;
     try {
-      await fetch("/api/production-targets", {
+      const res = await fetch("/api/production-targets", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: formatDateISO(selectedDate), target: customTarget }),
       });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
       setTargetSaved(true);
-    } catch {
-      // ignore
+    } catch (e) {
+      toast.error("Could not save target: " + (e instanceof Error ? e.message : "unknown error"));
     }
   };
 

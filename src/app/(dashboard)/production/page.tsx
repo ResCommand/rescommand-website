@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { ChefHat, LayoutGrid, Beaker, ListChecks, Calendar, ChevronLeft, ChevronRight, Sandwich, Settings, Pencil, Trash2 } from "lucide-react";
+import { ChefHat, LayoutGrid, Beaker, ListChecks, Calendar, ChevronLeft, ChevronRight, Settings, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface BatchInfo {
@@ -25,28 +25,6 @@ interface PrepItem {
   shelfLifeHours?: number;
 }
 
-interface SandwichMakeItem {
-  name: string;
-  quantity: number;
-}
-
-interface SandwichDailyBreakdown {
-  date: string;
-  dayLabel: string;
-  isHoliday: boolean;
-  isWeekend: boolean;
-  items: { name: string; par: number }[];
-}
-
-interface SandwichDayInfo {
-  isMakeDay: boolean;
-  makeDayLabel: string | null;
-  covers: string[];
-  itemsToMake: SandwichMakeItem[];
-  totalToMake: number;
-  dailyBreakdown: SandwichDailyBreakdown[];
-}
-
 interface ProductionData {
   date: string;
   dayOfWeek: number;
@@ -60,7 +38,7 @@ interface ProductionData {
   totalTrays: number;
   trayAllocations: TrayAllocation[];
   prepList: PrepItem[];
-  sandwichToday: SandwichDayInfo;
+  sandwichToday?: unknown;
 }
 
 // Existing prediction data
@@ -527,14 +505,6 @@ const canEdit = true; // all roles can edit production counts
           <LayoutGrid size={14} style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
           Trays
         </button>
-        <button className={`tab ${activeTab === "sandwiches" ? "active" : ""}`} onClick={() => setActiveTab("sandwiches")}>
-          <Sandwich size={14} style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
-          Sandwiches
-        </button>
-        <button className={`tab ${activeTab === "prep" ? "active" : ""}`} onClick={() => setActiveTab("prep")}>
-          <Beaker size={14} style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
-          Prep List
-        </button>
         <button className={`tab ${activeTab === "predictions" ? "active" : ""}`} onClick={() => setActiveTab("predictions")}>
           <ListChecks size={14} style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
           Predictions
@@ -775,279 +745,6 @@ const canEdit = true; // all roles can edit production counts
 		        </div>
 		      </div>
 		    )}
-
-      {/* ── Sandwiches Tab ────────────────────────────────── */}
-      {activeTab === "sandwiches" && (
-        <div className="space-y-4">
-          {data.sandwichToday?.isMakeDay ? (
-            <>
-              {/* Make Day Banner */}
-              <div className="card" style={{ padding: 20, background: "#F3EEFF", border: "1px solid #DDD6FE" }}>
-                <div className="flex items-center gap-3 mb-2">
-                  <span style={{ fontSize: 20 }}>🥪</span>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, color: "#6D28D9" }}>
-                    Sandwich Make Day — {data.sandwichToday.makeDayLabel}
-                  </h3>
-                </div>
-                <p className="text-sm" style={{ color: "#A855F7" }}>
-                  Making today for: {data.sandwichToday.covers.join(" · ")}
-                </p>
-              </div>
-
-              {/* Sandwhiches to Make */}
-              <div className="card" style={{ padding: 20 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Sandwiches to Make Today</h3>
-                <div style={{ overflowX: "auto" }}>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Sandwich</th>
-                        <th style={{ textAlign: "right" }}>Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.sandwichToday.itemsToMake.map((item, i) => (
-                        <tr key={i}>
-                          <td className="font-medium">{item.name}</td>
-                          <td style={{ textAlign: "right" }} className="font-semibold">{item.quantity}</td>
-                        </tr>
-                      ))}
-                      <tr style={{ borderTop: "2px solid #E5E7EB" }}>
-                        <td className="font-bold">Total Sandwiches</td>
-                        <td style={{ textAlign: "right" }} className="font-bold text-blue">{data.sandwichToday.totalToMake}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Daily Breakdown for this make batch */}
-              {data.sandwichToday.dailyBreakdown.length > 0 && (
-                <div className="card" style={{ padding: 20 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Daily Breakdown</h3>
-                  <div className="space-y-2">
-                    {data.sandwichToday.dailyBreakdown.map((day, i) => {
-                      const dayTotal = day.items.reduce((s, it) => s + it.par, 0);
-                      return (
-                        <div key={i} style={{
-                          padding: "10px 14px",
-                          borderRadius: 6,
-                          background: day.isHoliday ? "#FEF3C7" : day.isWeekend ? "#FFF7ED" : "#F9FAFB",
-                          border: `1px solid ${day.isHoliday ? "#FDE68A" : day.isWeekend ? "#FED7AA" : "#E5E7EB"}`,
-                        }}>
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">{day.dayLabel}</span>
-                              {day.isHoliday && <span className="badge badge-orange" style={{ fontSize: 10, padding: "1px 6px" }}>Holiday</span>}
-                              {day.isWeekend && !day.isHoliday && <span className="badge badge-purple" style={{ fontSize: 10, padding: "1px 6px" }}>Weekend</span>}
-                            </div>
-                            <span className="text-sm font-semibold text-blue">{dayTotal} total</span>
-                          </div>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                            {day.items.map((item, j) => (
-                              <span key={j} style={{
-                                padding: "2px 8px",
-                                borderRadius: 4,
-                                background: "#fff",
-                                border: "1px solid #E5E7EB",
-                                fontSize: 12,
-                              }}>
-                                {item.name}: <strong>{item.par}</strong>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            /* Not a make day */
-            <div className="card" style={{ padding: 20 }}>
-              <div className="empty-state">
-                <span style={{ fontSize: 32, display: "block", marginBottom: 8 }}>🥪</span>
-                <p className="font-medium" style={{ marginBottom: 4 }}>No sandwich prep today</p>
-                <p className="text-sm text-gray">Sandwiches are made on Mondays and Thursdays.</p>
-              </div>
-            </div>
-          )}
-
-          {/* Schedule Reference — always visible */}
-          <div className="card" style={{ padding: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Sandwich Make Schedule</h3>
-            <p className="text-sm text-gray" style={{ marginBottom: 12 }}>
-              Sandwiches are prepped in batches of 5 on make days and held for the following days.
-            </p>
-            <div className="space-y-3">
-              <div style={{
-                padding: "12px 16px",
-                borderRadius: 6,
-                background: "#F0FDF4",
-                border: "1px solid #BBF7D0",
-              }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="badge badge-green">Monday</span>
-                  <span className="text-sm text-gray">→ covers Tuesday, Wednesday, Thursday</span>
-                </div>
-                <p className="text-xs text-gray">All weekday par unless a holiday falls in the range.</p>
-              </div>
-              <div style={{
-                padding: "12px 16px",
-                borderRadius: 6,
-                background: "#FFF7ED",
-                border: "1px solid #FED7AA",
-              }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="badge badge-orange">Thursday</span>
-                  <span className="text-sm text-gray">→ covers Friday, Saturday, Sunday, Monday</span>
-                </div>
-                <p className="text-xs text-gray">Includes weekend par. Holidays trigger weekend quantities.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Prep List Tab ────────────────────────────────── */}
-      {activeTab === "prep" && (
-        <div className="space-y-4">
-          {canEdit && (
-            <div className="card" style={{ padding: "12px 16px" }}>
-              <div className="flex items-center gap-2" style={{ flexWrap: "wrap" }}>
-                <button className="btn btn-primary btn-sm" onClick={() => setShowPrepForm(true)}>
-                  + Add Prep Item
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => setShowPrepCatModal(true)}>
-                  <Settings size={14} /> Categories
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Add/Edit Prep Item Form */}
-          {showPrepForm && canEdit && (
-            <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>
-                {editingPrepItem ? "Edit Prep Item" : "Add New Prep Item"}
-              </h3>
-              <div className="grid-2" style={{ gap: 12, marginBottom: 12 }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Item Name *</label>
-                  <input type="text" className="form-input" value={prepFormName} onChange={e => setPrepFormName(e.target.value)} placeholder="e.g. Vanilla Glaze" />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Amount</label>
-                  <input type="text" className="form-input" value={prepFormAmount} onChange={e => setPrepFormAmount(e.target.value)} placeholder="e.g. 8-10 Qts" />
-                </div>
-              </div>
-              <div className="grid-3" style={{ gap: 12, marginBottom: 12 }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Category</label>
-                  <select className="form-input" value={prepFormCategory} onChange={e => setPrepFormCategory(e.target.value)}>
-                    {prepCategoriesList.map(c => <option key={c} value={c}>{c}</option>)}
-                    <option value="__new__">+ New Category</option>
-                  </select>
-                </div>
-                {prepFormCategory === "__new__" && (
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">New Category Name</label>
-                    <input type="text" className="form-input" value={prepFormNewCat} onChange={e => setPrepFormNewCat(e.target.value)} placeholder="e.g. Sauces" />
-                  </div>
-                )}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Shelf Life (hours)</label>
-                  <input type="number" className="form-input" value={prepFormShelfLife} onChange={e => setPrepFormShelfLife(parseInt(e.target.value) || 0)} min={0} placeholder="48" />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Category Color</label>
-                  <input type="color" className="form-input" value={prepFormCatColor} onChange={e => setPrepFormCatColor(e.target.value)} style={{ height: 36, padding: 2 }} />
-                </div>
-              </div>
-              <div className="flex gap-2" style={{ justifyContent: "flex-end" }}>
-                <button className="btn btn-secondary btn-sm" onClick={() => { setShowPrepForm(false); setEditingPrepItem(null); resetPrepForm(); }}>Cancel</button>
-                <button className="btn btn-primary btn-sm" onClick={savePrepItem} disabled={submittingPrep}>
-                  {submittingPrep ? "Saving..." : editingPrepItem ? "Update" : "Add Item"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {Object.entries(prepCategories).map(([category, items]) => (
-            <div key={category} className="card">
-              <div style={{ padding: "12px 20px", background: items[0]?.categoryColor || "#F3F4F6", borderRadius: "8px 8px 0 0", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, color: "#374151" }}>{category}</h3>
-                {canEdit && (
-                  <button onClick={() => { setEditingPrepCategory(category); setPrepCatEditName(category); setPrepCatEditColor(items[0]?.categoryColor || "#F3F4F6"); setShowPrepCatEdit(true); }} className="btn-icon" title="Rename category"><Pencil size={12} /></button>
-                )}
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th style={{ textAlign: "right" }}>Amount to Prep</th>
-                    <th style={{ textAlign: "right" }}>Good For</th>
-                    {canEdit && <th style={{ width: 80 }}></th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item, i) => {
-                    const shelfDisplay = item.shelfLifeHours
-                      ? item.shelfLifeHours >= 24
-                        ? `${Math.floor(item.shelfLifeHours / 24)} day${item.shelfLifeHours >= 48 ? "s" : ""}`
-                        : `${item.shelfLifeHours} hrs`
-                      : "—";
-                    const shelfColor = !item.shelfLifeHours ? "#9CA3AF"
-                      : item.shelfLifeHours <= 48 ? "#DC2626"
-                      : item.shelfLifeHours <= 72 ? "#D97706"
-                      : "#059669";
-                    return (
-                      <tr key={i}>
-                        <td className="font-medium">{item.name}</td>
-                        <td style={{ textAlign: "right" }} className="font-semibold">{item.amount}</td>
-                        <td style={{ textAlign: "right" }}>
-                          <span style={{
-                            fontSize: 12, fontWeight: 500, color: shelfColor,
-                            background: `${shelfColor}15`, padding: "2px 8px", borderRadius: 4,
-                          }}>
-                            {shelfDisplay}
-                          </span>
-                        </td>
-                        {canEdit && (
-                          <td>
-                            <div className="flex gap-1" style={{ justifyContent: "flex-end" }}>
-                              <button className="btn-icon" onClick={() => openEditPrepItem(item, category)} title="Edit"><Pencil size={12} /></button>
-                              <button className="btn-icon" style={{ color: "#DC2626" }} onClick={() => deletePrepItem(item.name)} title="Delete"><Trash2 size={12} /></button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ))}
-          <div className="card" style={{ padding: "12px 16px" }}>
-            <div className="flex items-center gap-4" style={{ flexWrap: "wrap", fontSize: 12 }}>
-              <span style={{ fontWeight: 600, color: "#374151" }}>Shelf Life Guide:</span>
-              <span className="flex items-center gap-1">
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#DC2626", display: "inline-block" }}></span>
-                <span style={{ color: "#6B7280" }}>≤ 2 days — use quickly</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#D97706", display: "inline-block" }}></span>
-                <span style={{ color: "#6B7280" }}>3 days — standard</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#059669", display: "inline-block" }}></span>
-                <span style={{ color: "#6B7280" }}>7+ days — stable</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Predictions Tab (existing data) ──────────────── */}
       {activeTab === "predictions" && (

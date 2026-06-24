@@ -27,6 +27,7 @@ import {
   Sandwich,
   Coffee,
   Pizza,
+  Beaker,
 } from "lucide-react";
 
 /* ── Module keys (must match backend module-config) ── */
@@ -79,6 +80,7 @@ const allNav: NavItem[] = [
     isCategory: true,
     children: [
       { href: "/production", emoji: "🍩", icon: Target, label: "Donut Production", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production" },
+      { href: "/production/prep", emoji: "🧪", icon: Beaker, label: "Prep List", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production" },
       { href: "/par-sheets", emoji: "✅", icon: CheckSquare, label: "Par Sheets", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "parSheets" },
       { href: "/roasting", emoji: "☕", icon: Coffee, label: "Coffee Roasting", section: "Production", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "roasting" },
       { href: "/entry/sandwiches", emoji: "🥪", icon: Sandwich, label: "Sandwiches & Bagels", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "sandwiches" },

@@ -85,6 +85,7 @@ export default function ProductionPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
   const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
+const canEdit = true; // all roles can edit production counts
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [data, setData] = useState<ProductionData | null>(null);
@@ -454,7 +455,7 @@ export default function ProductionPage() {
           <div className="stat-card" style={{ border: "none", padding: 0 }}>
             <div className="stat-icon stat-icon-orange">🎯</div>
             <div className="flex items-center justify-center gap-2">
-              {isManager ? (
+              {canEdit ? (
                 <input
                   type="number"
                   className="form-input"
@@ -480,7 +481,7 @@ export default function ProductionPage() {
                 </span>
               )}
             </div>
-            {isManager && customTarget !== null && !targetSaved && (
+            {canEdit && customTarget !== null && !targetSaved && (
               <button
                 className="btn btn-primary btn-sm"
                 onClick={saveTargetOverride}
@@ -696,11 +697,11 @@ export default function ProductionPage() {
 		            <h3 style={{ fontSize: 15, fontWeight: 600 }}>
 		              Tray Allocation — {effectiveTotalTrays} trays ({effectiveTarget} donuts ÷ {TRAY_SIZE}/tray)
 		            </h3>
-		            {isManager && Object.keys(trayOverrides).length > 0 && (
-		              <button className="btn btn-ghost btn-sm" onClick={() => { setTrayOverrides({}); setTraySaved(false); }} style={{ fontSize: 11, color: "#6B7280" }}>
-		                Reset to Default
-		              </button>
-		            )}
+	            {canEdit && Object.keys(trayOverrides).length > 0 && (
+              <button className="btn btn-ghost btn-sm" onClick={() => { setTrayOverrides({}); setTraySaved(false); }} style={{ fontSize: 11, color: "#6B7280" }}>
+                Reset to Default
+              </button>
+            )}
 		            </div>
 		          <div style={{ overflowX: "auto" }}>
 		            <table>
@@ -723,27 +724,27 @@ export default function ProductionPage() {
 		                        {isOverridden && <span className="text-xs" style={{ color: "#D97706", marginLeft: 4 }}>(was {baseTrays})</span>}
 		                      </td>
 		                      <td style={{ textAlign: "right" }}>
-		                        {isManager ? (
-		                          <input
-		                            type="number"
-		                            className="form-input"
-		                            value={t.trays}
-		                            min={0}
-		                            step={0.5}
-		                            onChange={(e) => {
-		                              const val = parseFloat(e.target.value);
-		                              if (isNaN(val) || val < 0) return;
-		                              setTrayOverrides(prev => {
-		                                const next = { ...prev, [t.name]: val };
-		                                setTraySaved(false);
-		                                return next;
-		                              });
-		                            }}
-		                            style={{ width: 70, textAlign: "right", padding: "4px 8px", fontSize: 14, fontWeight: 600 }}
-		                          />
-		                        ) : (
-		                          <span className="font-semibold">{t.trays}</span>
-		                        )}
+	                        {canEdit ? (
+                          <input
+                            type="number"
+                            className="form-input"
+                            value={t.trays}
+                            min={0}
+                            step={0.5}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (isNaN(val) || val < 0) return;
+                              setTrayOverrides(prev => {
+                                const next = { ...prev, [t.name]: val };
+                                setTraySaved(false);
+                                return next;
+                              });
+                            }}
+                            style={{ width: 70, textAlign: "right", padding: "4px 8px", fontSize: 14, fontWeight: 600 }}
+                          />
+                        ) : (
+                          <span className="font-semibold">{t.trays}</span>
+                        )}
 		                      </td>
 		                      <td style={{ textAlign: "right" }}>{t.donuts}</td>
 		                      <td style={{ textAlign: "right" }}>
@@ -761,16 +762,16 @@ export default function ProductionPage() {
 		              </tbody>
 		            </table>
 		          </div>
-		          {isManager && (
-		            <div className="flex items-center gap-3" style={{ marginTop: 12, flexWrap: "wrap" }}>
-		              <button className="btn btn-primary btn-sm" onClick={saveTrayOverrides} disabled={traySaved}>
-		                {traySaved ? "✓ Trays Saved" : "💾 Save Tray Changes"}
-		              </button>
-		              {Object.keys(trayOverrides).length > 0 && (
-		                <span className="text-xs text-gray">{Object.keys(trayOverrides).length} flavor{Object.keys(trayOverrides).length !== 1 ? "s" : ""} customized</span>
-		              )}
-		            </div>
-		          )}
+	          {canEdit && (
+            <div className="flex items-center gap-3" style={{ marginTop: 12, flexWrap: "wrap" }}>
+              <button className="btn btn-primary btn-sm" onClick={saveTrayOverrides} disabled={traySaved}>
+                {traySaved ? "✓ Trays Saved" : "💾 Save Tray Changes"}
+              </button>
+              {Object.keys(trayOverrides).length > 0 && (
+                <span className="text-xs text-gray">{Object.keys(trayOverrides).length} flavor{Object.keys(trayOverrides).length !== 1 ? "s" : ""} customized</span>
+              )}
+            </div>
+          )}
 		        </div>
 		      </div>
 		    )}
@@ -912,7 +913,7 @@ export default function ProductionPage() {
       {/* ── Prep List Tab ────────────────────────────────── */}
       {activeTab === "prep" && (
         <div className="space-y-4">
-          {isManager && (
+          {canEdit && (
             <div className="card" style={{ padding: "12px 16px" }}>
               <div className="flex items-center gap-2" style={{ flexWrap: "wrap" }}>
                 <button className="btn btn-primary btn-sm" onClick={() => setShowPrepForm(true)}>
@@ -926,7 +927,7 @@ export default function ProductionPage() {
           )}
 
           {/* Add/Edit Prep Item Form */}
-          {showPrepForm && isManager && (
+          {showPrepForm && canEdit && (
             <div className="card" style={{ padding: 20, border: "2px solid #7C3AED" }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>
                 {editingPrepItem ? "Edit Prep Item" : "Add New Prep Item"}
@@ -977,7 +978,7 @@ export default function ProductionPage() {
             <div key={category} className="card">
               <div style={{ padding: "12px 20px", background: items[0]?.categoryColor || "#F3F4F6", borderRadius: "8px 8px 0 0", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: "#374151" }}>{category}</h3>
-                {isManager && (
+                {canEdit && (
                   <button onClick={() => { setEditingPrepCategory(category); setPrepCatEditName(category); setPrepCatEditColor(items[0]?.categoryColor || "#F3F4F6"); setShowPrepCatEdit(true); }} className="btn-icon" title="Rename category"><Pencil size={12} /></button>
                 )}
               </div>
@@ -987,7 +988,7 @@ export default function ProductionPage() {
                     <th>Item</th>
                     <th style={{ textAlign: "right" }}>Amount to Prep</th>
                     <th style={{ textAlign: "right" }}>Good For</th>
-                    {isManager && <th style={{ width: 80 }}></th>}
+                    {canEdit && <th style={{ width: 80 }}></th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -1013,7 +1014,7 @@ export default function ProductionPage() {
                             {shelfDisplay}
                           </span>
                         </td>
-                        {isManager && (
+                        {canEdit && (
                           <td>
                             <div className="flex gap-1" style={{ justifyContent: "flex-end" }}>
                               <button className="btn-icon" onClick={() => openEditPrepItem(item, category)} title="Edit"><Pencil size={12} /></button>

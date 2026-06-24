@@ -39,8 +39,8 @@ const ROLE_LABELS: Record<string, string> = {
 export default function AdminPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isOwner = role === "OWNER";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isOwner = role === "OWNER" || role === "PLATFORM_ADMIN";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [activeTab, setActiveTab] = useState<"team" | "modules" | "permissions">("team");
 

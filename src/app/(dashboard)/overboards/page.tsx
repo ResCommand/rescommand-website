@@ -35,7 +35,7 @@ const statusStyle: Record<string, string> = { SCHEDULED: "badge-blue", IN_PROGRE
 export default function MenuPlanningPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [plans, setPlans] = useState<MenuPlan[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);

@@ -21,6 +21,12 @@ import {
   LogOut,
   Menu,
   X,
+  Megaphone,
+  ChevronDown,
+  ChevronRight,
+  Sandwich,
+  Coffee,
+  Pizza,
 } from "lucide-react";
 
 /* ── Module keys (must match backend module-config) ── */
@@ -28,14 +34,16 @@ const ALL_MODULE_KEYS = [
   "dashboard",
   "inventory",
   "recipes",
-  "parSheets",
   "schedule",
   "production",
+  "parSheets",
+  "roasting",
+  "sandwiches",
   "laborCost",
   "overboards",
-  "roasting",
   "social",
   "sops",
+  "marketing",
   "admin",
   "billing",
   "signup",
@@ -44,8 +52,8 @@ const ALL_MODULE_KEYS = [
 
 type ModuleKey = (typeof ALL_MODULE_KEYS)[number];
 
-/* ── Nav items with emoji + Lucide fallback ── */
-const allNav: {
+/* ── Nav items — supports nested children for sub-pages ── */
+interface NavItem {
   href: string;
   emoji: string;
   icon: React.ElementType;
@@ -53,18 +61,40 @@ const allNav: {
   section: string;
   roles: string[];
   moduleKey: ModuleKey;
-}[] = [
+  children?: NavItem[];
+  isCategory?: boolean; // true = expandable section header, not a page
+}
+
+const allNav: NavItem[] = [
+  // ── Main ──
   { href: "/dashboard", emoji: "📊", icon: LayoutDashboard, label: "Dashboard", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "dashboard" },
   { href: "/inventory", emoji: "📦", icon: Package, label: "Inventory", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "inventory" },
   { href: "/recipes", emoji: "📋", icon: ClipboardList, label: "Recipes", section: "Main", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "recipes" },
-  { href: "/par-sheets", emoji: "✅", icon: CheckSquare, label: "Par Sheets", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "parSheets" },
   { href: "/schedule", emoji: "📅", icon: Calendar, label: "Schedule", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "schedule" },
-  { href: "/production", emoji: "🎯", icon: Target, label: "Production", section: "Main", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production" },
+
+  // ── Production (expandable section) ──
+  {
+    href: "/production", emoji: "🎯", icon: Target, label: "Production", section: "Production",
+    roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production",
+    isCategory: true,
+    children: [
+      { href: "/production", emoji: "🍩", icon: Target, label: "Donut Production", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "production" },
+      { href: "/par-sheets", emoji: "✅", icon: CheckSquare, label: "Par Sheets", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "parSheets" },
+      { href: "/roasting", emoji: "☕", icon: Coffee, label: "Coffee Roasting", section: "Production", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "roasting" },
+      { href: "/entry/sandwiches", emoji: "🥪", icon: Sandwich, label: "Sandwiches & Bagels", section: "Production", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "sandwiches" },
+    ],
+  },
+
+  // ── Insights ──
   { href: "/labor-cost", emoji: "💰", icon: DollarSign, label: "Labor Costs", section: "Insights", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "laborCost" },
   { href: "/overboards", emoji: "📈", icon: BarChart3, label: "Overboards", section: "Insights", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "overboards" },
-  { href: "/roasting", emoji: "☕", icon: BarChart3, label: "Roasting", section: "Insights", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "roasting" },
+
+  // ── Team ──
+  { href: "/sops", emoji: "🎓", icon: GraduationCap, label: "Training / SOPs", section: "Team", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "sops" },
   { href: "/social", emoji: "💬", icon: MessageSquare, label: "Messages", section: "Team", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "social" },
-  { href: "/sops", emoji: "🎓", icon: GraduationCap, label: "Training", section: "Team", roles: ["EMPLOYEE", "MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "sops" },
+  { href: "/marketing", emoji: "📣", icon: Megaphone, label: "Marketing", section: "Team", roles: ["MANAGER", "OWNER", "PLATFORM_ADMIN"], moduleKey: "marketing" },
+
+  // ── Admin ──
   { href: "/admin", emoji: "⚙️", icon: Settings, label: "Admin", section: "Admin", roles: ["OWNER", "PLATFORM_ADMIN"], moduleKey: "admin" },
   { href: "/billing", emoji: "💳", icon: DollarSign, label: "Billing", section: "Admin", roles: ["OWNER", "PLATFORM_ADMIN"], moduleKey: "billing" },
 ];
@@ -77,6 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [brandName, setBrandName] = useState(PLATFORM_NAME);
   const [enabledModules, setEnabledModules] = useState<Set<ModuleKey>>(new Set(ALL_MODULE_KEYS));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["Production"]));
   const overlayRef = useRef<HTMLDivElement>(null);
 
   /* Fetch branding */
@@ -93,35 +124,62 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!Array.isArray(d) || d.length === 0) return; // keep defaults
-        // Build a set of disabled module keys from the API.
-        // Only hide a nav item if the API explicitly says it's disabled.
         const disabledKeys = new Set<string>();
         for (const c of d) {
           const key = c.moduleKey || c.key || "";
           if (key && c.enabled === false) disabledKeys.add(key);
         }
-        // Start from ALL keys, remove only explicitly disabled ones
         const activeKeys = ALL_MODULE_KEYS.filter((k) => !disabledKeys.has(k));
         setEnabledModules(new Set(activeKeys as readonly ModuleKey[]));
       })
-      .catch(() => {}); // keep defaults on error
+      .catch(() => {});
   }, []);
 
   const role = session?.user?.role as string | undefined;
-  const filteredNav = allNav.filter(
-    (n) => (!role || n.roles.includes(role)) && enabledModules.has(n.moduleKey)
-  );
+
+  /* Filter nav by role AND enabledModules — including children */
+  const filterNav = (items: NavItem[]): NavItem[] =>
+    items
+      .filter((n) => (!role || n.roles.includes(role)) && enabledModules.has(n.moduleKey))
+      .map((n) => n.children ? { ...n, children: filterNav(n.children) } : n)
+      .filter((n) => !n.isCategory || (n.children && n.children.length > 0)); // hide empty categories
+
+  const filteredNav = filterNav(allNav);
 
   /* Group nav by section */
-  const sections = filteredNav.reduce<Record<string, typeof filteredNav>>((acc, item) => {
+  const sections = filteredNav.reduce<Record<string, NavItem[]>>((acc, item) => {
     if (!acc[item.section]) acc[item.section] = [];
     acc[item.section].push(item);
     return acc;
   }, {});
 
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(section)) next.delete(section); else next.add(section);
+      return next;
+    });
+  };
+
+  // Auto-expand section containing the active path
+  useEffect(() => {
+    for (const item of filteredNav) {
+      if (item.children) {
+        const hasActiveChild = item.children.some(
+          (c) => pathname === c.href || pathname.startsWith(c.href + "/")
+        );
+        if (hasActiveChild) {
+          setExpandedSections((prev) => new Set([...prev, item.section]));
+        }
+      }
+    }
+  }, [pathname]);
+
   const initials = session?.user?.name
     ? session.user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "?";
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
     <div className="app-layout">
@@ -174,7 +232,58 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               {items.map((item) => {
                 const Icon = item.icon;
-                const active = pathname === item.href || pathname.startsWith(item.href + "/");
+
+                // Expandable category (e.g., Production)
+                if (item.isCategory && item.children && item.children.length > 0) {
+                  const expanded = expandedSections.has(item.section);
+                  const childActive = item.children.some((c) => isActive(c.href));
+                  return (
+                    <div key={item.href}>
+                      <button
+                        onClick={() => toggleSection(item.section)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          padding: "9px 12px", borderRadius: 8, width: "100%",
+                          fontSize: 13.5, fontWeight: 600,
+                          color: childActive ? "#fff" : "#C4B5FD",
+                          background: childActive ? "rgba(124, 58, 237, 0.15)" : "transparent",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <span style={{ fontSize: 16, lineHeight: 1 }}>{item.emoji}</span>
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                        {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      </button>
+                      {expanded && (
+                        <div style={{ paddingLeft: 22, marginTop: 2 }}>
+                          {item.children.map((child) => {
+                            const active = isActive(child.href);
+                            return (
+                              <Link
+                                key={child.href + child.label}
+                                href={child.href}
+                                className={active ? "active" : ""}
+                                onClick={() => setSidebarOpen(false)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8,
+                                  padding: "7px 12px", borderRadius: 8,
+                                  fontSize: 13, fontWeight: active ? 600 : 500,
+                                  color: active ? "#fff" : "#C4B5FD",
+                                }}
+                              >
+                                <span style={{ fontSize: 14, lineHeight: 1 }}>{child.emoji}</span>
+                                <span>{child.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Regular nav item
+                const active = isActive(item.href);
                 return (
                   <Link
                     key={item.href}
@@ -208,7 +317,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
-        {/* Powered by */}
         <div className="sidebar-poweredby">
           <span>⚡ Powered by {PLATFORM_NAME}</span>
         </div>

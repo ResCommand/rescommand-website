@@ -45,7 +45,7 @@ export default function OrderRequestsPage() {
   const [customUnit, setCustomUnit] = useState("");
 
   const { data: session } = useSession();
-  const isManager = session?.user && ((session.user as { role?: string }).role === "MANAGER" || (session.user as { role?: string }).role === "OWNER");
+  const isManager = session?.user && ((session.user as { role?: string }).role === "MANAGER" || (session.user as { role?: string }).role === "OWNER" || (session.user as { role?: string }).role === "PLATFORM_ADMIN");
 
   const fetchData = useCallback(async () => {
     try {

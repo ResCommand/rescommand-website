@@ -15,7 +15,7 @@ export async function GET() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  if (role === "OWNER" || role === "MANAGER") {
+  if (role === "OWNER" || role === "MANAGER" || role === "PLATFORM_ADMIN") {
     // Get all employee hours
     const hours = await prisma.employeeHour.findMany({
       where: { tenantId, date: { gte: today } },

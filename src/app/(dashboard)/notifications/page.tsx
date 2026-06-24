@@ -47,7 +47,7 @@ const priorityStyles: Record<string, string> = {
 export default function NotificationsPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);

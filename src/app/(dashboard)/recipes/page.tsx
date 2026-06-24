@@ -39,7 +39,7 @@ const DEFAULT_CATEGORY_COLORS: Record<string, { bg: string; border: string }> = 
 export default function RecipesPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);

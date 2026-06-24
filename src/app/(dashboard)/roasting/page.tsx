@@ -48,7 +48,7 @@ const ROAST_TEXT: Record<string, string> = {
 export default function RoastingPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [activeTab, setActiveTab] = useState<"green" | "profiles" | "logs">("green");
   const [greenCoffees, setGreenCoffees] = useState<GreenCoffee[]>([]);
@@ -420,7 +420,7 @@ export default function RoastingPage() {
                       <td className="text-sm text-gray">{l.performer?.name || "—"}</td>
                       {isManager && (
                         <td>
-                          {role === "OWNER" && (
+                          {(role === "OWNER" || role === "PLATFORM_ADMIN") && (
                             <button onClick={() => deleteLog(l.id)} className="btn-icon" style={{ color: "#DC2626" }}><Trash2 size={14} /></button>
                           )}
                         </td>

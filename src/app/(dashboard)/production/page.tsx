@@ -84,7 +84,7 @@ function formatDatePretty(d: Date): string {
 export default function ProductionPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [data, setData] = useState<ProductionData | null>(null);

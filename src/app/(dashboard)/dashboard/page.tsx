@@ -55,7 +55,7 @@ function getDefaultLayout(role: string): Layout {
 export default function DashboardPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
   const name = session?.user?.name?.split(" ")[0] || "there";
 
   const [kpis, setKpis] = useState<KPIs | null>(null);

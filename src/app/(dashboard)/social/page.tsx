@@ -25,7 +25,7 @@ const STATUS_TEXT: Record<string, string> = { DRAFT: "#374151", SCHEDULED: "#6D2
 export default function SocialMediaPage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [posts, setPosts] = useState<SocialPostItem[]>([]);
   const [loading, setLoading] = useState(true);

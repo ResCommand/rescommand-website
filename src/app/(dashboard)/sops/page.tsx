@@ -39,7 +39,7 @@ export default function SopsPage() {
   const [saving, setSaving] = useState(false);
 
   const isMgr = ["MANAGER", "OWNER"].includes((session?.user as { role?: string })?.role || "");
-  const isOwner = (session?.user as { role?: string })?.role === "OWNER";
+  const isOwner = (session?.user as { role?: string })?.role === "OWNER" || (session?.user as { role?: string })?.role === "PLATFORM_ADMIN";
 
   const load = () => {
     fetch("/api/sops").then(r => r.json()).then(d => Array.isArray(d) && setSops(d)).catch(() => {});

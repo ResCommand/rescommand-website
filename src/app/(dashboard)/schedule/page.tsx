@@ -71,7 +71,7 @@ function addDays(d: Date, n: number): Date {
 export default function SchedulePage() {
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "EMPLOYEE";
-  const isManager = role === "MANAGER" || role === "OWNER";
+  const isManager = role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN";
 
   const [activeTab, setActiveTab] = useState<"schedule" | "availability" | "timeoff" | "templates">("schedule");
   const [weekStart, setWeekStart] = useState<Date>(getMonday(new Date()));

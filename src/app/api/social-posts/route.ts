@@ -66,7 +66,7 @@ export async function PUT(request: Request) {
   if (data.status !== undefined) {
     updateData.status = data.status;
     // Track approval
-    if ((data.status === "SCHEDULED" || data.status === "PUBLISHED") && (role === "MANAGER" || role === "OWNER")) {
+    if ((data.status === "SCHEDULED" || data.status === "PUBLISHED") && (role === "MANAGER" || role === "OWNER" || role === "PLATFORM_ADMIN")) {
       updateData.approvedBy = userId;
     }
   }

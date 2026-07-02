@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
   const { name, icon } = body;
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
   const { id, name, icon } = body;
@@ -54,7 +54,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const id = Number(searchParams.get("id"));

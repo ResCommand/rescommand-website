@@ -89,7 +89,7 @@ const updateSchema = z.object({
 
 export async function PUT(request: Request) {
   const { userId, tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -117,7 +117,7 @@ const deleteSchema = z.object({ id: z.number() });
 
 export async function DELETE(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();

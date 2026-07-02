@@ -25,7 +25,7 @@ export async function GET() {
 // PUT /api/tenants/branding — update brandName
 export async function PUT(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();

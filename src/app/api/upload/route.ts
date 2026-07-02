@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const role = (session.user as { role?: string })?.role;
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const formData = await request.formData();

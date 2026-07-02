@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -71,6 +71,11 @@ export default function InventoryPage() {
   const [secName, setSecName] = useState("");
   const [secIcon, setSecIcon] = useState("📦");
 
+  // Vendor management
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const [vendorForm, setVendorForm] = useState({ name: "", role: "", mainUse: "", cadence: "", contactInfo: "" });
+
   // Weekly count state
   const [lines, setLines] = useState<Map<number, number>>(new Map());
   const [date, setDate] = useState<string>(formatDateISO(getMonday(new Date())));
@@ -92,7 +97,11 @@ export default function InventoryPage() {
         setVendors(vendorArr);
         setItems(itemArr);
         setSections(secArr);
-        setCollapsed(new Set(secArr.map((sec: Section) => sec.slug)));
+        // Start with first section expanded, rest collapsed
+        if (secArr.length > 0) {
+          const firstSlug = secArr[0].slug;
+          setCollapsed(new Set(secArr.slice(1).map((sec: Section) => sec.slug)));
+        }
         const m = new Map<number, number>();
         itemArr.forEach((item: InvItem) => m.set(item.id, item.currentStock));
         setLines(m);
@@ -125,6 +134,49 @@ export default function InventoryPage() {
   async function handleSectionDelete(id: number) {
     try {
       const r = await fetch(`/api/inventory/sections?id=${id}`, { method: "DELETE" });
+      if (r.ok) { toast.success("Deleted"); loadData(); }
+      else { const d = await r.json(); toast.error(d.error); }
+    } catch { toast.error("Error"); }
+  }
+
+  // Vendor CRUD
+  function openVendorCreate() {
+    setEditingVendor(null);
+    setVendorForm({ name: "", role: "", mainUse: "", cadence: "", contactInfo: "" });
+    setShowVendorModal(true);
+  }
+  function openVendorEdit(v: Vendor) {
+    setEditingVendor(v);
+    setVendorForm({
+      name: v.name,
+      role: v.role || "",
+      mainUse: v.mainUse || "",
+      cadence: v.cadence || "",
+      contactInfo: "",
+    });
+    setShowVendorModal(true);
+  }
+  async function handleVendorSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const payload: Record<string, string> = { name: vendorForm.name };
+    if (vendorForm.role) payload.role = vendorForm.role;
+    if (vendorForm.mainUse) payload.mainUse = vendorForm.mainUse;
+    if (vendorForm.cadence) payload.cadence = vendorForm.cadence;
+    if (vendorForm.contactInfo) payload.contactInfo = vendorForm.contactInfo;
+    try {
+      const method = editingVendor ? "PUT" : "POST";
+      const body = editingVendor ? { id: editingVendor.id, ...payload } : payload;
+      const r = await fetch("/api/inventory/vendors", {
+        method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      if (r.ok) { toast.success(editingVendor ? "Updated" : "Created"); setShowVendorModal(false); loadData(); }
+      else { const d = await r.json(); toast.error(d.error || "Failed"); }
+    } catch { toast.error("Error"); }
+  }
+  async function handleVendorDelete(id: number) {
+    if (!confirm("Delete this vendor? Items must be reassigned first.")) return;
+    try {
+      const r = await fetch(`/api/inventory/vendors?id=${id}`, { method: "DELETE" });
       if (r.ok) { toast.success("Deleted"); loadData(); }
       else { const d = await r.json(); toast.error(d.error); }
     } catch { toast.error("Error"); }
@@ -170,19 +222,28 @@ export default function InventoryPage() {
     setSaved(false);
   };
 
-  const updatePar = async (id: number, value: string) => {
+  const parTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+
+  const updatePar = (id: number, value: string) => {
     const num = Math.max(0, parseFloat(value) || 0);
     setParEdits((prev) => new Map(prev).set(id, num));
     setSaved(false);
-    try {
-      await fetch("/api/inventory", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, parLevel: num }),
-      });
-    } catch {
-      // silent — will reflect on next load
-    }
+    // Debounce the API call — save 800ms after last keystroke
+    const existing = parTimers.current.get(id);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(async () => {
+      try {
+        await fetch("/api/inventory", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, parLevel: num }),
+        });
+      } catch {
+        // silent — will reflect on next load
+      }
+      parTimers.current.delete(id);
+    }, 800);
+    parTimers.current.set(id, timer);
   };
 
   const save = async () => {
@@ -246,16 +307,19 @@ export default function InventoryPage() {
             </p>
           </div>
 <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
-	            <button onClick={openSectionCreate} className="btn btn-secondary btn-sm">
-	              <Settings size={14} /> Sections
-	            </button>
-	            <Link href="/inventory/items" className="btn btn-secondary btn-sm">
-	              ⚙️ Manage Items
-	            </Link>
-	            <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
-	              🛒 Order Requests
-	            </Link>
-	          </div>
+            <button onClick={() => setShowVendorModal(true)} className="btn btn-secondary btn-sm">
+              🏢 Vendors
+            </button>
+            <button onClick={openSectionCreate} className="btn btn-secondary btn-sm">
+              <Settings size={14} /> Sections
+            </button>
+            <Link href="/inventory/items" className="btn btn-secondary btn-sm">
+              ⚙️ Manage Items
+            </Link>
+            <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
+              🛒 Order Requests
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -282,7 +346,7 @@ export default function InventoryPage() {
               <div>
                 <div className="text-xs text-gray">To Order</div>
                 <div className="font-semibold text-sm" style={{ color: totalToOrder > 0 ? "#EA580C" : "#059669" }}>
-                  {totalToOrder}
+                  {totalToOrder.toLocaleString()} <span className="text-xs text-gray">units</span>
                 </div>
               </div>
               <div style={{ width: 1, height: 24, background: "#E5E7EB" }} />
@@ -611,6 +675,69 @@ export default function InventoryPage() {
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowSectionModal(false)} className="btn btn-secondary">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vendor Management Modal */}
+      {showVendorModal && (
+        <div className="modal-backdrop" onClick={() => setShowVendorModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h2>{editingVendor ? "Edit Vendor" : "Manage Vendors"}</h2>
+            </div>
+            <div className="modal-body">
+              {/* Existing vendors */}
+              {!editingVendor && (
+                <div className="space-y-2" style={{ marginBottom: 16 }}>
+                  {vendors.map(v => (
+                    <div key={v.id} className="list-item">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span className="font-medium text-sm">{v.name}</span>
+                        {v.role && <span className="text-xs text-gray" style={{ marginLeft: 6 }}>{v.role}</span>}
+                      </div>
+                      <span className="text-xs text-gray">{v._count?.inventoryItems || 0} items</span>
+                      <div className="flex gap-1">
+                        <button onClick={() => openVendorEdit(v)} className="btn-icon"><Pencil size={12} /></button>
+                        <button onClick={() => handleVendorDelete(v.id)} className="btn-icon" style={{ color: "#DC2626" }}><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Add/Edit form */}
+              <form onSubmit={handleVendorSubmit} className="space-y-3">
+                <div>
+                  <label className="form-label">Vendor Name *</label>
+                  <input value={vendorForm.name} onChange={e => setVendorForm(f => ({ ...f, name: e.target.value }))} required className="form-input" placeholder="e.g. US Foods" />
+                </div>
+                <div className="grid-2">
+                  <div>
+                    <label className="form-label">Role</label>
+                    <input value={vendorForm.role} onChange={e => setVendorForm(f => ({ ...f, role: e.target.value }))} className="form-input" placeholder="Primary broadline vendor" />
+                  </div>
+                  <div>
+                    <label className="form-label">Cadence</label>
+                    <input value={vendorForm.cadence} onChange={e => setVendorForm(f => ({ ...f, cadence: e.target.value }))} className="form-input" placeholder="Weekly" />
+                  </div>
+                </div>
+                <div>
+                  <label className="form-label">Main Use</label>
+                  <input value={vendorForm.mainUse} onChange={e => setVendorForm(f => ({ ...f, mainUse: e.target.value }))} className="form-input" placeholder="Donut ingredients, dairy, supplies" />
+                </div>
+                <div>
+                  <label className="form-label">Contact Info</label>
+                  <input value={vendorForm.contactInfo} onChange={e => setVendorForm(f => ({ ...f, contactInfo: e.target.value }))} className="form-input" placeholder="Phone, email, or rep name" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-primary btn-sm">{editingVendor ? "Update" : "Add Vendor"}</button>
+                  {editingVendor && <button type="button" onClick={() => { setEditingVendor(null); setVendorForm({ name: "", role: "", mainUse: "", cadence: "", contactInfo: "" }); }} className="btn btn-secondary btn-sm">Cancel Edit</button>}
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowVendorModal(false)} className="btn btn-secondary">Done</button>
             </div>
           </div>
         </div>

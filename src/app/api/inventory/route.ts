@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   const { tenantId, role } = await getSessionContext();
-  if (role !== "MANAGER" && role !== "OWNER")
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -77,11 +77,44 @@ export async function PUT(request: Request) {
   const existing = await prisma.inventoryItem.findFirst({ where: { id, tenantId } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Whitelist fields to prevent mass-assignment
+  const allowed = [
+    "name", "category", "unit", "unitCost", "parLevel", "currentStock",
+    "minStock", "reorderQty", "vendorId", "packSize", "suggestedCadence",
+    "sku", "notes", "inventorySection", "inventorySectionId", "supplier",
+  ];
+  const cleanData: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in data) cleanData[key] = data[key];
+  }
+
   const item = await prisma.inventoryItem.update({
     where: { id },
-    data,
+    data: cleanData,
     include: { vendor: { select: { id: true, name: true } } },
   });
 
   return NextResponse.json(item);
+}
+
+export async function DELETE(request: Request) {
+  const { tenantId, role } = await getSessionContext();
+  if (role !== "MANAGER" && role !== "OWNER" && role !== "PLATFORM_ADMIN")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { searchParams } = new URL(request.url);
+  const id = Number(searchParams.get("id"));
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  // Verify item belongs to this tenant
+  const existing = await prisma.inventoryItem.findFirst({ where: { id, tenantId } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Soft-delete
+  await prisma.inventoryItem.update({
+    where: { id },
+    data: { active: false },
+  });
+
+  return NextResponse.json({ success: true });
 }

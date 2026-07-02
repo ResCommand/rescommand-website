@@ -29,6 +29,7 @@ type FormMode = "custom";
 
 export default function OrderRequestsPage() {
   const [requests, setRequests] = useState<OrderRequest[]>([]);
+  const [vendors, setVendors] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
@@ -49,8 +50,12 @@ export default function OrderRequestsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const reqRes = await fetch("/api/inventory/order-requests").then((r) => r.json());
+      const [reqRes, venRes] = await Promise.all([
+        fetch("/api/inventory/order-requests").then((r) => r.json()),
+        fetch("/api/inventory/vendors").then((r) => r.json()).catch(() => []),
+      ]);
       setRequests(Array.isArray(reqRes) ? reqRes : []);
+      setVendors(Array.isArray(venRes) ? venRes : []);
     } catch {
       // ignore
     } finally {
@@ -235,14 +240,17 @@ export default function OrderRequestsPage() {
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Vendor (optional)</label>
-              <input
-                type="text"
+              <label className="form-label">Vendor</label>
+              <select
                 className="form-input"
-                placeholder="e.g. US Foods, or a new vendor"
                 value={customVendor}
                 onChange={(e) => setCustomVendor(e.target.value)}
-              />
+              >
+                <option value="">— Select vendor —</option>
+                {vendors.map((v) => (
+                  <option key={v.id} value={v.name}>{v.name}</option>
+                ))}
+              </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Quantity *</label>

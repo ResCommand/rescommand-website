@@ -144,7 +144,11 @@ export default function InventoryItemsPage() {
 
   const openNew = () => {
     setEditingId(null);
-    setForm(emptyForm);
+    // Default to most-used section
+    const sectionCounts: Record<string, number> = {};
+    items.forEach((i) => { sectionCounts[i.inventorySection] = (sectionCounts[i.inventorySection] || 0) + 1; });
+    const mostUsed = Object.entries(sectionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || sections[0]?.slug || "kitchen_regular";
+    setForm({ ...emptyForm, inventorySection: mostUsed });
     setShowForm(true);
     setError("");
   };
@@ -276,6 +280,21 @@ export default function InventoryItemsPage() {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (item: InvItem) => {
+    if (!confirm(`Delete "${item.name}"? This will hide it from inventory and counts.`)) return;
+    try {
+      const res = await fetch(`/api/inventory?id=${item.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete");
+      }
+      toast.success(`"${item.name}" deleted`);
+      fetchData();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
     }
   };
 
@@ -424,17 +443,6 @@ export default function InventoryItemsPage() {
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Reorder Qty</label>
-              <input
-                type="number"
-                className="form-input"
-                min="0"
-                step="0.5"
-                value={form.reorderQty}
-                onChange={(e) => setForm({ ...form, reorderQty: parseFloat(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Current Stock</label>
               <input
                 type="number"
@@ -530,12 +538,22 @@ export default function InventoryItemsPage() {
                   <td className="text-sm">{item.parLevel}</td>
                   <td className="text-sm">{item.currentStock} {item.unit}</td>
                   <td>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => openEdit(item)}
-                    >
-                      Edit
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => openEdit(item)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleDelete(item)}
+                        style={{ color: "#DC2626" }}
+                        title="Delete"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -581,13 +599,22 @@ export default function InventoryItemsPage() {
                       <div className="text-sm">{item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}</div>
                     </div>
                   </div>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => openEdit(item)}
-                    style={{ flexShrink: 0 }}
-                  >
-                    Edit
-                  </button>
+                  <div className="flex items-center" style={{ gap: 4 }}>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => openEdit(item)}
+                      style={{ flexShrink: 0 }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => handleDelete(item)}
+                      style={{ flexShrink: 0, color: "#DC2626" }}
+                    >
+                      🗑
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2" style={{ marginTop: 4 }}>
                   <span className="text-xs text-gray">{sectionLabels[item.inventorySection] || item.inventorySection}</span>

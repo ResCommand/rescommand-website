@@ -30,11 +30,14 @@ type FormMode = "custom";
 export default function OrderRequestsPage() {
   const [requests, setRequests] = useState<OrderRequest[]>([]);
   const [vendors, setVendors] = useState<{ id: number; name: string }[]>([]);
+  const [invItems, setInvItems] = useState<{ id: number; name: string; unit: string; vendorId: number | null; vendor: { name: string } | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
 
   // Form state
+  const [formMode, setFormMode] = useState<"inventory" | "custom">("inventory");
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [qty, setQty] = useState<string>("1");
   const [requestNotes, setRequestNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -45,17 +48,22 @@ export default function OrderRequestsPage() {
   const [customVendor, setCustomVendor] = useState("");
   const [customUnit, setCustomUnit] = useState("");
 
+  // Receiving
+  const [receiving, setReceiving] = useState<number | null>(null);
+
   const { data: session } = useSession();
   const isManager = session?.user && ((session.user as { role?: string }).role === "MANAGER" || (session.user as { role?: string }).role === "OWNER" || (session.user as { role?: string }).role === "PLATFORM_ADMIN");
 
   const fetchData = useCallback(async () => {
     try {
-      const [reqRes, venRes] = await Promise.all([
+      const [reqRes, venRes, itemRes] = await Promise.all([
         fetch("/api/inventory/order-requests").then((r) => r.json()),
         fetch("/api/inventory/vendors").then((r) => r.json()).catch(() => []),
+        fetch("/api/inventory").then((r) => r.json()).catch(() => []),
       ]);
       setRequests(Array.isArray(reqRes) ? reqRes : []);
       setVendors(Array.isArray(venRes) ? venRes : []);
+      setInvItems(Array.isArray(itemRes) ? itemRes.map((i: { id: number; name: string; unit: string; vendorId: number | null; vendor: { name: string } | null }) => ({ id: i.id, name: i.name, unit: i.unit, vendorId: i.vendorId, vendor: i.vendor })) : []);
     } catch {
       // ignore
     } finally {
@@ -79,6 +87,8 @@ export default function OrderRequestsPage() {
   };
 
   const resetForm = () => {
+    setFormMode("inventory");
+    setSelectedItemId(null);
     setQty("1");
     setRequestNotes("");
     setCustomName("");
@@ -88,22 +98,38 @@ export default function OrderRequestsPage() {
   };
 
   const submitRequest = async () => {
-    if (!customName.trim() || !qty) {
-      setFormError("Please enter an item name and quantity");
-      return;
-    }
-
     setSubmitting(true);
     setFormError("");
 
-    const payload = {
-      mode: "custom" as const,
-      customItemName: customName.trim(),
-      customVendorName: customVendor.trim() || undefined,
-      customUnit: customUnit.trim() || undefined,
-      qtyRequested: parseFloat(qty),
-      notes: requestNotes || undefined,
-    };
+    let payload: Record<string, unknown>;
+
+    if (formMode === "inventory") {
+      if (!selectedItemId || !qty) {
+        setFormError("Please select an item and quantity");
+        setSubmitting(false);
+        return;
+      }
+      payload = {
+        mode: "existing",
+        inventoryItemId: selectedItemId,
+        qtyRequested: parseFloat(qty),
+        notes: requestNotes || undefined,
+      };
+    } else {
+      if (!customName.trim() || !qty) {
+        setFormError("Please enter an item name and quantity");
+        setSubmitting(false);
+        return;
+      }
+      payload = {
+        mode: "custom",
+        customItemName: customName.trim(),
+        customVendorName: customVendor.trim() || undefined,
+        customUnit: customUnit.trim() || undefined,
+        qtyRequested: parseFloat(qty),
+        notes: requestNotes || undefined,
+      };
+    }
 
     try {
       const res = await fetch("/api/inventory/order-requests", {
@@ -149,6 +175,26 @@ export default function OrderRequestsPage() {
       fetchData();
     } catch {
       // ignore
+    }
+  };
+
+  const receiveOrder = async (req: OrderRequest) => {
+    setReceiving(req.id);
+    try {
+      const res = await fetch("/api/inventory/order-requests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: req.id, status: "FULFILLED", received: true }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to receive");
+      }
+      fetchData();
+    } catch {
+      // ignore
+    } finally {
+      setReceiving(null);
     }
   };
 
@@ -217,10 +263,33 @@ export default function OrderRequestsPage() {
       {/* New request form */}
       {showForm && (
         <div className="card mb-4" style={{ padding: 20 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Request a New Item</h3>
-          <p className="text-sm text-gray" style={{ marginBottom: 12 }}>
-            Need something that&apos;s not in our inventory list? Enter the details below and a manager will review it.
-          </p>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>New Order Request</h3>
+
+          {/* Mode toggle */}
+          <div style={{ display: "flex", gap: 0, marginBottom: 16, borderRadius: 8, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+            <button
+              onClick={() => setFormMode("inventory")}
+              style={{
+                flex: 1, padding: "8px 12px", fontSize: 13, fontWeight: 600,
+                background: formMode === "inventory" ? "#7C3AED" : "#fff",
+                color: formMode === "inventory" ? "#fff" : "#6B7280",
+                border: "none", cursor: "pointer",
+              }}
+            >
+              📋 From Inventory
+            </button>
+            <button
+              onClick={() => setFormMode("custom")}
+              style={{
+                flex: 1, padding: "8px 12px", fontSize: 13, fontWeight: 600,
+                background: formMode === "custom" ? "#7C3AED" : "#fff",
+                color: formMode === "custom" ? "#fff" : "#6B7280",
+                border: "none", cursor: "pointer",
+              }}
+            >
+              ✏️ Custom Item
+            </button>
+          </div>
 
           {formError && (
             <div style={{ background: "#FEF2F2", color: "#DC2626", padding: 10, borderRadius: 6, fontSize: 13, marginBottom: 12 }}>
@@ -228,71 +297,89 @@ export default function OrderRequestsPage() {
             </div>
           )}
 
-          <div className="grid-2" style={{ gap: 12 }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Item Name *</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="e.g. Madagascar Vanilla Beans"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-              />
+          {/* From Inventory mode */}
+          {formMode === "inventory" && (
+            <div className="space-y-3">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Select Item *</label>
+                <select
+                  className="form-input"
+                  value={selectedItemId ?? ""}
+                  onChange={(e) => setSelectedItemId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">— Choose an inventory item —</option>
+                  {invItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}{item.vendor ? ` (${item.vendor.name})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedItemId && (() => {
+                const item = invItems.find(i => i.id === selectedItemId);
+                return item ? (
+                  <div style={{ padding: 10, background: "#F3EEFF", borderRadius: 6, fontSize: 13 }}>
+                    <span className="text-gray">Vendor: </span><strong>{item.vendor?.name || "Unassigned"}</strong>
+                    <span className="text-gray" style={{ marginLeft: 12 }}>Unit: </span><strong>{item.unit}</strong>
+                  </div>
+                ) : null;
+              })()}
+              <div className="grid-2" style={{ gap: 12 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Quantity *</label>
+                  <input type="number" className="form-input" min="1" step="0.5" value={qty}
+                    onChange={(e) => setQty(e.target.value)} style={{ width: 120 }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Notes</label>
+                  <input type="text" className="form-input" placeholder="Optional notes..."
+                    value={requestNotes} onChange={(e) => setRequestNotes(e.target.value)} />
+                </div>
+              </div>
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Vendor</label>
-              <select
-                className="form-input"
-                value={customVendor}
-                onChange={(e) => setCustomVendor(e.target.value)}
-              >
-                <option value="">— Select vendor —</option>
-                {vendors.map((v) => (
-                  <option key={v.id} value={v.name}>{v.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Quantity *</label>
-              <input
-                type="number"
-                className="form-input"
-                min="1"
-                step="0.5"
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                style={{ width: 120 }}
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Unit (optional)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="e.g. case, lb, each"
-                value={customUnit}
-                onChange={(e) => setCustomUnit(e.target.value)}
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="form-group" style={{ marginTop: 12 }}>
-            <label className="form-label">Notes (optional)</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. Need ASAP, for weekend rush..."
-              value={requestNotes}
-              onChange={(e) => setRequestNotes(e.target.value)}
-            />
-          </div>
+          {/* Custom Item mode */}
+          {formMode === "custom" && (
+            <div className="space-y-3">
+              <div className="grid-2" style={{ gap: 12 }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Item Name *</label>
+                  <input type="text" className="form-input" placeholder="e.g. Madagascar Vanilla Beans"
+                    value={customName} onChange={(e) => setCustomName(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Vendor</label>
+                  <select className="form-input" value={customVendor}
+                    onChange={(e) => setCustomVendor(e.target.value)}>
+                    <option value="">— Select vendor —</option>
+                    {vendors.map((v) => (
+                      <option key={v.id} value={v.name}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Quantity *</label>
+                  <input type="number" className="form-input" min="1" step="0.5" value={qty}
+                    onChange={(e) => setQty(e.target.value)} style={{ width: 120 }} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Unit</label>
+                  <input type="text" className="form-input" placeholder="e.g. case, lb, each"
+                    value={customUnit} onChange={(e) => setCustomUnit(e.target.value)} />
+                </div>
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Notes</label>
+                <input type="text" className="form-input" placeholder="Optional notes..."
+                  value={requestNotes} onChange={(e) => setRequestNotes(e.target.value)} />
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button className="btn btn-secondary btn-sm" onClick={() => { setShowForm(false); resetForm(); }}>Cancel</button>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={submitRequest}
-              disabled={submitting}
-            >
+            <button className="btn btn-primary btn-sm" onClick={submitRequest} disabled={submitting}>
               {submitting ? "Submitting..." : "Submit Request"}
             </button>
           </div>
@@ -433,9 +520,10 @@ export default function OrderRequestsPage() {
                           <button
                             className="btn btn-sm"
                             style={{ background: "#059669", color: "#fff", padding: "3px 8px", fontSize: 11 }}
-                            onClick={() => updateStatus(req.id, "FULFILLED")}
+                            onClick={() => receiveOrder(req)}
+                            disabled={receiving === req.id}
                           >
-                            Fulfilled
+                            {receiving === req.id ? "Receiving..." : "📥 Receive"}
                           </button>
                           {isManager && (
                             <button
@@ -449,7 +537,22 @@ export default function OrderRequestsPage() {
                           )}
                         </div>
                       )}
-                      {(req.status === "FULFILLED" || req.status === "CANCELLED") && (
+                      {req.status === "FULFILLED" && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-green" style={{ fontWeight: 600 }}>✓ Received</span>
+                          {isManager && (
+                            <button
+                              className="btn btn-sm"
+                              style={{ background: "#DC2626", color: "#fff", padding: "3px 8px", fontSize: 11 }}
+                              onClick={() => deleteRequest(req.id)}
+                              title="Delete request"
+                            >
+                              🗑
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {req.status === "CANCELLED" && (
                         isManager ? (
                           <button
                             className="btn btn-sm"

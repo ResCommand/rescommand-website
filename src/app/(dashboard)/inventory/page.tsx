@@ -76,6 +76,11 @@ export default function InventoryPage() {
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [vendorForm, setVendorForm] = useState({ name: "", role: "", mainUse: "", cadence: "", contactInfo: "" });
 
+  // Generate Orders state
+  const [showGenOrders, setShowGenOrders] = useState(false);
+  const [genOrdersLoading, setGenOrdersLoading] = useState(false);
+  const [genOrdersResult, setGenOrdersResult] = useState<{ created: number; skipped: number } | null>(null);
+
   // Weekly count state
   const [lines, setLines] = useState<Map<number, number>>(new Map());
   const [date, setDate] = useState<string>(formatDateISO(getMonday(new Date())));
@@ -180,6 +185,34 @@ export default function InventoryPage() {
       if (r.ok) { toast.success("Deleted"); loadData(); }
       else { const d = await r.json(); toast.error(d.error); }
     } catch { toast.error("Error"); }
+  }
+
+  // Generate Orders from Count
+  async function handleGenerateOrders() {
+    setShowGenOrders(true);
+    setGenOrdersLoading(false);
+    setGenOrdersResult(null);
+  }
+
+  async function confirmGenerateOrders() {
+    setGenOrdersLoading(true);
+    try {
+      const res = await fetch("/api/inventory/generate-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate orders");
+      setGenOrdersResult({ created: data.created, skipped: data.skipped });
+      if (data.created > 0) toast.success(`Created ${data.created} order request(s)`);
+      else toast.info("No items below par or all already requested");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+      setGenOrdersResult(null);
+    } finally {
+      setGenOrdersLoading(false);
+    }
   }
 
   const filtered = items
@@ -319,6 +352,9 @@ export default function InventoryPage() {
             <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
               🛒 Order Requests
             </Link>
+            <Link href="/inventory/history" className="btn btn-secondary btn-sm">
+              📜 History
+            </Link>
           </div>
         </div>
       </div>
@@ -360,14 +396,21 @@ export default function InventoryPage() {
             </div>
           </div>
         </div>
-        <button
-          className="btn btn-primary btn-sm"
-          onClick={save}
-          disabled={saving}
-          style={{ width: "100%", maxWidth: 220 }}
-        >
-          {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
-        </button>
+        <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={save}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
+          </button>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleGenerateOrders}
+          >
+            🛒 Generate Orders
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -739,6 +782,77 @@ export default function InventoryPage() {
             <div className="modal-footer">
               <button onClick={() => setShowVendorModal(false)} className="btn btn-secondary">Done</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Generate Orders Modal */}
+      {showGenOrders && (
+        <div className="modal-backdrop" onClick={() => { setShowGenOrders(false); setGenOrdersResult(null); }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+            <div className="modal-header">
+              <h2>Generate Orders from Count</h2>
+            </div>
+            <div className="modal-body">
+              {genOrdersResult ? (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <div style={{ fontSize: 40 }}>✅</div>
+                  <h3 style={{ marginTop: 12, fontSize: 18 }}>Orders Generated</h3>
+                  <p className="text-sm text-gray" style={{ marginTop: 8 }}>
+                    {genOrdersResult.created > 0
+                      ? `Created ${genOrdersResult.created} order request${genOrdersResult.created !== 1 ? "s" : ""} for items below par.`
+                      : "No new orders needed — all items are at par or already requested."}
+                  </p>
+                  {genOrdersResult.skipped > 0 && (
+                    <p className="text-xs text-gray" style={{ marginTop: 4 }}>
+                      Skipped {genOrdersResult.skipped} item(s) with existing requests
+                    </p>
+                  )}
+                  <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
+                    <a href="/inventory/order-requests" className="btn btn-primary btn-sm">View Requests</a>
+                    <button onClick={() => { setShowGenOrders(false); setGenOrdersResult(null); }} className="btn btn-secondary btn-sm">Close</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm">
+                    Generate order requests for all items currently below par based on the saved count for{" "}
+                    <strong>{date}</strong>.
+                  </p>
+                  {totalToOrder === 0 ? (
+                    <div style={{ padding: 16, background: "#F0FDF4", borderRadius: 8, textAlign: "center" }}>
+                      <span className="text-sm text-green">✓ All items are at or above par. No orders needed.</span>
+                    </div>
+                  ) : (
+                    <div style={{ padding: 16, background: "#F3EEFF", borderRadius: 8 }}>
+                      <div className="text-sm font-semibold" style={{ color: "#7C3AED" }}>
+                        {totalToOrder.toLocaleString()} units to order across {vendors.length} vendors
+                      </div>
+                      <div className="text-xs text-gray" style={{ marginTop: 4 }}>
+                        Items below par will have order requests created automatically.
+                      </div>
+                    </div>
+                  )}
+                  {!saved && (
+                    <p className="text-xs text-gray" style={{ background: "#FFFBEB", padding: 8, borderRadius: 6 }}>
+                      ⚠️ Tip: Save your count first to use the latest numbers.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            {!genOrdersResult && (
+              <div className="modal-footer">
+                <button onClick={() => setShowGenOrders(false)} className="btn btn-secondary">Cancel</button>
+                <button
+                  onClick={confirmGenerateOrders}
+                  disabled={genOrdersLoading}
+                  className="btn btn-primary btn-sm"
+                >
+                  {genOrdersLoading ? "Generating..." : "Generate Orders"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

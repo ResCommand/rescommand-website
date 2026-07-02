@@ -85,6 +85,7 @@ export async function POST(request: Request) {
 const updateSchema = z.object({
   id: z.number(),
   status: z.enum(["PENDING", "APPROVED", "ORDERED", "FULFILLED", "CANCELLED"]),
+  received: z.boolean().optional(),
 });
 
 export async function PUT(request: Request) {
@@ -98,6 +99,16 @@ export async function PUT(request: Request) {
 
   const existing = await prisma.orderRequest.findFirst({ where: { id: parsed.data.id, tenantId } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // If receiving stock (FULFILLED + received), increment currentStock on the inventory item
+  if (parsed.data.received && parsed.data.status === "FULFILLED" && existing.status !== "FULFILLED") {
+    if (existing.inventoryItemId) {
+      await prisma.inventoryItem.update({
+        where: { id: existing.inventoryItemId },
+        data: { currentStock: { increment: existing.qtyRequested } },
+      });
+    }
+  }
 
   const updated = await prisma.orderRequest.update({
     where: { id: parsed.data.id },

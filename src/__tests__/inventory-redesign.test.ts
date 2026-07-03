@@ -4,7 +4,6 @@ import { describe, it, expect } from "@jest/globals";
 function getActiveTab(pathname: string): string | null {
   const TABS = [
     { href: "/inventory", label: "Count", exact: true },
-    { href: "/inventory/items", label: "Items" },
     { href: "/inventory/order-requests", label: "Orders" },
     { href: "/inventory/valuation", label: "Reports" },
   ];
@@ -29,10 +28,6 @@ describe("InventoryNav active-tab logic", () => {
     expect(getActiveTab("/inventory")).toBe("Count");
   });
 
-  it("activates Items on /inventory/items", () => {
-    expect(getActiveTab("/inventory/items")).toBe("Items");
-  });
-
   it("activates Orders on /inventory/order-requests", () => {
     expect(getActiveTab("/inventory/order-requests")).toBe("Orders");
   });
@@ -41,7 +36,11 @@ describe("InventoryNav active-tab logic", () => {
     expect(getActiveTab("/inventory/valuation")).toBe("Reports");
   });
 
-  it("does NOT activate Items when on /inventory (exact match for Count)", () => {
+  it("returns null for /inventory/items (removed tab)", () => {
+    expect(getActiveTab("/inventory/items")).toBeNull();
+  });
+
+  it("does NOT activate Orders when on /inventory (exact match for Count)", () => {
     expect(getActiveTab("/inventory")).not.toBe("Items");
   });
 

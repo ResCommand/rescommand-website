@@ -1,11 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, Package, ShoppingCart, BarChart3 } from "lucide-react";
+import { ClipboardList, ShoppingCart, BarChart3 } from "lucide-react";
 
 const TABS = [
   { href: "/inventory", label: "Count", icon: ClipboardList, exact: true },
-  { href: "/inventory/items", label: "Items", icon: Package },
   { href: "/inventory/order-requests", label: "Orders", icon: ShoppingCart },
   { href: "/inventory/valuation", label: "Reports", icon: BarChart3 },
 ];

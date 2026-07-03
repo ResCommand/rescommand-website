@@ -12,7 +12,7 @@ const inventorySchema = z.object({
   parLevel: z.number().min(0),
   currentStock: z.number().min(0),
   minStock: z.number().min(0),
-  reorderQty: z.number().min(0),
+  reorderQty: z.number().min(0).optional().default(0),
   supplier: z.string().optional(),
   vendorId: z.number().optional().nullable(),
   packSize: z.string().optional().nullable(),

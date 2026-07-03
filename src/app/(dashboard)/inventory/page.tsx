@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Settings, Pencil, Trash2 } from "lucide-react";
+import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import IconPicker from "@/components/IconPicker";
 import InventoryNav from "@/components/inventory/InventoryNav";
@@ -85,9 +85,10 @@ export default function InventoryPage() {
 
   // Slide-over edit drawer state
   const [editDrawerItem, setEditDrawerItem] = useState<InvItem | null>(null);
+  const [drawerMode, setDrawerMode] = useState<"edit" | "create">("edit");
   const [editForm, setEditForm] = useState({
     name: "", category: "BOH", unit: "case", unitCost: 0, parLevel: 0,
-    minStock: 0, packSize: "", sku: "", notes: "",
+    minStock: 0, currentStock: 0, packSize: "", sku: "", notes: "",
     suggestedCadence: "", vendorId: null as number | null,
     inventorySection: "kitchen_regular",
   });
@@ -95,11 +96,20 @@ export default function InventoryPage() {
   const [editError, setEditError] = useState("");
   const [showEditAdvanced, setShowEditAdvanced] = useState(false);
 
+  const blankForm = () => ({
+    name: "", category: "BOH", unit: "case", unitCost: 0, parLevel: 0,
+    minStock: 0, currentStock: 0, packSize: "", sku: "", notes: "",
+    suggestedCadence: "", vendorId: null as number | null,
+    inventorySection: sections[0]?.slug || "kitchen_regular",
+  });
+
   const openEditDrawer = (item: InvItem) => {
+    setDrawerMode("edit");
     setEditDrawerItem(item);
     setEditForm({
       name: item.name, category: item.category, unit: item.unit,
       unitCost: item.unitCost, parLevel: item.parLevel, minStock: item.minStock,
+      currentStock: item.currentStock,
       packSize: item.packSize || "", sku: item.sku || "", notes: item.notes || "",
       suggestedCadence: item.suggestedCadence || "", vendorId: item.vendor?.id ?? null,
       inventorySection: item.inventorySection || "kitchen_regular",
@@ -108,42 +118,71 @@ export default function InventoryPage() {
     setEditError("");
   };
 
-  const closeEditDrawer = () => {
+  const openCreateDrawer = () => {
+    setDrawerMode("create");
     setEditDrawerItem(null);
+    setEditForm(blankForm());
+    setShowEditAdvanced(false);
     setEditError("");
   };
 
-  const saveEditDrawer = async () => {
+  const closeEditDrawer = () => {
+    setEditDrawerItem(null);
+    setDrawerMode("edit");
+    setEditError("");
+  };
+
+  const deleteFromDrawer = async () => {
     if (!editDrawerItem) return;
+    if (!confirm(`Delete "${editDrawerItem.name}"? This will hide it from inventory.`)) return;
+    try {
+      const res = await fetch(`/api/inventory?id=${editDrawerItem.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete");
+      }
+      toast.success("Deleted");
+      setEditDrawerItem(null);
+      loadData();
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "Failed to delete");
+    }
+  };
+
+  const saveEditDrawer = async () => {
     if (!editForm.name.trim()) { setEditError("Name is required"); return; }
     setEditSaving(true);
     setEditError("");
     try {
+      const payload = {
+        name: editForm.name.trim(),
+        category: editForm.category,
+        unit: editForm.unit,
+        unitCost: editForm.unitCost,
+        parLevel: editForm.parLevel,
+        minStock: editForm.minStock,
+        currentStock: editForm.currentStock,
+        packSize: editForm.packSize || null,
+        sku: editForm.sku || null,
+        notes: editForm.notes || null,
+        suggestedCadence: editForm.suggestedCadence || null,
+        vendorId: editForm.vendorId,
+        inventorySection: editForm.inventorySection,
+        ...(drawerMode === "edit" && editDrawerItem ? { id: editDrawerItem.id } : {}),
+      };
       const res = await fetch("/api/inventory", {
-        method: "PUT",
+        method: drawerMode === "edit" ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editDrawerItem.id,
-          name: editForm.name.trim(),
-          category: editForm.category,
-          unit: editForm.unit,
-          unitCost: editForm.unitCost,
-          parLevel: editForm.parLevel,
-          minStock: editForm.minStock,
-          packSize: editForm.packSize || null,
-          sku: editForm.sku || null,
-          notes: editForm.notes || null,
-          suggestedCadence: editForm.suggestedCadence || null,
-          vendorId: editForm.vendorId,
-          inventorySection: editForm.inventorySection,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to save");
+        const msg = typeof data.error === "string" ? data.error : "Validation error — check your fields";
+        throw new Error(msg);
       }
-      toast.success("Updated");
+      toast.success(drawerMode === "edit" ? "Updated" : "Created");
       setEditDrawerItem(null);
+      setDrawerMode("edit");
       loadData();
     } catch (e) {
       setEditError(e instanceof Error ? e.message : "Failed to save");
@@ -251,7 +290,13 @@ export default function InventoryPage() {
       const r = await fetch("/api/inventory/vendors", {
         method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
-      if (r.ok) { toast.success(editingVendor ? "Updated" : "Created"); setShowVendorModal(false); loadData(); }
+      if (r.ok) {
+        toast.success(editingVendor ? "Updated" : "Created");
+        setShowVendorModal(false);
+        setEditingVendor(null);
+        setVendorForm({ name: "", role: "", mainUse: "", cadence: "", contactInfo: "" });
+        loadData();
+      }
       else { const d = await r.json(); toast.error(d.error || "Failed"); }
     } catch { toast.error("Error"); }
   }
@@ -440,6 +485,9 @@ export default function InventoryPage() {
             </p>
           </div>
           <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+            <button onClick={openCreateDrawer} className="btn btn-primary btn-sm">
+              <Plus size={14} /> Add Item
+            </button>
             <button onClick={() => setShowVendorModal(true)} className="btn btn-secondary btn-sm">
               <Settings size={14} /> Settings
             </button>
@@ -928,7 +976,7 @@ export default function InventoryPage() {
               </form>
             </div>
             <div className="modal-footer">
-              <button onClick={() => setShowVendorModal(false)} className="btn btn-secondary">Done</button>
+              <button onClick={() => { setShowVendorModal(false); setEditingVendor(null); setVendorForm({ name: "", role: "", mainUse: "", cadence: "", contactInfo: "" }); }} className="btn btn-secondary">Done</button>
             </div>
           </div>
         </div>
@@ -1006,11 +1054,11 @@ export default function InventoryPage() {
       )}
 
       {/* Slide-over Edit Drawer */}
-      {editDrawerItem && (
+      {(editDrawerItem || drawerMode === "create") && (
         <div className="drawer-backdrop" onClick={closeEditDrawer}>
           <div className="drawer-panel" onClick={e => e.stopPropagation()}>
             <div className="drawer-header">
-              <h2>Edit Item</h2>
+              <h2>{drawerMode === "create" ? "Add New Item" : "Edit Item"}</h2>
               <button className="btn-icon" onClick={closeEditDrawer} title="Close">✕</button>
             </div>
             <div className="drawer-body">
@@ -1023,7 +1071,8 @@ export default function InventoryPage() {
                 <div className="form-group" style={{ marginBottom: 16 }}>
                   <label className="form-label">Item Name *</label>
                   <input type="text" className="form-input" value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    placeholder="e.g. Beef Tallow" />
                 </div>
                 <div className="form-group" style={{ marginBottom: 16 }}>
                   <label className="form-label">Vendor</label>
@@ -1037,17 +1086,22 @@ export default function InventoryPage() {
                   <label className="form-label">Section</label>
                   <select className="form-input" value={editForm.inventorySection}
                     onChange={(e) => setEditForm({ ...editForm, inventorySection: e.target.value })}>
-                    {sections.map(s => (<option key={s.id} value={s.slug}>{s.icon} {s.name}</option>))}
-                    <option value="kitchen_regular">Kitchen Regular</option>
-                    <option value="kitchen_infrequent">Kitchen Infrequent</option>
-                    <option value="packaging">Packaging</option>
-                    <option value="barista">Barista</option>
+                    {sections.length > 0
+                      ? sections.map(s => (<option key={s.id} value={s.slug}>{s.icon} {s.name}</option>))
+                      : (<>
+                          <option value="kitchen_regular">🍳 Kitchen Regular</option>
+                          <option value="kitchen_infrequent">🧂 Kitchen Infrequent</option>
+                          <option value="packaging">📦 Packaging</option>
+                          <option value="barista">☕ Barista</option>
+                        </>)
+                    }
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 16 }}>
                   <label className="form-label">Unit</label>
                   <input type="text" className="form-input" value={editForm.unit}
-                    onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} />
+                    onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+                    placeholder="e.g. case, lb, gal" />
                 </div>
                 <div className="form-group" style={{ marginBottom: 16 }}>
                   <label className="form-label">Unit Cost ($)</label>
@@ -1064,6 +1118,14 @@ export default function InventoryPage() {
                   <input type="number" className="form-input" min="0" step="0.5" value={editForm.minStock}
                     onChange={(e) => setEditForm({ ...editForm, minStock: parseFloat(e.target.value) || 0 })} />
                 </div>
+                {drawerMode === "create" && (
+                  <div className="form-group" style={{ marginBottom: 16 }}>
+                    <label className="form-label">Starting Stock</label>
+                    <input type="number" className="form-input" min="0" step="0.5" value={editForm.currentStock}
+                      onChange={(e) => setEditForm({ ...editForm, currentStock: parseFloat(e.target.value) || 0 })}
+                      placeholder="0" />
+                  </div>
+                )}
               </div>
 
               <button
@@ -1117,9 +1179,18 @@ export default function InventoryPage() {
               )}
             </div>
             <div className="drawer-footer">
+              {drawerMode === "edit" && editDrawerItem && (
+                <button
+                  className="btn btn-sm"
+                  onClick={deleteFromDrawer}
+                  style={{ marginRight: "auto", color: "#DC2626", borderColor: "#FCA5A5" }}
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              )}
               <button className="btn btn-secondary btn-sm" onClick={closeEditDrawer}>Cancel</button>
               <button className="btn btn-primary btn-sm" onClick={saveEditDrawer} disabled={editSaving}>
-                {editSaving ? "Saving..." : "Save Changes"}
+                {editSaving ? "Saving..." : drawerMode === "create" ? "Add Item" : "Save Changes"}
               </button>
             </div>
           </div>

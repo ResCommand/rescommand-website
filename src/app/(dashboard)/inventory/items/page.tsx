@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import ImportModal from "@/components/ImportModal";
 import { toast } from "sonner";
@@ -91,6 +91,9 @@ export default function InventoryItemsPage() {
   // Progressive disclosure
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Scroll to form when it opens
+  const formRef = useRef<HTMLDivElement>(null);
+
   const fetchData = useCallback(async () => {
     try {
       const [itemsRes, vendorsRes, sectionsRes] = await Promise.all([
@@ -109,6 +112,13 @@ export default function InventoryItemsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Scroll to top when form opens
+  useEffect(() => {
+    if (showForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showForm]);
 
   // Set default section when sections load and form is empty
   useEffect(() => {
@@ -380,7 +390,7 @@ export default function InventoryItemsPage() {
 
       {/* Add/Edit form */}
       {showForm && (
-        <div className="card mb-4 inv-items-form-card">
+        <div ref={formRef} className="card mb-4 inv-items-form-card" style={{ padding: 24 }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
             {editingId ? "Edit Item" : "Add New Item"}
           </h3>
@@ -391,14 +401,14 @@ export default function InventoryItemsPage() {
           )}
 
           {/* Essential fields */}
-          <div className="grid-2" style={{ gap: 12 }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className="grid-2" style={{ gap: 16 }}>
+            <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Item Name *</label>
               <input type="text" className="form-input" value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g. Beef Tallow" />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Vendor</label>
               <select className="form-input" value={form.vendorId ?? ""}
                 onChange={(e) => setForm({ ...form, vendorId: e.target.value ? Number(e.target.value) : null })}>
@@ -406,25 +416,25 @@ export default function InventoryItemsPage() {
                 {vendors.map((v) => (<option key={v.id} value={v.id}>{v.name}</option>))}
               </select>
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Section</label>
               <select className="form-input" value={form.inventorySection}
                 onChange={(e) => setForm({ ...form, inventorySection: e.target.value })}>
                 {sectionOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
               </select>
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Unit</label>
               <input type="text" className="form-input" value={form.unit}
                 onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 placeholder="e.g. case, each, lb" />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Unit Cost ($)</label>
               <input type="number" className="form-input" min="0" step="0.01" value={form.unitCost}
                 onChange={(e) => setForm({ ...form, unitCost: parseFloat(e.target.value) || 0 })} />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 16 }}>
               <label className="form-label">Par Level</label>
               <input type="number" className="form-input" min="0" step="0.5" value={form.parLevel}
                 onChange={(e) => setForm({ ...form, parLevel: parseFloat(e.target.value) || 0 })} />
@@ -454,26 +464,26 @@ export default function InventoryItemsPage() {
 
           {/* Advanced fields */}
           {showAdvanced && (
-            <div className="grid-2" style={{ gap: 12, marginTop: 12 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="grid-2" style={{ gap: 16, marginTop: 16 }}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label">SKU</label>
                 <input type="text" className="form-input" value={form.sku}
                   onChange={(e) => setForm({ ...form, sku: e.target.value })}
                   placeholder="e.g. 2880383" />
               </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label">Pack Size</label>
                 <input type="text" className="form-input" value={form.packSize}
                   onChange={(e) => setForm({ ...form, packSize: e.target.value })}
                   placeholder="e.g. 50 lb case" />
               </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label">Suggested Cadence</label>
                 <input type="text" className="form-input" value={form.suggestedCadence}
                   onChange={(e) => setForm({ ...form, suggestedCadence: e.target.value })}
                   placeholder="e.g. 2-3 cases/week" />
               </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label">Category</label>
                 <select className="form-input" value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}>
@@ -485,15 +495,15 @@ export default function InventoryItemsPage() {
             </div>
           )}
           {showAdvanced && (
-            <div className="form-group" style={{ marginTop: 12 }}>
+            <div className="form-group" style={{ marginTop: 0, marginBottom: 0 }}>
               <label className="form-label">Notes</label>
               <textarea className="form-input" value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="Additional notes..." rows={2} />
+                placeholder="Additional notes..." rows={3} />
             </div>
           )}
 
-          <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #F1F3F5", display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button className="btn btn-secondary btn-sm" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
             <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
               {saving ? "Saving..." : editingId ? "Update Item" : "Add Item"}

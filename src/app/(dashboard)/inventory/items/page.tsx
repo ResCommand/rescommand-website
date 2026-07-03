@@ -82,6 +82,15 @@ export default function InventoryItemsPage() {
   const [search, setSearch] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
 
+  // Sorting + pagination
+  const [sortKey, setSortKey] = useState<keyof InvItem | "vendorName" | "sectionName">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  // Progressive disclosure
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const fetchData = useCallback(async () => {
     try {
       const [itemsRes, vendorsRes, sectionsRes] = await Promise.all([
@@ -116,9 +125,43 @@ export default function InventoryItemsPage() {
     ? Object.fromEntries(sections.map(s => [s.slug, s.name]))
     : DEFAULT_SECTION_LABELS;
 
-  const filtered = items.filter(
-    (i) => !search || i.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const toggleSort = (key: typeof sortKey) => {
+    if (sortKey === key) {
+      setSortDir(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const getSortValue = (item: InvItem): string | number => {
+    switch (sortKey) {
+      case "vendorName": return item.vendor?.name || "zzz";
+      case "sectionName": return sectionLabels[item.inventorySection] || item.inventorySection;
+      case "name": return item.name.toLowerCase();
+      case "unitCost": return item.unitCost;
+      case "parLevel": return item.parLevel;
+      case "currentStock": return item.currentStock;
+      default: return (item[sortKey] as string | number) ?? "";
+    }
+  };
+
+  const filtered = items
+    .filter((i) => !search || i.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      const va = getSortValue(a);
+      const vb = getSortValue(b);
+      if (typeof va === "number" && typeof vb === "number") {
+        return sortDir === "asc" ? va - vb : vb - va;
+      }
+      return sortDir === "asc"
+        ? String(va).localeCompare(String(vb))
+        : String(vb).localeCompare(String(va));
+    });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const openEdit = (item: InvItem) => {
     setEditingId(item.id);
@@ -138,12 +181,15 @@ export default function InventoryItemsPage() {
       notes: item.notes || "",
       inventorySection: item.inventorySection || sections[0]?.slug || "",
     });
+    // Auto-expand advanced if any of those fields have data
+    setShowAdvanced(!!(item.sku || item.packSize || item.suggestedCadence || item.notes));
     setShowForm(true);
     setError("");
   };
 
   const openNew = () => {
     setEditingId(null);
+    setShowAdvanced(false);
     // Default to most-used section
     const sectionCounts: Record<string, number> = {};
     items.forEach((i) => { sectionCounts[i.inventorySection] = (sectionCounts[i.inventorySection] || 0) + 1; });
@@ -343,149 +389,110 @@ export default function InventoryItemsPage() {
               {error}
             </div>
           )}
+
+          {/* Essential fields */}
           <div className="grid-2" style={{ gap: 12 }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Item Name *</label>
-              <input
-                type="text"
-                className="form-input"
-                value={form.name}
+              <input type="text" className="form-input" value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. Beef Tallow"
-              />
+                placeholder="e.g. Beef Tallow" />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Vendor</label>
-              <select
-                className="form-input"
-                value={form.vendorId ?? ""}
-                onChange={(e) => setForm({ ...form, vendorId: e.target.value ? Number(e.target.value) : null })}
-              >
+              <select className="form-input" value={form.vendorId ?? ""}
+                onChange={(e) => setForm({ ...form, vendorId: e.target.value ? Number(e.target.value) : null })}>
                 <option value="">No Vendor</option>
-                {vendors.map((v) => (
-                  <option key={v.id} value={v.id}>{v.name}</option>
-                ))}
+                {vendors.map((v) => (<option key={v.id} value={v.id}>{v.name}</option>))}
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Category</label>
-              <select
-                className="form-input"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-              >
-                <option value="FOH">Front of House</option>
-                <option value="BOH">Back of House</option>
-                <option value="BOTH">Both</option>
+              <label className="form-label">Section</label>
+              <select className="form-input" value={form.inventorySection}
+                onChange={(e) => setForm({ ...form, inventorySection: e.target.value })}>
+                {sectionOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Unit</label>
-              <input
-                type="text"
-                className="form-input"
-                value={form.unit}
+              <input type="text" className="form-input" value={form.unit}
                 onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                placeholder="e.g. case, each, lb"
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Pack Size</label>
-              <input
-                type="text"
-                className="form-input"
-                value={form.packSize}
-                onChange={(e) => setForm({ ...form, packSize: e.target.value })}
-                placeholder="e.g. 50 lb case"
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">SKU</label>
-              <input
-                type="text"
-                className="form-input"
-                value={form.sku}
-                onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                placeholder="e.g. 2880383"
-              />
+                placeholder="e.g. case, each, lb" />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Unit Cost ($)</label>
-              <input
-                type="number"
-                className="form-input"
-                min="0"
-                step="0.01"
-                value={form.unitCost}
-                onChange={(e) => setForm({ ...form, unitCost: parseFloat(e.target.value) || 0 })}
-              />
+              <input type="number" className="form-input" min="0" step="0.01" value={form.unitCost}
+                onChange={(e) => setForm({ ...form, unitCost: parseFloat(e.target.value) || 0 })} />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Par Level</label>
-              <input
-                type="number"
-                className="form-input"
-                min="0"
-                step="0.5"
-                value={form.parLevel}
-                onChange={(e) => setForm({ ...form, parLevel: parseFloat(e.target.value) || 0 })}
-              />
+              <input type="number" className="form-input" min="0" step="0.5" value={form.parLevel}
+                onChange={(e) => setForm({ ...form, parLevel: parseFloat(e.target.value) || 0 })} />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Min Stock (reorder trigger)</label>
-              <input
-                type="number"
-                className="form-input"
-                min="0"
-                step="0.5"
-                value={form.minStock}
-                onChange={(e) => setForm({ ...form, minStock: parseFloat(e.target.value) || 0 })}
-              />
+              <input type="number" className="form-input" min="0" step="0.5" value={form.minStock}
+                onChange={(e) => setForm({ ...form, minStock: parseFloat(e.target.value) || 0 })} />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Current Stock</label>
-              <input
-                type="number"
-                className="form-input"
-                min="0"
-                step="0.5"
-                value={form.currentStock}
-                onChange={(e) => setForm({ ...form, currentStock: parseFloat(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Suggested Cadence</label>
-              <input
-                type="text"
-                className="form-input"
-                value={form.suggestedCadence}
-                onChange={(e) => setForm({ ...form, suggestedCadence: e.target.value })}
-                placeholder="e.g. 2-3 cases/week"
-              />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Section</label>
-              <select
-                className="form-input"
-                value={form.inventorySection}
-                onChange={(e) => setForm({ ...form, inventorySection: e.target.value })}
-              >
-                {sectionOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <input type="number" className="form-input" min="0" step="0.5" value={form.currentStock}
+                onChange={(e) => setForm({ ...form, currentStock: parseFloat(e.target.value) || 0 })} />
             </div>
           </div>
-          <div className="form-group" style={{ marginTop: 12 }}>
-            <label className="form-label">Notes</label>
-            <textarea
-              className="form-input"
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Additional notes..."
-              rows={2}
-            />
-          </div>
+
+          {/* Advanced toggle */}
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            style={{
+              marginTop: 12, background: "none", border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: 600, color: "#7C3AED", padding: "4px 0",
+            }}
+          >
+            {showAdvanced ? "▼ Hide advanced fields" : "▶ Show advanced fields"}
+          </button>
+
+          {/* Advanced fields */}
+          {showAdvanced && (
+            <div className="grid-2" style={{ gap: 12, marginTop: 12 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">SKU</label>
+                <input type="text" className="form-input" value={form.sku}
+                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                  placeholder="e.g. 2880383" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Pack Size</label>
+                <input type="text" className="form-input" value={form.packSize}
+                  onChange={(e) => setForm({ ...form, packSize: e.target.value })}
+                  placeholder="e.g. 50 lb case" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Suggested Cadence</label>
+                <input type="text" className="form-input" value={form.suggestedCadence}
+                  onChange={(e) => setForm({ ...form, suggestedCadence: e.target.value })}
+                  placeholder="e.g. 2-3 cases/week" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Category</label>
+                <select className="form-input" value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <option value="FOH">Front of House</option>
+                  <option value="BOH">Back of House</option>
+                  <option value="BOTH">Both</option>
+                </select>
+              </div>
+            </div>
+          )}
+          {showAdvanced && (
+            <div className="form-group" style={{ marginTop: 12 }}>
+              <label className="form-label">Notes</label>
+              <textarea className="form-input" value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="Additional notes..." rows={2} />
+            </div>
+          )}
+
           <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button className="btn btn-secondary btn-sm" onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
             <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
@@ -502,7 +509,7 @@ export default function InventoryItemsPage() {
           className="form-input"
           placeholder="Search items..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
       </div>
 
@@ -512,18 +519,31 @@ export default function InventoryItemsPage() {
           <table>
             <thead>
               <tr>
-                <th>Item</th>
-                <th>Vendor</th>
-                <th>Section</th>
-                <th>Category</th>
-                <th>Unit Cost</th>
-                <th>Par</th>
-                <th>On Hand</th>
+                {([
+                  { key: "name", label: "Item" },
+                  { key: "vendorName", label: "Vendor" },
+                  { key: "sectionName", label: "Section" },
+                  { key: "category", label: "Category" },
+                  { key: "unitCost", label: "Unit Cost" },
+                  { key: "parLevel", label: "Par" },
+                  { key: "currentStock", label: "On Hand" },
+                ] as const).map(col => (
+                  <th
+                    key={col.key}
+                    onClick={() => toggleSort(col.key)}
+                    style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+                  >
+                    {col.label}
+                    {sortKey === col.key && (
+                      <span style={{ marginLeft: 2 }}>{sortDir === "asc" ? "▲" : "▼"}</span>
+                    )}
+                  </th>
+                ))}
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
+              {paginated.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="font-medium text-sm">{item.name}</div>
@@ -557,7 +577,7 @@ export default function InventoryItemsPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {paginated.length === 0 && (
                 <tr><td colSpan={8}><div className="empty-state">No items found</div></td></tr>
               )}
             </tbody>
@@ -566,7 +586,7 @@ export default function InventoryItemsPage() {
 
         {/* Items list — Mobile cards */}
         <div className="inv-cards-mobile">
-          {filtered.map((item) => {
+          {paginated.map((item) => {
             const isLow = item.parLevel > 0 && item.currentStock <= item.minStock && item.minStock > 0;
             return (
               <div
@@ -633,6 +653,46 @@ export default function InventoryItemsPage() {
           {filtered.length === 0 && (
             <div className="empty-state">No items found</div>
           )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0", flexWrap: "wrap" }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              ← Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                style={{
+                  minWidth: 32, height: 32, borderRadius: 6, border: "none",
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  background: p === currentPage ? "#7C3AED" : "#F3F4F6",
+                  color: p === currentPage ? "#fff" : "#6B7280",
+                }}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+
+        {/* Item count footer */}
+        <div style={{ textAlign: "center", padding: "8px 0 0", fontSize: 12, color: "#9CA3AF" }}>
+          Showing {paginated.length} of {filtered.length} item{filtered.length !== 1 ? "s" : ""}
+          {search && ` matching "${search}"`}
         </div>
       </div>
 

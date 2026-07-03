@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getTenantId, getSessionContext } from "@/lib/tenant";
+import { roundToPackSize } from "@/lib/packSize";
 import { z } from "zod";
 
 // GET /api/inventory/counts — list counts (most recent first)
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
       },
       include: {
         counter: { select: { id: true, name: true } },
-        lines: { include: { inventoryItem: { select: { id: true, name: true, unit: true, parLevel: true } } } },
+        lines: { include: { inventoryItem: { select: { id: true, name: true, unit: true, parLevel: true, packSize: true } } } },
       },
     });
   } else {
@@ -100,15 +101,19 @@ export async function POST(request: Request) {
       },
       include: {
         counter: { select: { id: true, name: true } },
-        lines: { include: { inventoryItem: { select: { id: true, name: true, unit: true, parLevel: true } } } },
+        lines: { include: { inventoryItem: { select: { id: true, name: true, unit: true, parLevel: true, packSize: true } } } },
       },
     });
   }
 
-  // Calculate amountToOrder = parLevel - onHand (if positive)
+  // Calculate amountToOrder = roundToPackSize(parLevel - onHand)
   for (const line of count.lines) {
     const parLevel = line.inventoryItem.parLevel;
-    const amountToOrder = Math.max(0, parLevel - line.onHand);
+    const rawAmount = Math.max(0, parLevel - line.onHand);
+    const { qty: amountToOrder } = roundToPackSize(
+      rawAmount,
+      line.inventoryItem.packSize ?? null,
+    );
     await prisma.inventoryCountLine.update({
       where: { id: line.id },
       data: { amountToOrder },

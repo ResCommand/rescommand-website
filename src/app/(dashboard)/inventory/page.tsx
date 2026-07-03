@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import IconPicker from "@/components/IconPicker";
+import { roundToPackSize } from "@/lib/packSize";
 
 interface Vendor {
   id: number;
@@ -237,7 +238,9 @@ export default function InventoryPage() {
     const par = getPar(i);
     if (par === 0) return sum;
     const onHand = lines.get(i.id) ?? i.currentStock;
-    return sum + Math.max(0, par - onHand);
+    const raw = Math.max(0, par - onHand);
+    const { qty } = roundToPackSize(raw, i.packSize);
+    return sum + qty;
   }, 0);
 
   const toggleSection = (section: string) => {
@@ -354,6 +357,9 @@ export default function InventoryPage() {
             </Link>
             <Link href="/inventory/history" className="btn btn-secondary btn-sm">
               📜 History
+            </Link>
+            <Link href="/inventory/valuation" className="btn btn-secondary btn-sm">
+              💰 Valuation
             </Link>
           </div>
         </div>
@@ -514,7 +520,8 @@ export default function InventoryPage() {
                       {section.items.map((item) => {
                         const par = getPar(item);
                         const onHand = lines.get(item.id) ?? item.currentStock;
-                        const toOrder = par > 0 ? Math.max(0, par - onHand) : 0;
+                        const rawToOrder = par > 0 ? Math.max(0, par - onHand) : 0;
+                        const { qty: toOrder, cases, rounded } = roundToPackSize(rawToOrder, item.packSize);
                         const isLow = par > 0 && onHand <= item.minStock && item.minStock > 0;
                         const dimmed = par === 0;
                         return (
@@ -570,7 +577,14 @@ export default function InventoryPage() {
                             </td>
                             <td>
                               {toOrder > 0 ? (
-                                <span className="badge badge-orange">{toOrder} {item.unit}</span>
+                                <div>
+                                  <span className="badge badge-orange">{toOrder} {item.unit}</span>
+                                  {cases && rounded && (
+                                    <div className="text-xs text-gray" style={{ marginTop: 2 }}>
+                                      {cases} case{cases !== 1 ? "s" : ""}
+                                    </div>
+                                  )}
+                                </div>
                               ) : dimmed ? (
                                 <span className="text-xs text-gray" style={{ fontStyle: "italic" }}>off</span>
                               ) : (

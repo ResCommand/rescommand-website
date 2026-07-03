@@ -658,3 +658,64 @@ tr:hover td { background: #FAFAFC; }
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* === Slide-over Edit Drawer === */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 200;
+  display: flex;
+  justify-content: flex-end;
+  animation: drawer-fade-in 0.2s ease;
+}
+.drawer-panel {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+  animation: drawer-slide-in 0.25s ease;
+  overflow: hidden;
+}
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rc-border);
+  flex-shrink: 0;
+}
+.drawer-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--rc-text);
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.drawer-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid var(--rc-border);
+  flex-shrink: 0;
+  background: #FAFAFC;
+}
+@keyframes drawer-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes drawer-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@media (max-width: 768px) {
+  .drawer-panel { max-width: 100%; }
+}

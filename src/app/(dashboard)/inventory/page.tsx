@@ -83,6 +83,75 @@ export default function InventoryPage() {
   const [genOrdersLoading, setGenOrdersLoading] = useState(false);
   const [genOrdersResult, setGenOrdersResult] = useState<{ created: number; skipped: number } | null>(null);
 
+  // Slide-over edit drawer state
+  const [editDrawerItem, setEditDrawerItem] = useState<InvItem | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "", category: "BOH", unit: "case", unitCost: 0, parLevel: 0,
+    minStock: 0, packSize: "", sku: "", notes: "",
+    suggestedCadence: "", vendorId: null as number | null,
+    inventorySection: "kitchen_regular",
+  });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [showEditAdvanced, setShowEditAdvanced] = useState(false);
+
+  const openEditDrawer = (item: InvItem) => {
+    setEditDrawerItem(item);
+    setEditForm({
+      name: item.name, category: item.category, unit: item.unit,
+      unitCost: item.unitCost, parLevel: item.parLevel, minStock: item.minStock,
+      packSize: item.packSize || "", sku: item.sku || "", notes: item.notes || "",
+      suggestedCadence: item.suggestedCadence || "", vendorId: item.vendor?.id ?? null,
+      inventorySection: item.inventorySection || "kitchen_regular",
+    });
+    setShowEditAdvanced(!!(item.sku || item.packSize || item.suggestedCadence || item.notes));
+    setEditError("");
+  };
+
+  const closeEditDrawer = () => {
+    setEditDrawerItem(null);
+    setEditError("");
+  };
+
+  const saveEditDrawer = async () => {
+    if (!editDrawerItem) return;
+    if (!editForm.name.trim()) { setEditError("Name is required"); return; }
+    setEditSaving(true);
+    setEditError("");
+    try {
+      const res = await fetch("/api/inventory", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editDrawerItem.id,
+          name: editForm.name.trim(),
+          category: editForm.category,
+          unit: editForm.unit,
+          unitCost: editForm.unitCost,
+          parLevel: editForm.parLevel,
+          minStock: editForm.minStock,
+          packSize: editForm.packSize || null,
+          sku: editForm.sku || null,
+          notes: editForm.notes || null,
+          suggestedCadence: editForm.suggestedCadence || null,
+          vendorId: editForm.vendorId,
+          inventorySection: editForm.inventorySection,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save");
+      }
+      toast.success("Updated");
+      setEditDrawerItem(null);
+      loadData();
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   // Weekly count state
   const [lines, setLines] = useState<Map<number, number>>(new Map());
   const [date, setDate] = useState<string>(formatDateISO(getMonday(new Date())));
@@ -549,6 +618,7 @@ export default function InventoryPage() {
                         <th style={{ width: 120 }}>Par Level</th>
                         <th style={{ width: 130 }}>To Order</th>
                         <th style={{ width: 90 }}>Status</th>
+                        <th style={{ width: 50 }}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -631,6 +701,15 @@ export default function InventoryPage() {
                                 <span className="inv-status-off">—</span>
                               )}
                             </td>
+                            <td>
+                              <button
+                                className="btn-icon"
+                                onClick={() => openEditDrawer(item)}
+                                title="Edit item"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
@@ -656,6 +735,14 @@ export default function InventoryPage() {
                           <div className="inv-item-name" style={{ flex: 1, marginRight: 4, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {item.name}
                           </div>
+                          <button
+                            className="btn-icon"
+                            onClick={() => openEditDrawer(item)}
+                            title="Edit item"
+                            style={{ flexShrink: 0 }}
+                          >
+                            <Pencil size={14} />
+                          </button>
                           {isLow && <span className="inv-status-low">Low</span>}
                           {toOrder > 0 && !isLow && <span className="inv-status-order">+{toOrder} {item.unit}</span>}
                           {!isLow && toOrder === 0 && par > 0 && <span className="inv-status-ok">✓</span>}
@@ -914,6 +1001,127 @@ export default function InventoryPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Slide-over Edit Drawer */}
+      {editDrawerItem && (
+        <div className="drawer-backdrop" onClick={closeEditDrawer}>
+          <div className="drawer-panel" onClick={e => e.stopPropagation()}>
+            <div className="drawer-header">
+              <h2>Edit Item</h2>
+              <button className="btn-icon" onClick={closeEditDrawer} title="Close">✕</button>
+            </div>
+            <div className="drawer-body">
+              {editError && (
+                <div style={{ background: "#FEF2F2", color: "#DC2626", padding: 10, borderRadius: 6, fontSize: 13, marginBottom: 12 }}>
+                  {editError}
+                </div>
+              )}
+              <div className="grid-2" style={{ gap: 16 }}>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Item Name *</label>
+                  <input type="text" className="form-input" value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Vendor</label>
+                  <select className="form-input" value={editForm.vendorId ?? ""}
+                    onChange={(e) => setEditForm({ ...editForm, vendorId: e.target.value ? Number(e.target.value) : null })}>
+                    <option value="">No Vendor</option>
+                    {vendors.map(v => (<option key={v.id} value={v.id}>{v.name}</option>))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Section</label>
+                  <select className="form-input" value={editForm.inventorySection}
+                    onChange={(e) => setEditForm({ ...editForm, inventorySection: e.target.value })}>
+                    {sections.map(s => (<option key={s.id} value={s.slug}>{s.icon} {s.name}</option>))}
+                    <option value="kitchen_regular">Kitchen Regular</option>
+                    <option value="kitchen_infrequent">Kitchen Infrequent</option>
+                    <option value="packaging">Packaging</option>
+                    <option value="barista">Barista</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Unit</label>
+                  <input type="text" className="form-input" value={editForm.unit}
+                    onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Unit Cost ($)</label>
+                  <input type="number" className="form-input" min="0" step="0.01" value={editForm.unitCost}
+                    onChange={(e) => setEditForm({ ...editForm, unitCost: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Par Level</label>
+                  <input type="number" className="form-input" min="0" step="0.5" value={editForm.parLevel}
+                    onChange={(e) => setEditForm({ ...editForm, parLevel: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Min Stock (reorder trigger)</label>
+                  <input type="number" className="form-input" min="0" step="0.5" value={editForm.minStock}
+                    onChange={(e) => setEditForm({ ...editForm, minStock: parseFloat(e.target.value) || 0 })} />
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowEditAdvanced(!showEditAdvanced)}
+                style={{
+                  marginTop: 4, background: "none", border: "none", cursor: "pointer",
+                  fontSize: 13, fontWeight: 600, color: "#7C3AED", padding: "4px 0",
+                }}
+              >
+                {showEditAdvanced ? "▼ Hide advanced fields" : "▶ Show advanced fields"}
+              </button>
+
+              {showEditAdvanced && (
+                <div className="grid-2" style={{ gap: 16, marginTop: 16 }}>
+                  <div className="form-group" style={{ marginBottom: 16 }}>
+                    <label className="form-label">SKU</label>
+                    <input type="text" className="form-input" value={editForm.sku}
+                      onChange={(e) => setEditForm({ ...editForm, sku: e.target.value })}
+                      placeholder="e.g. 2880383" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 16 }}>
+                    <label className="form-label">Pack Size</label>
+                    <input type="text" className="form-input" value={editForm.packSize}
+                      onChange={(e) => setEditForm({ ...editForm, packSize: e.target.value })}
+                      placeholder="e.g. 50 lb case" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 16 }}>
+                    <label className="form-label">Suggested Cadence</label>
+                    <input type="text" className="form-input" value={editForm.suggestedCadence}
+                      onChange={(e) => setEditForm({ ...editForm, suggestedCadence: e.target.value })}
+                      placeholder="e.g. 2-3 cases/week" />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 16 }}>
+                    <label className="form-label">Category</label>
+                    <select className="form-input" value={editForm.category}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}>
+                      <option value="FOH">Front of House</option>
+                      <option value="BOH">Back of House</option>
+                      <option value="BOTH">Both</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+              {showEditAdvanced && (
+                <div className="form-group" style={{ marginTop: 0, marginBottom: 0 }}>
+                  <label className="form-label">Notes</label>
+                  <textarea className="form-input" value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    placeholder="Additional notes..." rows={3} />
+                </div>
+              )}
+            </div>
+            <div className="drawer-footer">
+              <button className="btn btn-secondary btn-sm" onClick={closeEditDrawer}>Cancel</button>
+              <button className="btn btn-primary btn-sm" onClick={saveEditDrawer} disabled={editSaving}>
+                {editSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
           </div>
         </div>
       )}

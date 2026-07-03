@@ -206,6 +206,8 @@ export default function InventoryPage() {
     else inputRefs.current.delete(key);
   }, []);
 
+  const initialLoadDone = useRef(false);
+
   const loadData = () => {
     Promise.all([
       fetch("/api/inventory/vendors").then((r) => r.json()),
@@ -219,9 +221,10 @@ export default function InventoryPage() {
         setVendors(vendorArr);
         setItems(itemArr);
         setSections(secArr);
-        if (secArr.length > 0) {
-          const firstSlug = secArr[0].slug;
-          setCollapsed(new Set(secArr.slice(1).map((sec: Section) => sec.slug)));
+        // Only set collapsed state on first load — all collapsed by default
+        if (!initialLoadDone.current) {
+          setCollapsed(new Set(secArr.map((sec: Section) => sec.slug)));
+          initialLoadDone.current = true;
         }
         const m = new Map<number, number>();
         itemArr.forEach((item: InvItem) => m.set(item.id, item.currentStock));

@@ -646,3 +646,15 @@ tr:hover td { background: #FAFAFC; }
   background: #F3F4F6;
   color: #9CA3AF;
 }
+
+/* Items page — section group header row */
+.inv-items-section-row td {
+  background: var(--rc-primary-light) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--rc-primary-dark) !important;
+  padding: 8px 14px !important;
+  border-bottom: 1px solid var(--rc-border) !important;
+  text-transform: none;
+  letter-spacing: 0;
+}

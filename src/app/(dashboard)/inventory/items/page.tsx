@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Fragment } from "react";
 import Link from "next/link";
 import ImportModal from "@/components/ImportModal";
 import InventoryNav from "@/components/inventory/InventoryNav";
@@ -84,7 +84,7 @@ export default function InventoryItemsPage() {
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Sorting + pagination
-  const [sortKey, setSortKey] = useState<keyof InvItem | "vendorName" | "sectionName">("name");
+  const [sortKey, setSortKey] = useState<keyof InvItem | "vendorName" | "sectionName">("sectionName");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
@@ -160,6 +160,15 @@ export default function InventoryItemsPage() {
   const filtered = items
     .filter((i) => !search || i.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
+      // Primary sort: always group by section (in section order)
+      const sectionOrder = sections.map(s => s.slug);
+      const sa = sectionOrder.indexOf(a.inventorySection || "kitchen_regular");
+      const sb = sectionOrder.indexOf(b.inventorySection || "kitchen_regular");
+      const saIdx = sa === -1 ? 999 : sa;
+      const sbIdx = sb === -1 ? 999 : sb;
+      if (saIdx !== sbIdx) return saIdx - sbIdx;
+
+      // Secondary sort: user's chosen column
       const va = getSortValue(a);
       const vb = getSortValue(b);
       if (typeof va === "number" && typeof vb === "number") {
@@ -553,40 +562,54 @@ export default function InventoryItemsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginated.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="font-medium text-sm">{item.name}</div>
-                    {item.sku && <div className="text-xs text-gray">SKU: {item.sku}</div>}
-                  </td>
-                  <td><span className="badge badge-blue">{item.vendor?.name || "—"}</span></td>
-                  <td>
-                    <span className="text-xs">{sectionLabels[item.inventorySection] || item.inventorySection}</span>
-                  </td>
-                  <td className="text-sm">{item.category}</td>
-                  <td className="text-sm">{item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}</td>
-                  <td className="text-sm">{item.parLevel}</td>
-                  <td className="text-sm">{item.currentStock} {item.unit}</td>
-                  <td>
-                    <div className="flex gap-1">
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => openEdit(item)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => handleDelete(item)}
-                        style={{ color: "#DC2626" }}
-                        title="Delete"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {paginated.map((item, idx) => {
+                const prevSection = idx > 0 ? paginated[idx - 1].inventorySection : null;
+                const showSectionHeader = idx === 0 || prevSection !== item.inventorySection;
+                const secInfo = sections.find(s => s.slug === item.inventorySection);
+                return (
+                  <Fragment key={item.id}>
+                    {showSectionHeader && (
+                      <tr className="inv-items-section-row">
+                        <td colSpan={8}>
+                          {secInfo ? `${secInfo.icon} ${secInfo.name}` : item.inventorySection}
+                        </td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td>
+                        <div className="font-medium text-sm">{item.name}</div>
+                        {item.sku && <div className="text-xs text-gray">SKU: {item.sku}</div>}
+                      </td>
+                      <td><span className="badge badge-blue">{item.vendor?.name || "—"}</span></td>
+                      <td>
+                        <span className="text-xs">{sectionLabels[item.inventorySection] || item.inventorySection}</span>
+                      </td>
+                      <td className="text-sm">{item.category}</td>
+                      <td className="text-sm">{item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}</td>
+                      <td className="text-sm">{item.parLevel}</td>
+                      <td className="text-sm">{item.currentStock} {item.unit}</td>
+                      <td>
+                        <div className="flex gap-1">
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => openEdit(item)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => handleDelete(item)}
+                            style={{ color: "#DC2626" }}
+                            title="Delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </Fragment>
+                );
+              })}
               {paginated.length === 0 && (
                 <tr><td colSpan={8}><div className="empty-state">No items found</div></td></tr>
               )}

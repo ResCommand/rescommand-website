@@ -18,120 +18,123 @@ enum Role {
 // ─── Platform: Multi-Tenancy ─────────────────────────────────
 
 model Tenant {
-  id              Int       @id @default(autoincrement())
-  name            String
-  slug            String    @unique                    // e.g. "duffersdonutshop"
-  domain          String?   @unique                    // Custom domain e.g. "ops.duffersdonutshop.com"
-  businessType    String    @default("DONUT_SHOP")     // DONUT_SHOP, BAKERY, CAFE, RESTAURANT, BAR, FOOD_TRUCK
-  plan            String    @default("STARTER")        // FREE, STARTER, PROFESSIONAL, ENTERPRISE
-  stripeCustomerId String?  @map("stripe_customer_id")
+  id               Int       @id @default(autoincrement())
+  name             String
+  slug             String    @unique // e.g. "duffersdonutshop"
+  domain           String?   @unique // Custom domain e.g. "ops.duffersdonutshop.com"
+  businessType     String    @default("DONUT_SHOP") // DONUT_SHOP, BAKERY, CAFE, RESTAURANT, BAR, FOOD_TRUCK
+  plan             String    @default("STARTER") // FREE, STARTER, PROFESSIONAL, ENTERPRISE
+  stripeCustomerId String?   @map("stripe_customer_id")
   trialEndsAt      DateTime? @map("trial_ends_at")
-  active          Boolean   @default(true)
-  logoUrl         String?   @map("logo_url")
-  primaryColor    String?   @map("primary_color") @default("#1A56DB")
-  settings        Json?
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  active           Boolean   @default(true)
+  logoUrl          String?   @map("logo_url")
+  primaryColor     String?   @default("#1A56DB") @map("primary_color")
+  settings         Json?
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  members         TenantUser[]
-  subscription    TenantSubscription?
-  employeeCategories    EmployeeCategory[]
-  productCategories     ProductCategory[]
-  products              Product[]
-  productIngredients    ProductIngredient[]
-  transactions          Transaction[]
-  transactionLines      TransactionLine[]
-  drinkLogs             DrinkLog[]
-  donutLogs             DonutLog[]
-  vendors               Vendor[]
-  inventoryItems        InventoryItem[]
-  inventoryOrders       InventoryOrder[]
-  inventoryOrderLines   InventoryOrderLine[]
-  inventoryCounts       InventoryCount[]
-  inventoryCountLines   InventoryCountLine[]
-  inventorySections     InventorySection[]
-  orderRequests         OrderRequest[]
-  holidaySchedules      HolidaySchedule[]
-  weatherCache          WeatherCache[]
-  parSheets             ParSheet[]
-  parSheetLines         ParSheetLine[]
-  predictionModels      PredictionModel[]
-  overboardSchedules    OverboardSchedule[]
-  overboardLines        OverboardLine[]
-  cleaningTasks         CleaningTask[]
-  cleaningLogs          CleaningLog[]
-  maintenanceLogs       MaintenanceLog[]
-  employeeHours         EmployeeHour[]
-  sops                  Sop[]
-  dashboardLayouts      DashboardLayout[]
-  espressoDialLogs      EspressoDialLog[]
-  recipeCategories      RecipeCategory[]
-  recipes               Recipe[]
+  members                   TenantUser[]
+  subscription              TenantSubscription?
+  employeeCategories        EmployeeCategory[]
+  productCategories         ProductCategory[]
+  products                  Product[]
+  productIngredients        ProductIngredient[]
+  transactions              Transaction[]
+  transactionLines          TransactionLine[]
+  drinkLogs                 DrinkLog[]
+  donutLogs                 DonutLog[]
+  vendors                   Vendor[]
+  inventoryItems            InventoryItem[]
+  inventoryOrders           InventoryOrder[]
+  inventoryOrderLines       InventoryOrderLine[]
+  inventoryCounts           InventoryCount[]
+  inventoryCountLines       InventoryCountLine[]
+  inventorySections         InventorySection[]
+  orderRequests             OrderRequest[]
+  holidaySchedules          HolidaySchedule[]
+  weatherCache              WeatherCache[]
+  parSheets                 ParSheet[]
+  parSheetLines             ParSheetLine[]
+  predictionModels          PredictionModel[]
+  overboardSchedules        OverboardSchedule[]
+  overboardLines            OverboardLine[]
+  cleaningTasks             CleaningTask[]
+  cleaningLogs              CleaningLog[]
+  maintenanceLogs           MaintenanceLog[]
+  employeeHours             EmployeeHour[]
+  sops                      Sop[]
+  dashboardLayouts          DashboardLayout[]
+  espressoDialLogs          EspressoDialLog[]
+  recipeCategories          RecipeCategory[]
+  recipes                   Recipe[]
   productionTargetOverrides ProductionTargetOverride[]
-  batchCompletions      BatchCompletion[]
-  trayOverrides         TrayOverride[]
-  prepItems             PrepItem[]
-  notifications         Notification[]
-  notificationReads     NotificationRead[]
-  notificationRecipients NotificationRecipient[]
-  shifts                Shift[]
-  availabilityBlocks    AvailabilityBlock[]
-  timeOffRequests       TimeOffRequest[]
-  scheduleTemplates     ScheduleTemplate[]
-  templateShifts        TemplateShift[]
-  moduleConfigs         ModuleConfig[]
-  greenCoffees          GreenCoffee[]
-  roastProfiles         RoastProfile[]
-  roastLogs             RoastLog[]
-  menuTasks             MenuTask[]
-  socialPosts           SocialPost[]
+  batchCompletions          BatchCompletion[]
+  trayOverrides             TrayOverride[]
+  prepItems                 PrepItem[]
+  notifications             Notification[]
+  notificationReads         NotificationRead[]
+  notificationRecipients    NotificationRecipient[]
+  shifts                    Shift[]
+  availabilityBlocks        AvailabilityBlock[]
+  timeOffRequests           TimeOffRequest[]
+  scheduleTemplates         ScheduleTemplate[]
+  templateShifts            TemplateShift[]
+  moduleConfigs             ModuleConfig[]
+  greenCoffees              GreenCoffee[]
+  roastProfiles             RoastProfile[]
+  roastLogs                 RoastLog[]
+  menuTasks                 MenuTask[]
+  socialPosts               SocialPost[]
+  SandwichType              SandwichType[]
+  SandwichSchedule          SandwichSchedule[]
+  SandwichRecipe            SandwichRecipe[]
 
   @@map("tenants")
 }
 
 model TenantUser {
-  id          Int       @id @default(autoincrement())
-  tenantId    Int       @map("tenant_id")
-  userId      Int       @map("user_id")
-  role        Role      @default(EMPLOYEE)
-  invitedBy   Int?      @map("invited_by")
-  acceptedAt  DateTime? @map("accepted_at")
-  active      Boolean   @default(true)
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id         Int       @id @default(autoincrement())
+  tenantId   Int       @map("tenant_id")
+  userId     Int       @map("user_id")
+  role       Role      @default(EMPLOYEE)
+  invitedBy  Int?      @map("invited_by")
+  acceptedAt DateTime? @map("accepted_at")
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now()) @map("created_at")
 
-  tenant      Tenant    @relation(fields: [tenantId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-  inviter     User?     @relation("TenantInviter", fields: [invitedBy], references: [id])
+  tenant  Tenant @relation(fields: [tenantId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
+  inviter User?  @relation("TenantInviter", fields: [invitedBy], references: [id])
 
   @@unique([tenantId, userId])
   @@map("tenant_users")
 }
 
 model TenantSubscription {
-  id                  Int      @id @default(autoincrement())
-  tenantId            Int      @unique @map("tenant_id")
-  stripeSubscriptionId String  @map("stripe_subscription_id")
-  stripePriceId       String   @map("stripe_price_id")
-  status              String   @default("active")    // active, past_due, canceled, trialing
-  currentPeriodStart  DateTime @map("current_period_start")
-  currentPeriodEnd    DateTime @map("current_period_end")
-  cancelAtPeriodEnd   Boolean  @default(false) @map("cancel_at_period_end")
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  id                   Int      @id @default(autoincrement())
+  tenantId             Int      @unique @map("tenant_id")
+  stripeSubscriptionId String   @map("stripe_subscription_id")
+  stripePriceId        String   @map("stripe_price_id")
+  status               String   @default("active") // active, past_due, canceled, trialing
+  currentPeriodStart   DateTime @map("current_period_start")
+  currentPeriodEnd     DateTime @map("current_period_end")
+  cancelAtPeriodEnd    Boolean  @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
-  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("tenant_subscriptions")
 }
 
 model EmployeeCategory {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id        Int      @id @default(autoincrement())
-name      String
-  color     String   @default("#6B7280")
-  sortOrder Int      @default(0) @map("sort_order")
-  active    Boolean   @default(true)
+  tenantId  Int     @default(1) @map("tenant_id")
+  tenant    Tenant  @relation(fields: [tenantId], references: [id])
+  id        Int     @id @default(autoincrement())
+  name      String
+  color     String  @default("#6B7280")
+  sortOrder Int     @default(0) @map("sort_order")
+  active    Boolean @default(true)
   members   User[]
 
   @@unique([tenantId, name])
@@ -139,49 +142,49 @@ name      String
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  email           String    @unique
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
   name            String
-  passwordHash    String    @map("password_hash")
-  role            Role      @default(EMPLOYEE)
+  passwordHash    String   @map("password_hash")
+  role            Role     @default(EMPLOYEE)
   phone           String?
-  active          Boolean   @default(true)
-  isPlatformAdmin Boolean   @default(false) @map("is_platform_admin")
-  categoryId      Int?      @map("category_id")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  active          Boolean  @default(true)
+  isPlatformAdmin Boolean  @default(false) @map("is_platform_admin")
+  categoryId      Int?     @map("category_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  category          EmployeeCategory?   @relation(fields: [categoryId], references: [id])
-  transactions      Transaction[]
-  drinkLogs         DrinkLog[]
-  donutLogs         DonutLog[]
-  employeeHours     EmployeeHour[]
-  cleaningLogs      CleaningLog[]
-  maintenanceLogs   MaintenanceLog[]    @relation("MaintenanceCreator")
-  maintenanceResolver MaintenanceLog[]  @relation("MaintenanceResolver")
-  inventoryOrders   InventoryOrder[]
-  sopsCreated       Sop[]              @relation("SopCreator")
-  sopsUpdated       Sop[]              @relation("SopUpdater")
-  dashboardLayout   DashboardLayout?
-  espressoDials     EspressoDialLog[]
-  inventoryCounts   InventoryCount[]
-  orderRequests     OrderRequest[]     @relation("OrderRequester")
-  orderReviews      OrderRequest[]     @relation("OrderRequestReviewer")
-  batchCompletions  BatchCompletion[]
-  sentNotifications Notification[]     @relation("NotificationSender")
-  notificationReads NotificationRead[]
+  category               EmployeeCategory?       @relation(fields: [categoryId], references: [id])
+  transactions           Transaction[]
+  drinkLogs              DrinkLog[]
+  donutLogs              DonutLog[]
+  employeeHours          EmployeeHour[]
+  cleaningLogs           CleaningLog[]
+  maintenanceLogs        MaintenanceLog[]        @relation("MaintenanceCreator")
+  maintenanceResolver    MaintenanceLog[]        @relation("MaintenanceResolver")
+  inventoryOrders        InventoryOrder[]
+  sopsCreated            Sop[]                   @relation("SopCreator")
+  sopsUpdated            Sop[]                   @relation("SopUpdater")
+  dashboardLayout        DashboardLayout?
+  espressoDials          EspressoDialLog[]
+  inventoryCounts        InventoryCount[]
+  orderRequests          OrderRequest[]          @relation("OrderRequester")
+  orderReviews           OrderRequest[]          @relation("OrderRequestReviewer")
+  batchCompletions       BatchCompletion[]
+  sentNotifications      Notification[]          @relation("NotificationSender")
+  notificationReads      NotificationRead[]
   notificationRecipients NotificationRecipient[]
-  shifts              Shift[]
-  availabilityBlocks  AvailabilityBlock[]
-  timeOffRequests     TimeOffRequest[]
-  timeOffReviewed     TimeOffRequest[]    @relation("TimeOffReviewer")
-  templateShifts      TemplateShift[]
-  roastLogs           RoastLog[]         @relation("RoastPerformer")
-  menuTaskAssignments MenuTask[]         @relation("MenuTaskAssignee")
-  socialPostsCreated  SocialPost[]       @relation("SocialPostCreator")
-  socialPostsApproved SocialPost[]       @relation("SocialPostApprover")
-  tenantMemberships   TenantUser[]
-  tenantInvites       TenantUser[]       @relation("TenantInviter")
+  shifts                 Shift[]
+  availabilityBlocks     AvailabilityBlock[]
+  timeOffRequests        TimeOffRequest[]
+  timeOffReviewed        TimeOffRequest[]        @relation("TimeOffReviewer")
+  templateShifts         TemplateShift[]
+  roastLogs              RoastLog[]              @relation("RoastPerformer")
+  menuTaskAssignments    MenuTask[]              @relation("MenuTaskAssignee")
+  socialPostsCreated     SocialPost[]            @relation("SocialPostCreator")
+  socialPostsApproved    SocialPost[]            @relation("SocialPostApprover")
+  tenantMemberships      TenantUser[]
+  tenantInvites          TenantUser[]            @relation("TenantInviter")
 
   @@map("users")
 }
@@ -189,13 +192,13 @@ model User {
 // ─── Products ────────────────────────────────────────────────
 
 model ProductCategory {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id        Int              @id @default(autoincrement())
-  name      String
-  type      ProductType
-  fohBoh    FohBoh           @default(BOTH) @map("foh_boh")
-  products  Product[]
+  tenantId Int         @default(1) @map("tenant_id")
+  tenant   Tenant      @relation(fields: [tenantId], references: [id])
+  id       Int         @id @default(autoincrement())
+  name     String
+  type     ProductType
+  fohBoh   FohBoh      @default(BOTH) @map("foh_boh")
+  products Product[]
 
   @@map("product_categories")
 }
@@ -215,33 +218,33 @@ enum FohBoh {
 }
 
 model Product {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id          Int              @id @default(autoincrement())
+  tenantId    Int             @default(1) @map("tenant_id")
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
+  id          Int             @id @default(autoincrement())
   name        String
-  categoryId  Int              @map("category_id")
+  categoryId  Int             @map("category_id")
   description String?
-  price       Float            @default(0)
-  cost        Float            @default(0)
-  active      Boolean          @default(true)
-  category    ProductCategory  @relation(fields: [categoryId], references: [id])
+  price       Float           @default(0)
+  cost        Float           @default(0)
+  active      Boolean         @default(true)
+  category    ProductCategory @relation(fields: [categoryId], references: [id])
 
-  ingredients     ProductIngredient[]
+  ingredients      ProductIngredient[]
   transactionLines TransactionLine[]
-  donutLogs       DonutLog[]
-  parSheetLines   ParSheetLine[]
-  overboardLines  OverboardLine[]
+  donutLogs        DonutLog[]
+  parSheetLines    ParSheetLine[]
+  overboardLines   OverboardLine[]
 
   @@map("products")
 }
 
 model ProductIngredient {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id              Int           @id @default(autoincrement())
-  productId       Int           @map("product_id")
-  inventoryItemId Int           @map("inventory_item_id")
-  quantityUsed    Float         @default(0) @map("quantity_used")
+  tenantId        Int    @default(1) @map("tenant_id")
+  tenant          Tenant @relation(fields: [tenantId], references: [id])
+  id              Int    @id @default(autoincrement())
+  productId       Int    @map("product_id")
+  inventoryItemId Int    @map("inventory_item_id")
+  quantityUsed    Float  @default(0) @map("quantity_used")
 
   product       Product       @relation(fields: [productId], references: [id])
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
@@ -252,14 +255,14 @@ model ProductIngredient {
 // ─── Sales & Logging ────────────────────────────────────────
 
 model Transaction {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id            Int              @id @default(autoincrement())
-  userId        Int              @map("user_id")
-  totalAmount   Float            @map("total_amount") @default(0)
-  paymentMethod PaymentMethod?   @map("payment_method")
+  tenantId      Int            @default(1) @map("tenant_id")
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  id            Int            @id @default(autoincrement())
+  userId        Int            @map("user_id")
+  totalAmount   Float          @default(0) @map("total_amount")
+  paymentMethod PaymentMethod? @map("payment_method")
   notes         String?
-  createdAt     DateTime         @default(now()) @map("created_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
 
   user  User              @relation(fields: [userId], references: [id])
   lines TransactionLine[]
@@ -274,15 +277,15 @@ enum PaymentMethod {
 }
 
 model TransactionLine {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id            Int        @id @default(autoincrement())
-  transactionId Int        @map("transaction_id")
-  productId     Int?       @map("product_id")
-  productName   String     @map("product_name")
-  quantity      Int        @default(1)
-  unitPrice     Float      @map("unit_price") @default(0)
-  total         Float      @default(0)
+  tenantId      Int    @default(1) @map("tenant_id")
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  id            Int    @id @default(autoincrement())
+  transactionId Int    @map("transaction_id")
+  productId     Int?   @map("product_id")
+  productName   String @map("product_name")
+  quantity      Int    @default(1)
+  unitPrice     Float  @default(0) @map("unit_price")
+  total         Float  @default(0)
 
   transaction Transaction @relation(fields: [transactionId], references: [id])
   product     Product?    @relation(fields: [productId], references: [id])
@@ -291,18 +294,18 @@ model TransactionLine {
 }
 
 model DrinkLog {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id             Int        @id @default(autoincrement())
-  userId         Int        @map("user_id")
-  drinkType      String     @map("drink_type")
-  size           String?
-  milkType       String?    @map("milk_type")
-  espressoShots  Int        @default(0) @map("espresso_shots")
-  dialSetting    String?    @map("dial_setting")
-  waste          Int        @default(0)
-  notes          String?
-  createdAt      DateTime   @default(now()) @map("created_at")
+  tenantId      Int      @default(1) @map("tenant_id")
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  drinkType     String   @map("drink_type")
+  size          String?
+  milkType      String?  @map("milk_type")
+  espressoShots Int      @default(0) @map("espresso_shots")
+  dialSetting   String?  @map("dial_setting")
+  waste         Int      @default(0)
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -310,17 +313,17 @@ model DrinkLog {
 }
 
 model DonutLog {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  productId Int?     @map("product_id")
-  made      Int      @default(0)
-  sold      Int      @default(0)
-  wasted    Int      @default(0)
+  tenantId  Int         @default(1) @map("tenant_id")
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  id        Int         @id @default(autoincrement())
+  userId    Int         @map("user_id")
+  productId Int?        @map("product_id")
+  made      Int         @default(0)
+  sold      Int         @default(0)
+  wasted    Int         @default(0)
   period    ShiftPeriod @default(AM)
   notes     String?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime    @default(now()) @map("created_at")
 
   user    User     @relation(fields: [userId], references: [id])
   product Product? @relation(fields: [productId], references: [id])
@@ -336,17 +339,17 @@ enum ShiftPeriod {
 // ─── Vendors ─────────────────────────────────────────────────
 
 model Vendor {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id             Int      @id @default(autoincrement())
-  name           String
-  role           String?  // e.g. "Primary broadline vendor"
-  mainUse        String?  // e.g. "Donut ingredients, dairy, supplies"
-  cadence        String?  // e.g. "Weekly / near-weekly"
-  contactInfo    String?
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  tenantId    Int      @default(1) @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id          Int      @id @default(autoincrement())
+  name        String
+  role        String? // e.g. "Primary broadline vendor"
+  mainUse     String? // e.g. "Donut ingredients, dairy, supplies"
+  cadence     String? // e.g. "Weekly / near-weekly"
+  contactInfo String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   inventoryItems InventoryItem[]
 
@@ -357,48 +360,48 @@ model Vendor {
 // ─── Inventory ──────────────────────────────────────────────
 
 model InventoryItem {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id               Int       @id @default(autoincrement())
-  name             String
-  category         FohBoh
-  unit             String
-  unitCost         Float     @map("unit_cost") @default(0)
-  parLevel         Float     @map("par_level") @default(0)
-  currentStock     Float     @default(0) @map("current_stock")
-  minStock         Float     @map("min_stock") @default(0)
-  reorderQty       Float     @map("reorder_qty") @default(0)
-  supplier         String?   // legacy field, kept for backward compat
-  active           Boolean   @default(true)
-  vendorId         Int?      @map("vendor_id")
-  packSize         String?   @map("pack_size")      // e.g. "50 lb case", "12 x 32 oz case"
-  suggestedCadence String?   @map("suggested_cadence") // e.g. "2-3 cases/week"
-  sku              String?
-  notes            String?
-  inventorySection   String     @default("kitchen_regular") @map("inventory_section")
-  inventorySectionId Int?       @map("inventory_section_id")
+  tenantId           Int     @default(1) @map("tenant_id")
+  tenant             Tenant  @relation(fields: [tenantId], references: [id])
+  id                 Int     @id @default(autoincrement())
+  name               String
+  category           FohBoh
+  unit               String
+  unitCost           Float   @default(0) @map("unit_cost")
+  parLevel           Float   @default(0) @map("par_level")
+  currentStock       Float   @default(0) @map("current_stock")
+  minStock           Float   @default(0) @map("min_stock")
+  reorderQty         Float   @default(0) @map("reorder_qty")
+  supplier           String? // legacy field, kept for backward compat
+  active             Boolean @default(true)
+  vendorId           Int?    @map("vendor_id")
+  packSize           String? @map("pack_size") // e.g. "50 lb case", "12 x 32 oz case"
+  suggestedCadence   String? @map("suggested_cadence") // e.g. "2-3 cases/week"
+  sku                String?
+  notes              String?
+  inventorySection   String  @default("kitchen_regular") @map("inventory_section")
+  inventorySectionId Int?    @map("inventory_section_id")
 
-  vendor            Vendor?               @relation(fields: [vendorId], references: [id])
-  section           InventorySection?     @relation(fields: [inventorySectionId], references: [id])
+  vendor             Vendor?              @relation(fields: [vendorId], references: [id])
+  section            InventorySection?    @relation(fields: [inventorySectionId], references: [id])
   productIngredients ProductIngredient[]
-  orderLines        InventoryOrderLine[]
-  countLines        InventoryCountLine[]
-  orderRequests     OrderRequest[]
+  orderLines         InventoryOrderLine[]
+  countLines         InventoryCountLine[]
+  orderRequests      OrderRequest[]
 
   @@map("inventory_items")
 }
 
 model InventoryOrder {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int              @id @default(autoincrement())
-  status     OrderStatus      @default(DRAFT)
-  createdBy  Int              @map("created_by")
-  createdAt  DateTime         @default(now()) @map("created_at")
-  receivedAt DateTime?        @map("received_at")
+  tenantId   Int         @default(1) @map("tenant_id")
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  id         Int         @id @default(autoincrement())
+  status     OrderStatus @default(DRAFT)
+  createdBy  Int         @map("created_by")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  receivedAt DateTime?   @map("received_at")
   notes      String?
 
-  creator User                @relation(fields: [createdBy], references: [id])
+  creator User                 @relation(fields: [createdBy], references: [id])
   lines   InventoryOrderLine[]
 
   @@map("inventory_orders")
@@ -412,14 +415,14 @@ enum OrderStatus {
 }
 
 model InventoryOrderLine {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id              Int           @id @default(autoincrement())
-  orderId         Int           @map("order_id")
-  inventoryItemId Int           @map("inventory_item_id")
-  qtyOrdered      Float         @map("qty_ordered") @default(0)
-  qtyReceived     Float         @map("qty_received") @default(0)
-  unitCost        Float         @map("unit_cost") @default(0)
+  tenantId        Int    @default(1) @map("tenant_id")
+  tenant          Tenant @relation(fields: [tenantId], references: [id])
+  id              Int    @id @default(autoincrement())
+  orderId         Int    @map("order_id")
+  inventoryItemId Int    @map("inventory_item_id")
+  qtyOrdered      Float  @default(0) @map("qty_ordered")
+  qtyReceived     Float  @default(0) @map("qty_received")
+  unitCost        Float  @default(0) @map("unit_cost")
 
   order         InventoryOrder @relation(fields: [orderId], references: [id])
   inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id])
@@ -430,13 +433,13 @@ model InventoryOrderLine {
 // ─── Weekly Inventory Counts ─────────────────────────────────
 
 model InventoryCount {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int                  @id @default(autoincrement())
-  date       DateTime
-  countedBy  Int                  @map("counted_by")
-  notes      String?
-  createdAt  DateTime             @default(now()) @map("created_at")
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  countedBy Int      @map("counted_by")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
 
   counter User                 @relation(fields: [countedBy], references: [id])
   lines   InventoryCountLine[]
@@ -446,13 +449,13 @@ model InventoryCount {
 }
 
 model InventoryCountLine {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id              Int           @id @default(autoincrement())
-  countId         Int           @map("count_id")
-  inventoryItemId Int           @map("inventory_item_id")
-  onHand          Float         @map("on_hand") @default(0)
-  amountToOrder   Float         @map("amount_to_order") @default(0)
+  tenantId        Int    @default(1) @map("tenant_id")
+  tenant          Tenant @relation(fields: [tenantId], references: [id])
+  id              Int    @id @default(autoincrement())
+  countId         Int    @map("count_id")
+  inventoryItemId Int    @map("inventory_item_id")
+  onHand          Float  @default(0) @map("on_hand")
+  amountToOrder   Float  @default(0) @map("amount_to_order")
 
   count         InventoryCount @relation(fields: [countId], references: [id])
   inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id])
@@ -466,14 +469,14 @@ model InventoryCountLine {
 // ─── Inventory Sections (DB-driven, replaces enum) ──────────────
 
 model InventorySection {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id        Int              @id @default(autoincrement())
-  name      String           // Display name: "Kitchen — Regular Orders"
-  slug      String           // Internal key: "kitchen_regular"
-  icon      String           @default("📦")  // Emoji icon
-  sortOrder Int              @default(0) @map("sort_order")
-  active    Boolean          @default(true)
+  tenantId  Int             @default(1) @map("tenant_id")
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  id        Int             @id @default(autoincrement())
+  name      String // Display name: "Kitchen — Regular Orders"
+  slug      String // Internal key: "kitchen_regular"
+  icon      String          @default("📦") // Emoji icon
+  sortOrder Int             @default(0) @map("sort_order")
+  active    Boolean         @default(true)
   items     InventoryItem[]
 
   @@unique([tenantId, slug])
@@ -489,27 +492,27 @@ enum OrderRequestStatus {
 }
 
 model OrderRequest {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id             Int               @id @default(autoincrement())
-  inventoryItemId Int?             @map("inventory_item_id")
-  qtyRequested   Float             @map("qty_requested") @default(0)
-  requestedBy    Int               @map("requested_by")
-  notes          String?
-  status         OrderRequestStatus @default(PENDING)
-  reviewedBy     Int?              @map("reviewed_by")
-  reviewedAt     DateTime?         @map("reviewed_at")
-  createdAt      DateTime          @default(now()) @map("created_at")
-  updatedAt      DateTime          @updatedAt @map("updated_at")
+  tenantId        Int                @default(1) @map("tenant_id")
+  tenant          Tenant             @relation(fields: [tenantId], references: [id])
+  id              Int                @id @default(autoincrement())
+  inventoryItemId Int?               @map("inventory_item_id")
+  qtyRequested    Float              @default(0) @map("qty_requested")
+  requestedBy     Int                @map("requested_by")
+  notes           String?
+  status          OrderRequestStatus @default(PENDING)
+  reviewedBy      Int?               @map("reviewed_by")
+  reviewedAt      DateTime?          @map("reviewed_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
 
   // Custom item fields (used when inventoryItemId is null — item not in system yet)
-  customItemName   String?         @map("custom_item_name")
-  customVendorName String?         @map("custom_vendor_name")
-  customUnit       String?         @map("custom_unit")
+  customItemName   String? @map("custom_item_name")
+  customVendorName String? @map("custom_vendor_name")
+  customUnit       String? @map("custom_unit")
 
   inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
-  requester     User          @relation("OrderRequester", fields: [requestedBy], references: [id])
-  reviewer      User?         @relation("OrderRequestReviewer", fields: [reviewedBy], references: [id])
+  requester     User           @relation("OrderRequester", fields: [requestedBy], references: [id])
+  reviewer      User?          @relation("OrderRequestReviewer", fields: [reviewedBy], references: [id])
 
   @@map("order_requests")
 }
@@ -517,13 +520,13 @@ model OrderRequest {
 // ─── Prediction & Par ───────────────────────────────────────
 
 model HolidaySchedule {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id           Int          @id @default(autoincrement())
-  date         DateTime
-  name         String
-  impactLevel  ImpactLevel  @map("impact_level") @default(MEDIUM)
-  notes        String?
+  tenantId    Int         @default(1) @map("tenant_id")
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  id          Int         @id @default(autoincrement())
+  date        DateTime
+  name        String
+  impactLevel ImpactLevel @default(MEDIUM) @map("impact_level")
+  notes       String?
 
   @@map("holiday_schedules")
 }
@@ -535,26 +538,26 @@ enum ImpactLevel {
 }
 
 model WeatherCache {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id           Int      @id @default(autoincrement())
-  date         DateTime
-  tempHigh     Float     @map("temp_high") @default(0)
-  tempLow      Float     @map("temp_low") @default(0)
+  tenantId      Int      @default(1) @map("tenant_id")
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  id            Int      @id @default(autoincrement())
+  date          DateTime
+  tempHigh      Float    @default(0) @map("temp_high")
+  tempLow       Float    @default(0) @map("temp_low")
   precipitation Float    @default(0)
-  conditions   String?
-  fetchedAt    DateTime  @map("fetched_at") @default(now())
+  conditions    String?
+  fetchedAt     DateTime @default(now()) @map("fetched_at")
 
   @@unique([tenantId, date])
   @@map("weather_cache")
 }
 
 model ParSheet {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id          Int      @id @default(autoincrement())
+  tenantId    Int            @default(1) @map("tenant_id")
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  id          Int            @id @default(autoincrement())
   date        DateTime
-  generatedBy Int?     @map("generated_by")
+  generatedBy Int?           @map("generated_by")
   notes       String?
   lines       ParSheetLine[]
 
@@ -563,16 +566,16 @@ model ParSheet {
 }
 
 model ParSheetLine {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int      @id @default(autoincrement())
-  parSheetId Int      @map("par_sheet_id")
-  productId  Int      @map("product_id")
-  parLevel   Int      @map("par_level") @default(0)
-  onHand     Int      @map("on_hand") @default(0)
-  toMake     Int      @map("to_make") @default(0)
-  actualSold Int?     @map("actual_sold")
-  predicted  Int      @default(0)
+  tenantId   Int    @default(1) @map("tenant_id")
+  tenant     Tenant @relation(fields: [tenantId], references: [id])
+  id         Int    @id @default(autoincrement())
+  parSheetId Int    @map("par_sheet_id")
+  productId  Int    @map("product_id")
+  parLevel   Int    @default(0) @map("par_level")
+  onHand     Int    @default(0) @map("on_hand")
+  toMake     Int    @default(0) @map("to_make")
+  actualSold Int?   @map("actual_sold")
+  predicted  Int    @default(0)
 
   parSheet ParSheet @relation(fields: [parSheetId], references: [id])
   product  Product  @relation(fields: [productId], references: [id])
@@ -581,14 +584,14 @@ model ParSheetLine {
 }
 
 model PredictionModel {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId      Int    @default(1) @map("tenant_id")
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
   id            Int    @id @default(autoincrement())
   productId     Int    @map("product_id")
   dayOfWeek     Int    @map("day_of_week")
-  avgSold       Float  @map("avg_sold") @default(0)
-  weatherFactor Float  @map("weather_factor") @default(1.0)
-  holidayFactor Float  @map("holiday_factor") @default(1.0)
+  avgSold       Float  @default(0) @map("avg_sold")
+  weatherFactor Float  @default(1.0) @map("weather_factor")
+  holidayFactor Float  @default(1.0) @map("holiday_factor")
 
   @@map("prediction_models")
 }
@@ -596,15 +599,15 @@ model PredictionModel {
 // ─── Operations ─────────────────────────────────────────────
 
 model OverboardSchedule {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id     Int              @id @default(autoincrement())
-  date   DateTime
-  status OverboardStatus  @default(SCHEDULED)
-  name   String?
-  notes  String?
-  lines  OverboardLine[]
-  tasks  MenuTask[]
+  tenantId Int             @default(1) @map("tenant_id")
+  tenant   Tenant          @relation(fields: [tenantId], references: [id])
+  id       Int             @id @default(autoincrement())
+  date     DateTime
+  status   OverboardStatus @default(SCHEDULED)
+  name     String?
+  notes    String?
+  lines    OverboardLine[]
+  tasks    MenuTask[]
 
   @@map("overboard_schedules")
 }
@@ -616,18 +619,18 @@ enum OverboardStatus {
 }
 
 model OverboardLine {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id             Int     @id @default(autoincrement())
-  overboardId    Int     @map("overboard_id")
-  productId      Int     @map("product_id")
-  quantity       Int     @default(0)
-  quantitySold   Int     @default(0) @map("quantity_sold")
-  unitPrice      Float   @map("unit_price") @default(0)
-  upchargePrice  Float   @map("upcharge_price") @default(0)
-  upchargesSold  Int     @default(0) @map("upcharges_sold")
-  fillings       String?
-  toppings       String?
+  tenantId      Int     @default(1) @map("tenant_id")
+  tenant        Tenant  @relation(fields: [tenantId], references: [id])
+  id            Int     @id @default(autoincrement())
+  overboardId   Int     @map("overboard_id")
+  productId     Int     @map("product_id")
+  quantity      Int     @default(0)
+  quantitySold  Int     @default(0) @map("quantity_sold")
+  unitPrice     Float   @default(0) @map("unit_price")
+  upchargePrice Float   @default(0) @map("upcharge_price")
+  upchargesSold Int     @default(0) @map("upcharges_sold")
+  fillings      String?
+  toppings      String?
 
   overboard OverboardSchedule @relation(fields: [overboardId], references: [id])
   product   Product           @relation(fields: [productId], references: [id])
@@ -636,8 +639,8 @@ model OverboardLine {
 }
 
 model CleaningTask {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId    Int           @default(1) @map("tenant_id")
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
   id          Int           @id @default(autoincrement())
   title       String
   description String?
@@ -657,12 +660,12 @@ enum TaskFrequency {
 }
 
 model CleaningLog {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id          Int       @id @default(autoincrement())
-  taskId      Int       @map("task_id")
-  completedBy Int       @map("completed_by")
-  completedAt DateTime  @map("completed_at") @default(now())
+  tenantId    Int      @default(1) @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id          Int      @id @default(autoincrement())
+  taskId      Int      @map("task_id")
+  completedBy Int      @map("completed_by")
+  completedAt DateTime @default(now()) @map("completed_at")
   notes       String?
 
   task CleaningTask @relation(fields: [taskId], references: [id])
@@ -672,16 +675,16 @@ model CleaningLog {
 }
 
 model MaintenanceLog {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int      @id @default(autoincrement())
+  tenantId   Int       @default(1) @map("tenant_id")
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  id         Int       @id @default(autoincrement())
   equipment  String
   issue      String
-  resolved   Boolean  @default(false)
-  resolvedBy Int?     @map("resolved_by")
+  resolved   Boolean   @default(false)
+  resolvedBy Int?      @map("resolved_by")
   resolvedAt DateTime? @map("resolved_at")
-  createdBy  Int      @map("created_by")
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdBy  Int       @map("created_by")
+  createdAt  DateTime  @default(now()) @map("created_at")
   notes      String?
 
   creator  User  @relation("MaintenanceCreator", fields: [createdBy], references: [id])
@@ -691,15 +694,15 @@ model MaintenanceLog {
 }
 
 model EmployeeHour {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id        Int       @id @default(autoincrement())
-  userId    Int       @map("user_id")
-  clockIn   DateTime  @map("clock_in")
-  clockOut  DateTime?  @map("clock_out")
+  tenantId   Int       @default(1) @map("tenant_id")
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  clockIn    DateTime  @map("clock_in")
+  clockOut   DateTime? @map("clock_out")
   totalHours Float?    @map("total_hours")
-  date      DateTime
-  notes     String?
+  date       DateTime
+  notes      String?
 
   user User @relation(fields: [userId], references: [id])
 
@@ -719,31 +722,32 @@ enum SopCategory {
 }
 
 model Sop {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id          Int         @id @default(autoincrement())
-  title       String
-  category    SopCategory
-  content     String      @db.MediumText
-  fileUrl     String?     @map("file_url")
-  version     Int         @default(1)
-  active      Boolean     @default(true)
-  createdBy   Int         @map("created_by")
-  updatedBy   Int?        @map("updated_by")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  tenantId  Int         @default(1) @map("tenant_id")
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  id        Int         @id @default(autoincrement())
+  title     String
+  category  SopCategory
+  content   String      @db.MediumText
+  fileUrl   String?     @map("file_url")
+  version   Int         @default(1)
+  active    Boolean     @default(true)
+  createdBy Int         @map("created_by")
+  updatedBy Int?        @map("updated_by")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
 
-  creator User @relation("SopCreator", fields: [createdBy], references: [id])
+  creator User  @relation("SopCreator", fields: [createdBy], references: [id])
   updater User? @relation("SopUpdater", fields: [updatedBy], references: [id])
 
   @@map("sops")
 }
+
 model DashboardLayout {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id       Int    @id @default(autoincrement())
-  userId   Int    @unique @map("user_id")
-  layout   String @db.MediumText
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  layout    String   @db.MediumText
   updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])
@@ -752,28 +756,28 @@ model DashboardLayout {
 }
 
 model EspressoDialLog {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id                Int      @id @default(autoincrement())
-  userId            Int      @map("user_id")
-  date              DateTime @default(now())
+  tenantId Int      @default(1) @map("tenant_id")
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  id       Int      @id @default(autoincrement())
+  userId   Int      @map("user_id")
+  date     DateTime @default(now())
 
   // Regular (Meridian Blend)
-  groundsWeight     Float?   @map("grounds_weight")
-  grinderCoarseness String?  @map("grinder_coarseness")
-  dispenseTime      Float?   @map("dispense_time")
-  pullTime          Float?   @map("pull_time")
-  shotWeight        Float?   @map("shot_weight")
+  groundsWeight     Float?  @map("grounds_weight")
+  grinderCoarseness String? @map("grinder_coarseness")
+  dispenseTime      Float?  @map("dispense_time")
+  pullTime          Float?  @map("pull_time")
+  shotWeight        Float?  @map("shot_weight")
 
   // Decaf
-  decafGroundsWeight     Float?   @map("decaf_grounds_weight")
-  decafGrinderCoarseness String?  @map("decaf_grinder_coarseness")
-  decafDispenseTime      Float?   @map("decaf_dispense_time")
-  decafPullTime          Float?   @map("decaf_pull_time")
-  decafShotWeight        Float?   @map("decaf_shot_weight")
+  decafGroundsWeight     Float?  @map("decaf_grounds_weight")
+  decafGrinderCoarseness String? @map("decaf_grinder_coarseness")
+  decafDispenseTime      Float?  @map("decaf_dispense_time")
+  decafPullTime          Float?  @map("decaf_pull_time")
+  decafShotWeight        Float?  @map("decaf_shot_weight")
 
-  notes             String?
-  createdAt         DateTime @default(now()) @map("created_at")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -783,13 +787,13 @@ model EspressoDialLog {
 // ─── Recipes ────────────────────────────────────────────────────
 
 model RecipeCategory {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   name      String
   slug      String
   icon      String   @default("📋")
-  color     String   @default("#F9FAFB")   // Background color
+  color     String   @default("#F9FAFB") // Background color
   sortOrder Int      @default(0) @map("sort_order")
   active    Boolean  @default(true)
   recipes   Recipe[]
@@ -799,20 +803,20 @@ model RecipeCategory {
 }
 
 model Recipe {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id          Int      @id @default(autoincrement())
-  name        String
-  category    String   @default("general")
-  categoryId  Int?     @map("category_id")
-  description String?
-  ingredients Json     // Array of { name, amount, unit }
-  instructions String? @db.Text
-  yield       String?  // e.g. "Makes 1 quart"
-  sortOrder   Int      @default(0) @map("sort_order")
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenantId     Int      @default(1) @map("tenant_id")
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  id           Int      @id @default(autoincrement())
+  name         String
+  category     String   @default("general")
+  categoryId   Int?     @map("category_id")
+  description  String?
+  ingredients  Json // Array of { name, amount, unit }
+  instructions String?  @db.Text
+  yield        String? // e.g. "Makes 1 quart"
+  sortOrder    Int      @default(0) @map("sort_order")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   recipeCategory RecipeCategory? @relation(fields: [categoryId], references: [id])
 
@@ -820,8 +824,8 @@ model Recipe {
 }
 
 model ProductionTargetOverride {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   date      DateTime
   target    Int
@@ -832,14 +836,14 @@ model ProductionTargetOverride {
 }
 
 model BatchCompletion {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int      @id @default(autoincrement())
-  date       DateTime
-  batchIndex Int      @map("batch_index")
-  mixerType  String   @map("mixer_type")  // "Large" or "Small"
-  completedBy Int?    @map("completed_by")
-  createdAt  DateTime @default(now()) @map("created_at")
+  tenantId    Int      @default(1) @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id          Int      @id @default(autoincrement())
+  date        DateTime
+  batchIndex  Int      @map("batch_index")
+  mixerType   String   @map("mixer_type") // "Large" or "Small"
+  completedBy Int?     @map("completed_by")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   user User? @relation(fields: [completedBy], references: [id])
 
@@ -848,46 +852,91 @@ model BatchCompletion {
 }
 
 model TrayOverride {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int      @id @default(autoincrement())
-  date       DateTime
-  flavor    String    // Flavor name: "M&M", "Vanilla", etc.
-  trays     Float     @default(0)
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  flavor    String // Flavor name: "M&M", "Vanilla", etc.
+  trays     Float    @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([tenantId, date, flavor])
   @@map("tray_overrides")
 }
 
 model PrepItem {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id             Int      @id @default(autoincrement())
+  tenantId       Int     @default(1) @map("tenant_id")
+  tenant         Tenant  @relation(fields: [tenantId], references: [id])
+  id             Int     @id @default(autoincrement())
   name           String
   category       String
-  categoryColor  String   @default("#F3F4F6") @map("category_color")
+  categoryColor  String  @default("#F3F4F6") @map("category_color")
   amount         String
-  shelfLifeHours Int      @default(0) @map("shelf_life_hours")
-  sortOrder      Int      @default(0) @map("sort_order")
-  active         Boolean  @default(true)
+  shelfLifeHours Int     @default(0) @map("shelf_life_hours")
+  sortOrder      Int     @default(0) @map("sort_order")
+  active         Boolean @default(true)
 
   @@map("prep_items")
+}
+
+// ─── Sandwich & Bagel Prep Planner ──────────────────────────
+
+model SandwichType {
+  tenantId  Int     @default(1) @map("tenant_id")
+  tenant    Tenant  @relation(fields: [tenantId], references: [id])
+  id        Int     @id @default(autoincrement())
+  name      String
+  category  String  @default("sandwich") // "sandwich", "wrap", "bagel"
+  active    Boolean @default(true)
+  sortOrder Int     @default(0) @map("sort_order")
+
+  schedule SandwichSchedule[]
+  recipes  SandwichRecipe[]
+
+  @@map("sandwich_types")
+}
+
+model SandwichSchedule {
+  tenantId       Int    @default(1) @map("tenant_id")
+  tenant         Tenant @relation(fields: [tenantId], references: [id])
+  id             Int    @id @default(autoincrement())
+  sandwichTypeId Int    @map("sandwich_type_id")
+  dayOfWeek      Int    @map("day_of_week") // 0=Sun, 1=Mon, ..., 6=Sat
+  quantity       Int    @default(0)
+
+  sandwichType SandwichType @relation(fields: [sandwichTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([sandwichTypeId, dayOfWeek, tenantId])
+  @@map("sandwich_schedules")
+}
+
+model SandwichRecipe {
+  tenantId        Int    @default(1) @map("tenant_id")
+  tenant          Tenant @relation(fields: [tenantId], references: [id])
+  id              Int    @id @default(autoincrement())
+  sandwichTypeId  Int    @map("sandwich_type_id")
+  ingredientName  String @map("ingredient_name")
+  quantityPerUnit Float  @map("quantity_per_unit") // e.g. 1 egg per sandwich, 0.5 cup of cheese
+  unit            String @default("each")
+
+  sandwichType SandwichType @relation(fields: [sandwichTypeId], references: [id], onDelete: Cascade)
+
+  @@map("sandwich_recipes")
 }
 
 // ─── Notifications ────────────────────────────────────────────
 
 model Notification {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int      @id @default(autoincrement())
-  title      String
-  message    String
-  priority   String   @default("normal")  // "low", "normal", "high", "urgent"
-  sentBy     Int      @map("sent_by")
-  createdAt  DateTime @default(now()) @map("created_at")
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  priority  String   @default("normal") // "low", "normal", "high", "urgent"
+  sentBy    Int      @map("sent_by")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  sender     User              @relation("NotificationSender", fields: [sentBy], references: [id])
+  sender     User                    @relation("NotificationSender", fields: [sentBy], references: [id])
   reads      NotificationRead[]
   recipients NotificationRecipient[]
 
@@ -895,8 +944,8 @@ model Notification {
 }
 
 model NotificationRead {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId       Int      @default(1) @map("tenant_id")
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
   id             Int      @id @default(autoincrement())
   notificationId Int      @map("notification_id")
   userId         Int      @map("user_id")
@@ -910,11 +959,11 @@ model NotificationRead {
 }
 
 model NotificationRecipient {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id             Int      @id @default(autoincrement())
-  notificationId Int      @map("notification_id")
-  userId         Int      @map("user_id")
+  tenantId       Int    @default(1) @map("tenant_id")
+  tenant         Tenant @relation(fields: [tenantId], references: [id])
+  id             Int    @id @default(autoincrement())
+  notificationId Int    @map("notification_id")
+  userId         Int    @map("user_id")
 
   notification Notification @relation(fields: [notificationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
@@ -926,13 +975,13 @@ model NotificationRecipient {
 // ─── Employee Scheduling ────────────────────────────────────────
 
 model Shift {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   date      DateTime
-  startTime String   @map("start_time")   // "06:00"
-  endTime   String   @map("end_time")     // "14:00"
-  position  String   @default("GENERAL")  // GENERAL, FOH, BOH, CLOSING, OPENING
+  startTime String   @map("start_time") // "06:00"
+  endTime   String   @map("end_time") // "14:00"
+  position  String   @default("GENERAL") // GENERAL, FOH, BOH, CLOSING, OPENING
   notes     String?
   published Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
@@ -945,12 +994,12 @@ model Shift {
 }
 
 model AvailabilityBlock {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
-  dayOfWeek Int      @map("day_of_week")   // 0=Sun, 1=Mon, ... 6=Sat. -1 = all days
-  startTime String?  @map("start_time")    // null = all day blocked
-  endTime   String?  @map("end_time")      // null = all day blocked
+  dayOfWeek Int      @map("day_of_week") // 0=Sun, 1=Mon, ... 6=Sat. -1 = all days
+  startTime String?  @map("start_time") // null = all day blocked
+  endTime   String?  @map("end_time") // null = all day blocked
   reason    String?
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -961,28 +1010,28 @@ model AvailabilityBlock {
 }
 
 model TimeOffRequest {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id        Int      @id @default(autoincrement())
-  startDate DateTime @map("start_date")
-  endDate   DateTime @map("end_date")
-  reason    String?
-  status    String   @default("PENDING")  // PENDING, APPROVED, DENIED
-  reviewedBy Int?    @map("reviewed_by")
+  tenantId   Int       @default(1) @map("tenant_id")
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  id         Int       @id @default(autoincrement())
+  startDate  DateTime  @map("start_date")
+  endDate    DateTime  @map("end_date")
+  reason     String?
+  status     String    @default("PENDING") // PENDING, APPROVED, DENIED
+  reviewedBy Int?      @map("reviewed_by")
   reviewedAt DateTime? @map("reviewed_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
-  userId Int  @map("user_id")
-  user   User @relation(fields: [userId], references: [id])
+  userId   Int   @map("user_id")
+  user     User  @relation(fields: [userId], references: [id])
   reviewer User? @relation("TimeOffReviewer", fields: [reviewedBy], references: [id])
 
   @@map("time_off_requests")
 }
 
 model ScheduleTemplate {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId  Int      @default(1) @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   id        Int      @id @default(autoincrement())
   name      String   @default("Default Schedule")
   isDefault Boolean  @default(false) @map("is_default")
@@ -995,18 +1044,18 @@ model ScheduleTemplate {
 }
 
 model TemplateShift {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id         Int    @id @default(autoincrement())
-  dayOfWeek  Int    @map("day_of_week")    // 0=Sun, 1=Mon...6=Sat
-  startTime  String @map("start_time")
-  endTime    String @map("end_time")
-  position   String @default("GENERAL")
-  userId     Int    @map("user_id")
+  tenantId  Int    @default(1) @map("tenant_id")
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  id        Int    @id @default(autoincrement())
+  dayOfWeek Int    @map("day_of_week") // 0=Sun, 1=Mon...6=Sat
+  startTime String @map("start_time")
+  endTime   String @map("end_time")
+  position  String @default("GENERAL")
+  userId    Int    @map("user_id")
 
-  user     User             @relation(fields: [userId], references: [id])
-  template ScheduleTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  templateId Int            @map("template_id")
+  user       User             @relation(fields: [userId], references: [id])
+  template   ScheduleTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId Int              @map("template_id")
 
   @@map("template_shifts")
 }
@@ -1014,16 +1063,16 @@ model TemplateShift {
 // ─── Module Configuration ────────────────────────────────────
 
 model ModuleConfig {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId    Int     @default(1) @map("tenant_id")
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
   id          Int     @id @default(autoincrement())
-  moduleKey   String  @map("module_key")   // e.g. "roasting", "schedule", "inventory"
-  name        String  // Display name, e.g. "Coffee Roasting"
+  moduleKey   String  @map("module_key") // e.g. "roasting", "schedule", "inventory"
+  name        String // Display name, e.g. "Coffee Roasting"
   description String? // Short help text
   enabled     Boolean @default(false)
-  icon        String  @default("")                  // Emoji or lucide icon name
+  icon        String  @default("") // Emoji or lucide icon name
   sortOrder   Int     @default(0) @map("sort_order")
-  group       String  @default("operations")       // "operations" | "management" | "coffee"
+  group       String  @default("operations") // "operations" | "management" | "coffee"
 
   @@unique([tenantId, moduleKey])
   @@map("module_configs")
@@ -1032,46 +1081,46 @@ model ModuleConfig {
 // ─── Coffee Roasting ─────────────────────────────────────────
 
 model GreenCoffee {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id            Int     @id @default(autoincrement())
-  name          String
-  origin        String?   // Country / region
-  farm          String?
-  process       String?   // Washed, Natural, Honey, etc.
-  variety       String?   // Typica, Bourbon, Gesha, etc.
-  elevation     String?
-  grade         String?
-  density       String?
-  moisture      Float?    // Percentage
-  bagWeightKg   Float     @default(60) @map("bag_weight_kg")
-  stockKg       Float     @default(0) @map("stock_kg")      // Current on-hand
-  costPerKg     Float?    @map("cost_per_kg")
-  notes         String?
-  active        Boolean   @default(true)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  tenantId    Int      @default(1) @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id          Int      @id @default(autoincrement())
+  name        String
+  origin      String? // Country / region
+  farm        String?
+  process     String? // Washed, Natural, Honey, etc.
+  variety     String? // Typica, Bourbon, Gesha, etc.
+  elevation   String?
+  grade       String?
+  density     String?
+  moisture    Float? // Percentage
+  bagWeightKg Float    @default(60) @map("bag_weight_kg")
+  stockKg     Float    @default(0) @map("stock_kg") // Current on-hand
+  costPerKg   Float?   @map("cost_per_kg")
+  notes       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  roastLogs    RoastLog[]
+  roastLogs     RoastLog[]
   roastProfiles RoastProfile[]
 
   @@map("green_coffees")
 }
 
 model RoastProfile {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id              Int     @id @default(autoincrement())
+  tenantId        Int      @default(1) @map("tenant_id")
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  id              Int      @id @default(autoincrement())
   name            String
-  greenCoffeeId   Int     @map("green_coffee_id")
-  targetWeightKg  Float   @map("target_weight_kg")     // Batch size
-  chargeTemp      Float?  @map("charge_temp")          // Starting drum temp (°F or °C)
-  turnAroundPoint Float?  @map("turn_around_point")    // When beans hit target temp
-  firstCrack      Float?  @map("first_crack")          // Time mark (seconds or string)
-  developmentTime Float?  @map("development_time")     // Post-first-crack seconds
-  dropTemp        Float?  @map("drop_temp")            // Final bean temp
-  totalDuration   Float?  @map("total_duration")       // Total roast seconds
-  roastLevel      String  @default("MEDIUM") @map("roast_level")  // LIGHT / MEDIUM / MEDIUM_DARK / DARK
+  greenCoffeeId   Int      @map("green_coffee_id")
+  targetWeightKg  Float    @map("target_weight_kg") // Batch size
+  chargeTemp      Float?   @map("charge_temp") // Starting drum temp (°F or °C)
+  turnAroundPoint Float?   @map("turn_around_point") // When beans hit target temp
+  firstCrack      Float?   @map("first_crack") // Time mark (seconds or string)
+  developmentTime Float?   @map("development_time") // Post-first-crack seconds
+  dropTemp        Float?   @map("drop_temp") // Final bean temp
+  totalDuration   Float?   @map("total_duration") // Total roast seconds
+  roastLevel      String   @default("MEDIUM") @map("roast_level") // LIGHT / MEDIUM / MEDIUM_DARK / DARK
   notes           String?
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -1083,28 +1132,28 @@ model RoastProfile {
 }
 
 model RoastLog {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id              Int     @id @default(autoincrement())
+  tenantId        Int      @default(1) @map("tenant_id")
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  id              Int      @id @default(autoincrement())
   date            DateTime
-  greenCoffeeId   Int     @map("green_coffee_id")
-  profileId       Int?    @map("profile_id")
-  greenWeightKg   Float   @map("green_weight_kg")      // Input weight
-  roastedWeightKg Float   @map("roasted_weight_kg")    // Output weight
-  roastLevel      String  @default("MEDIUM") @map("roast_level")
-  chargeTemp      Float?  @map("charge_temp")
-  firstCrackTime  Float?  @map("first_crack_time")
-  dropTemp        Float?  @map("drop_temp")
-  totalDuration   Float?  @map("total_duration")       // Seconds
+  greenCoffeeId   Int      @map("green_coffee_id")
+  profileId       Int?     @map("profile_id")
+  greenWeightKg   Float    @map("green_weight_kg") // Input weight
+  roastedWeightKg Float    @map("roasted_weight_kg") // Output weight
+  roastLevel      String   @default("MEDIUM") @map("roast_level")
+  chargeTemp      Float?   @map("charge_temp")
+  firstCrackTime  Float?   @map("first_crack_time")
+  dropTemp        Float?   @map("drop_temp")
+  totalDuration   Float?   @map("total_duration") // Seconds
   notes           String?
-  lossPercent     Float?  @map("loss_percent")         // Auto-calculated
-  batchNumber     String? @map("batch_number")
-  performedBy     Int?    @map("performed_by")
+  lossPercent     Float?   @map("loss_percent") // Auto-calculated
+  batchNumber     String?  @map("batch_number")
+  performedBy     Int?     @map("performed_by")
   createdAt       DateTime @default(now()) @map("created_at")
 
-  greenCoffee  GreenCoffee   @relation(fields: [greenCoffeeId], references: [id])
-  profile      RoastProfile? @relation(fields: [profileId], references: [id])
-  performer    User?         @relation("RoastPerformer", fields: [performedBy], references: [id])
+  greenCoffee GreenCoffee   @relation(fields: [greenCoffeeId], references: [id])
+  profile     RoastProfile? @relation(fields: [profileId], references: [id])
+  performer   User?         @relation("RoastPerformer", fields: [performedBy], references: [id])
 
   @@map("roast_logs")
 }
@@ -1112,19 +1161,19 @@ model RoastLog {
 // ─── Menu Planning Tasks ────────────────────────────────────
 
 model MenuTask {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id          Int      @id @default(autoincrement())
-  scheduleId Int      @map("schedule_id")     // Links to OverboardSchedule (menu plan)
+  tenantId   Int       @default(1) @map("tenant_id")
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  id         Int       @id @default(autoincrement())
+  scheduleId Int       @map("schedule_id") // Links to OverboardSchedule (menu plan)
   title      String
-  completed  Boolean  @default(false)
+  completed  Boolean   @default(false)
   dueDate    DateTime? @map("due_date")
-  assignedTo Int?     @map("assigned_to")
-  sortOrder  Int      @default(0) @map("sort_order")
-  createdAt  DateTime @default(now()) @map("created_at")
+  assignedTo Int?      @map("assigned_to")
+  sortOrder  Int       @default(0) @map("sort_order")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
-  schedule  OverboardSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  assignee  User?             @relation("MenuTaskAssignee", fields: [assignedTo], references: [id])
+  schedule OverboardSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  assignee User?             @relation("MenuTaskAssignee", fields: [assignedTo], references: [id])
 
   @@map("menu_tasks")
 }
@@ -1132,23 +1181,23 @@ model MenuTask {
 // ─── Social Media Planner ──────────────────────────────────
 
 model SocialPost {
-  tenantId Int @default(1) @map("tenant_id")
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  id            Int      @id @default(autoincrement())
-  title         String
-  description   String?                    // Caption / copy
-  platform      String   @default("ALL")   // ALL, INSTAGRAM, FACEBOOK, TIKTOK, TWITTER
-  postDate      DateTime? @map("post_date") // Scheduled date
-  status        String   @default("DRAFT")  // DRAFT, SCHEDULED, PUBLISHED, CANCELLED
-  mediaUrl      String?  @map("media_url")  // Image/video link or uploaded path
-  linkUrl       String?  @map("link_url")   // Link to share
-  notes         String?
-  approvedBy    Int?     @map("approved_by")
-  createdById   Int      @map("created_by")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  tenantId    Int       @default(1) @map("tenant_id")
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String? // Caption / copy
+  platform    String    @default("ALL") // ALL, INSTAGRAM, FACEBOOK, TIKTOK, TWITTER
+  postDate    DateTime? @map("post_date") // Scheduled date
+  status      String    @default("DRAFT") // DRAFT, SCHEDULED, PUBLISHED, CANCELLED
+  mediaUrl    String?   @map("media_url") // Image/video link or uploaded path
+  linkUrl     String?   @map("link_url") // Link to share
+  notes       String?
+  approvedBy  Int?      @map("approved_by")
+  createdById Int       @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  approvedByUser User?  @relation("SocialPostApprover", fields: [approvedBy], references: [id])
+  approvedByUser User? @relation("SocialPostApprover", fields: [approvedBy], references: [id])
   createdByUser  User  @relation("SocialPostCreator", fields: [createdById], references: [id])
 
   @@map("social_posts")
@@ -1158,14 +1207,14 @@ model SocialPost {
 
 model PlanPricing {
   id            Int      @id @default(autoincrement())
-  planKey       String   @unique                          // FREE, STARTER, PROFESSIONAL, ENTERPRISE
-  name          String                                     // Starter, Professional, etc.
-  price         Int                                        // Price in cents (4900 = $49.00)
-  stripePriceId String?  @map("stripe_price_id")          // Linked Stripe Price ID
-  features      Json?                                      // Array of feature strings
-  staffLimit    Int?    @map("staff_limit")                // Max staff members (null = unlimited)
-  active        Boolean @default(true)
-  sortOrder     Int     @default(0) @map("sort_order")
+  planKey       String   @unique // FREE, STARTER, PROFESSIONAL, ENTERPRISE
+  name          String // Starter, Professional, etc.
+  price         Int // Price in cents (4900 = $49.00)
+  stripePriceId String?  @map("stripe_price_id") // Linked Stripe Price ID
+  features      Json? // Array of feature strings
+  staffLimit    Int?     @map("staff_limit") // Max staff members (null = unlimited)
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0) @map("sort_order")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 

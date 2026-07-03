@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Calendar, ChevronLeft } from "lucide-react";
+import InventoryNav from "@/components/inventory/InventoryNav";
+import { Calendar } from "lucide-react";
 
 interface CountLine {
   id: number;
@@ -69,16 +70,15 @@ export default function CountHistoryPage() {
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1>📜 Count History</h1>
+            <h1>Count History</h1>
             <p className="text-sm text-gray">
               {counts.length} past count{counts.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Link href="/inventory" className="btn btn-secondary btn-sm">
-            <ChevronLeft size={14} /> Back to Inventory
-          </Link>
         </div>
       </div>
+
+      <InventoryNav />
 
       {counts.length === 0 ? (
         <div className="card" style={{ padding: 40, textAlign: "center" }}>

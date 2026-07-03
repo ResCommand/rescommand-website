@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import ImportModal from "@/components/ImportModal";
+import InventoryNav from "@/components/inventory/InventoryNav";
 import { toast } from "sonner";
 
 interface Vendor {
@@ -368,7 +369,7 @@ export default function InventoryItemsPage() {
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1>📦 Manage Items</h1>
+            <h1>Manage Items</h1>
             <p className="text-sm text-gray">Add, edit, and organize inventory items by vendor.</p>
           </div>
           <div className="inv-items-header-actions">
@@ -381,12 +382,11 @@ export default function InventoryItemsPage() {
             <button className="btn btn-primary btn-sm" onClick={openNew}>
               + Add Item
             </button>
-            <Link href="/inventory" className="btn btn-secondary btn-sm">
-              ← Back to Inventory
-            </Link>
           </div>
         </div>
       </div>
+
+      <InventoryNav />
 
       {/* Add/Edit form */}
       {showForm && (

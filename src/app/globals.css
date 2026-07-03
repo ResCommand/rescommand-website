@@ -430,4 +430,219 @@ tr:hover td { background: #FAFAFC; }
   .inv-items-header-actions .btn { flex: 1; min-width: 0; text-align: center; justify-content: center; }
   .inv-items-form-card { padding: 12px !important; }
   .inv-items-search { max-width: 100% !important; }
+  .inv-tab-nav { padding: 0; gap: 0; }
+  .inv-tab-item { flex: 1; justify-content: center; }
+  .inv-unsaved-pill { width: 100%; text-align: center; }
+  .inv-row-low-stock { border-left: 3px solid #EF4444 !important; }
+  .inv-count-table th:nth-child(2), .inv-count-table td:nth-child(2),
+  .inv-count-table th:nth-child(3), .inv-count-table td:nth-child(3) { width: auto !important; }
+}
+
+/* === Inventory Redesign — Shared Tab Nav === */
+.inv-tab-nav {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--rc-border);
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+.inv-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--rc-text-gray);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.inv-tab-item:hover {
+  color: var(--rc-primary);
+  background: var(--rc-primary-light);
+  border-radius: var(--rc-radius-sm) var(--rc-radius-sm) 0 0;
+}
+.inv-tab-active {
+  color: var(--rc-primary);
+  border-bottom-color: var(--rc-primary);
+  font-weight: 600;
+}
+
+/* === Unsaved Changes Pill === */
+.inv-unsaved-pill {
+  position: fixed;
+  top: 12px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  border-radius: var(--rc-radius);
+  font-size: 13px;
+  color: #92400E;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* === Table Redesign === */
+.inv-count-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.inv-count-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rc-text-gray);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rc-border);
+  white-space: nowrap;
+}
+.inv-count-table td {
+  padding: 10px 12px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--rc-border-light);
+  vertical-align: middle;
+  color: var(--rc-text-medium);
+}
+.inv-count-table tr:last-child td { border-bottom: none; }
+.inv-count-table tr:hover td { background: #FAFAFC; }
+
+/* Row status indicators */
+.inv-row-low-stock {
+  border-left: 3px solid #EF4444;
+}
+.inv-row-at-par {
+  opacity: 0.7;
+}
+
+/* Item name cell — vendor subtitle */
+.inv-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--rc-text);
+}
+.inv-item-subtitle {
+  font-size: 12px;
+  color: var(--rc-text-light);
+  margin-top: 2px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Count progress badge */
+.inv-count-progress {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--rc-primary-light);
+  color: var(--rc-primary);
+}
+.inv-count-progress-complete {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+/* At-par celebration */
+.inv-all-at-par {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+  border: 1px solid #BBF7D0;
+  border-radius: var(--rc-radius-lg);
+}
+.inv-all-at-par-icon {
+  font-size: 48px;
+}
+.inv-all-at-par-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #059669;
+}
+.inv-all-at-par-sub {
+  font-size: 14px;
+  color: #047857;
+}
+
+/* Inventory card inner padding */
+.card-table {
+  padding: 0;
+  overflow: hidden;
+}
+.card-table > table {
+  margin: 0;
+}
+
+/* Numeric input — count entry */
+.inv-num-input {
+  width: 90px;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.inv-num-input:focus {
+  border-color: var(--rc-primary);
+  box-shadow: 0 0 0 3px var(--rc-primary-light);
+}
+
+/* Status badges — semantic */
+.inv-status-low {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.inv-status-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #D1FAE5;
+  color: #059669;
+}
+.inv-status-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #FFEDD5;
+  color: #EA580C;
+}
+.inv-status-off {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #F3F4F6;
+  color: #9CA3AF;
 }

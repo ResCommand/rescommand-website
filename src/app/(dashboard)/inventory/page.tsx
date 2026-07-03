@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import { Settings, Plus, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { Settings, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import IconPicker from "@/components/IconPicker";
+import InventoryNav from "@/components/inventory/InventoryNav";
 import { roundToPackSize } from "@/lib/packSize";
 
 interface Vendor {
@@ -65,6 +65,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [countedItems, setCountedItems] = useState<Set<number>>(new Set());
 
   // Section management
   const [showSectionModal, setShowSectionModal] = useState(false);
@@ -90,6 +91,13 @@ export default function InventoryPage() {
   const [error, setError] = useState("");
   const [parEdits, setParEdits] = useState<Map<number, number>>(new Map());
 
+  // Track refs for Enter-to-next-row keyboard navigation
+  const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+  const setInputRef = useCallback((key: string, el: HTMLInputElement | null) => {
+    if (el) inputRefs.current.set(key, el);
+    else inputRefs.current.delete(key);
+  }, []);
+
   const loadData = () => {
     Promise.all([
       fetch("/api/inventory/vendors").then((r) => r.json()),
@@ -103,7 +111,6 @@ export default function InventoryPage() {
         setVendors(vendorArr);
         setItems(itemArr);
         setSections(secArr);
-        // Start with first section expanded, rest collapsed
         if (secArr.length > 0) {
           const firstSlug = secArr[0].slug;
           setCollapsed(new Set(secArr.slice(1).map((sec: Section) => sec.slug)));
@@ -179,8 +186,8 @@ export default function InventoryPage() {
       else { const d = await r.json(); toast.error(d.error || "Failed"); }
     } catch { toast.error("Error"); }
   }
+
   async function handleVendorDelete(id: number) {
-    if (!confirm("Delete this vendor? Items must be reassigned first.")) return;
     try {
       const r = await fetch(`/api/inventory/vendors?id=${id}`, { method: "DELETE" });
       if (r.ok) { toast.success("Deleted"); loadData(); }
@@ -188,11 +195,9 @@ export default function InventoryPage() {
     } catch { toast.error("Error"); }
   }
 
-  // Generate Orders from Count
-  async function handleGenerateOrders() {
-    setShowGenOrders(true);
-    setGenOrdersLoading(false);
+  function handleGenerateOrders() {
     setGenOrdersResult(null);
+    setShowGenOrders(true);
   }
 
   async function confirmGenerateOrders() {
@@ -255,7 +260,23 @@ export default function InventoryPage() {
   const updateLine = (id: number, value: string) => {
     const num = parseFloat(value) || 0;
     setLines((prev) => new Map(prev).set(id, num));
+    setCountedItems((prev) => new Set(prev).add(id));
     setSaved(false);
+  };
+
+  // Enter key → focus next row's On Hand input
+  const handleEnterKey = (e: React.KeyboardEvent, itemId: number) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    // Find next item in the same flat sorted list
+    const sortedIds = filtered.map(i => i.id);
+    const idx = sortedIds.indexOf(itemId);
+    if (idx >= 0 && idx < sortedIds.length - 1) {
+      const nextId = sortedIds[idx + 1];
+      const nextInput = inputRefs.current.get(`onhand-${nextId}`);
+      nextInput?.focus();
+      nextInput?.select();
+    }
   };
 
   const parTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
@@ -264,7 +285,6 @@ export default function InventoryPage() {
     const num = Math.max(0, parseFloat(value) || 0);
     setParEdits((prev) => new Map(prev).set(id, num));
     setSaved(false);
-    // Debounce the API call — save 800ms after last keystroke
     const existing = parTimers.current.get(id);
     if (existing) clearTimeout(existing);
     const timer = setTimeout(async () => {
@@ -318,6 +338,13 @@ export default function InventoryPage() {
     }))
     .filter((sec) => sec.items.length > 0);
 
+  // Track counted items per section
+  const getSectionProgress = (secItems: InvItem[]) => {
+    if (secItems.length === 0) return { counted: 0, total: 0 };
+    const counted = secItems.filter(i => countedItems.has(i.id)).length;
+    return { counted, total: secItems.length };
+  };
+
   if (loading) {
     return (
       <div className="page-container">
@@ -329,43 +356,47 @@ export default function InventoryPage() {
 
   return (
     <div className="page-container">
+      {/* Header — cleaned up: title + stats + single settings button */}
       <div className="page-header">
         <div className="page-header-row">
           <div>
             <h1>Inventory</h1>
             <p className="text-sm text-gray">
-              {items.length} items across {vendors.length} vendors
+              {items.length} items · {vendors.length} vendors
               {lowStockCount > 0 && (
-                <span className="text-red" style={{ marginLeft: 8 }}>
+                <span className="inv-status-low" style={{ marginLeft: 8, verticalAlign: "middle" }}>
                   {lowStockCount} low stock
                 </span>
               )}
             </p>
           </div>
-<div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+          <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
             <button onClick={() => setShowVendorModal(true)} className="btn btn-secondary btn-sm">
-              🏢 Vendors
+              <Settings size={14} /> Settings
             </button>
-            <button onClick={openSectionCreate} className="btn btn-secondary btn-sm">
-              <Settings size={14} /> Sections
-            </button>
-            <Link href="/inventory/items" className="btn btn-secondary btn-sm">
-              ⚙️ Manage Items
-            </Link>
-            <Link href="/inventory/order-requests" className="btn btn-secondary btn-sm">
-              🛒 Order Requests
-            </Link>
-            <Link href="/inventory/history" className="btn btn-secondary btn-sm">
-              📜 History
-            </Link>
-            <Link href="/inventory/valuation" className="btn btn-secondary btn-sm">
-              💰 Valuation
-            </Link>
           </div>
         </div>
       </div>
 
-      {/* Count date + status bar — stacked on mobile */}
+      {/* Shared Tab Navigation */}
+      <InventoryNav />
+
+      {/* Sticky unsaved changes pill */}
+      {!saved && countedItems.size > 0 && (
+        <div className="inv-unsaved-pill">
+          <span>⚠️ {countedItems.size} unsaved {countedItems.size === 1 ? "change" : "changes"}</span>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={save}
+            disabled={saving}
+            style={{ marginLeft: "auto" }}
+          >
+            {saving ? "Saving..." : "Save Count"}
+          </button>
+        </div>
+      )}
+
+      {/* Count date + status bar */}
       <div className="inv-count-bar">
         <div className="inv-count-bar-row">
           <div className="form-group" style={{ marginBottom: 0, flex: "0 0 auto" }}>
@@ -394,30 +425,34 @@ export default function InventoryPage() {
               <div style={{ width: 1, height: 24, background: "#E5E7EB" }} />
               <div>
                 {saved ? (
-                  <span className="badge badge-green" style={{ fontSize: 11, padding: "2px 8px" }}>✓ Saved</span>
+                  <span className="inv-status-ok">✓ Saved</span>
                 ) : (
-                  <span className="badge badge-yellow" style={{ fontSize: 11, padding: "2px 8px" }}>Unsaved</span>
+                  <span className="badge badge-gray" style={{ fontSize: 11, padding: "2px 8px" }}>
+                    {countedItems.size > 0 ? `${countedItems.size} changed` : "No changes"}
+                  </span>
                 )}
               </div>
             </div>
           </div>
-        </div>
-        <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={save}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : saved ? "✓ Save Again" : "💾 Save Count"}
-          </button>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={handleGenerateOrders}
-          >
-            🛒 Generate Orders
-          </button>
+          <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={handleGenerateOrders}
+            >
+              🛒 Generate Orders
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* At-par celebration */}
+      {totalToOrder === 0 && items.length > 0 && (
+        <div className="inv-all-at-par" style={{ marginBottom: 16 }}>
+          <div className="inv-all-at-par-icon">✅</div>
+          <div className="inv-all-at-par-title">All items at or above par!</div>
+          <div className="inv-all-at-par-sub">No orders needed this cycle.</div>
+        </div>
+      )}
 
       {error && (
         <div style={{ background: "#FEF2F2", color: "#DC2626", padding: 10, borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
@@ -445,7 +480,7 @@ export default function InventoryPage() {
       </div>
 
       {/* Search */}
-      <div className="form-group" style={{ maxWidth: 320 }}>
+      <div className="form-group" style={{ maxWidth: 320, marginBottom: 16 }}>
         <input
           type="text"
           className="form-input"
@@ -455,7 +490,7 @@ export default function InventoryPage() {
         />
       </div>
 
-      {/* Collapsible sectionGroups */}
+      {/* Collapsible sections */}
       {sectionGroups.map((section) => {
         const isCollapsed = collapsed.has(section.key);
         const sectionToOrder = section.items.reduce((sum, i) => {
@@ -464,56 +499,56 @@ export default function InventoryPage() {
           const onHand = lines.get(i.id) ?? i.currentStock;
           return sum + Math.max(0, par - onHand);
         }, 0);
+        const progress = getSectionProgress(section.items);
+        const allCounted = progress.counted === progress.total;
         return (
-<div key={section.key} className="inv-section-block">
-	            {/* Section header */}
-	            <div
-	              className="inv-section-header"
-	              onClick={() => toggleSection(section.key)}
-	            >
-	              <div className="flex items-center gap-2" style={{ flexWrap: "wrap", minWidth: 0 }}>
-	                <span
-	                  style={{
-	                    fontSize: 11,
-	                    color: "#6B7280",
-	                    transition: "transform 0.2s",
-	                    display: "inline-block",
-	                    transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
-	                  }}
-	                >
-	                  ▼
-	                </span>
-	                <h2 className="inv-section-title">
-	                  {section.label}
-	                </h2>
-	                <span style={{ fontSize: 12, color: "#6B7280" }}>
-	                  {section.items.length}
-	                </span>
-	                {!isCollapsed && sectionToOrder > 0 && (
-	                  <span className="badge badge-orange">{sectionToOrder} to order</span>
-	                )}
-	              </div>
-	              {isCollapsed && sectionToOrder > 0 && (
-	                <span className="badge badge-orange" style={{ marginTop: 2, marginLeft: 8, flexShrink: 0 }}>to order</span>
-	              )}
-	            </div>
+          <div key={section.key} className="inv-section-block">
+            {/* Section header */}
+            <div className="inv-section-header" onClick={() => toggleSection(section.key)}>
+              <div className="flex items-center gap-2" style={{ flexWrap: "wrap", minWidth: 0 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "#6B7280",
+                    transition: "transform 0.2s",
+                    display: "inline-block",
+                    transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                  }}
+                >
+                  ▼
+                </span>
+                <h2 className="inv-section-title">{section.label}</h2>
+                <span style={{ fontSize: 12, color: "#6B7280" }}>
+                  {section.items.length}
+                </span>
+                {/* Count progress badge */}
+                {progress.counted > 0 && (
+                  <span className={`inv-count-progress ${allCounted ? "inv-count-progress-complete" : ""}`}>
+                    {allCounted ? "✓" : `${progress.counted}/${progress.total}`}
+                  </span>
+                )}
+                {!isCollapsed && sectionToOrder > 0 && (
+                  <span className="inv-status-order">{sectionToOrder} to order</span>
+                )}
+              </div>
+              {isCollapsed && sectionToOrder > 0 && (
+                <span className="inv-status-order" style={{ marginTop: 2, marginLeft: 8, flexShrink: 0 }}>to order</span>
+              )}
+            </div>
 
             {/* Section content (collapsible) */}
             {!isCollapsed && (
-              <div className="card" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, marginTop: -1 }}>
-                {/* Desktop table — hidden on mobile */}
+              <div className="card card-table" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, marginTop: -1 }}>
+                {/* Desktop table — redesigned 6 columns */}
                 <div className="table-wrapper inv-table-desktop">
-                  <table>
+                  <table className="inv-count-table">
                     <thead>
                       <tr>
                         <th>Item</th>
-                        <th>Vendor</th>
-                        <th>Pack Size</th>
-                        <th>Unit Cost</th>
                         <th style={{ width: 110 }}>On Hand</th>
-                        <th>Par Level</th>
-                        <th>To Order</th>
-                        <th>Cadence</th>
+                        <th style={{ width: 120 }}>Par Level</th>
+                        <th style={{ width: 130 }}>To Order</th>
+                        <th style={{ width: 90 }}>Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -524,75 +559,77 @@ export default function InventoryPage() {
                         const { qty: toOrder, cases, rounded } = roundToPackSize(rawToOrder, item.packSize);
                         const isLow = par > 0 && onHand <= item.minStock && item.minStock > 0;
                         const dimmed = par === 0;
+                        const atPar = par > 0 && toOrder === 0 && !isLow;
+                        const rowClass = isLow ? "inv-row-low-stock" : atPar ? "inv-row-at-par" : "";
                         return (
-                          <tr key={item.id} style={{ opacity: dimmed ? 0.45 : 1 }}>
+                          <tr key={item.id} className={rowClass} style={{ opacity: dimmed ? 0.45 : undefined }}>
                             <td>
-                              <div className="font-medium text-sm">{item.name}</div>
-                              {item.sku && <div className="text-xs text-gray">SKU: {item.sku}</div>}
-                            </td>
-                            <td>
-                              <span className="badge badge-blue">{item.vendor?.name || "—"}</span>
-                            </td>
-                            <td className="text-sm">{item.packSize || "—"}</td>
-                            <td className="text-sm">
-                              {item.unitCost > 0 ? `$${item.unitCost.toFixed(2)}` : "—"}
+                              <div className="inv-item-name">{item.name}</div>
+                              <div className="inv-item-subtitle">
+                                {item.vendor && <span>{item.vendor.name}</span>}
+                                {item.vendor && item.unitCost > 0 && <span>·</span>}
+                                {item.unitCost > 0 && <span>${item.unitCost.toFixed(2)}/{item.unit}</span>}
+                                {item.sku && <span>· SKU: {item.sku}</span>}
+                              </div>
                             </td>
                             <td>
                               <input
+                                ref={(el) => setInputRef(`onhand-${item.id}`, el)}
                                 type="number"
-                                className="form-input"
-                                style={{
-                                  width: 90,
-                                  padding: "5px 8px",
-                                  fontSize: 13,
-                                  borderColor: isLow ? "#DC2626" : undefined,
-                                  background: isLow ? "#FEF2F2" : undefined,
-                                }}
+                                className="inv-num-input"
                                 min="0"
                                 step="0.5"
+                                inputMode="decimal"
                                 placeholder="0"
                                 value={onHand || ""}
                                 onChange={(e) => updateLine(item.id, e.target.value)}
+                                onKeyDown={(e) => handleEnterKey(e, item.id)}
                               />
                             </td>
                             <td>
                               <input
                                 type="number"
-                                className="form-input"
+                                className="inv-num-input"
                                 style={{
                                   width: 70,
-                                  padding: "5px 8px",
-                                  fontSize: 13,
-                                  borderColor: par === 0 ? "#D1D5DB" : undefined,
-                                  color: par === 0 ? "#9CA3AF" : undefined,
+                                  color: par === 0 ? "var(--rc-text-light)" : undefined,
                                 }}
                                 min="0"
                                 step="0.5"
+                                inputMode="decimal"
                                 placeholder="0"
                                 value={par || ""}
                                 onChange={(e) => updatePar(item.id, e.target.value)}
                                 title={par === 0 ? "Set par level above 0 to track this item" : ""}
                               />
-                              <span className="text-xs text-gray" style={{ marginLeft: 2 }}>{item.unit}</span>
+                              <span className="text-xs text-gray" style={{ marginLeft: 4 }}>{item.unit}</span>
                             </td>
                             <td>
                               {toOrder > 0 ? (
                                 <div>
-                                  <span className="badge badge-orange">{toOrder} {item.unit}</span>
+                                  <span className="inv-status-order">{toOrder} {item.unit}</span>
                                   {cases && rounded && (
                                     <div className="text-xs text-gray" style={{ marginTop: 2 }}>
-                                      {cases} case{cases !== 1 ? "s" : ""}
+                                      {cases} case{cases !== 1 ? "s" : ""} · {item.packSize}
                                     </div>
                                   )}
                                 </div>
                               ) : dimmed ? (
-                                <span className="text-xs text-gray" style={{ fontStyle: "italic" }}>off</span>
+                                <span className="inv-status-off">Off</span>
                               ) : (
                                 <span className="text-xs text-gray">—</span>
                               )}
                             </td>
-                            <td className="text-xs text-gray" style={{ maxWidth: 140 }}>
-                              {item.suggestedCadence || "—"}
+                            <td>
+                              {isLow ? (
+                                <span className="inv-status-low">Low</span>
+                              ) : atPar ? (
+                                <span className="inv-status-ok">✓ OK</span>
+                              ) : toOrder > 0 ? (
+                                <span className="inv-status-order">Order</span>
+                              ) : (
+                                <span className="inv-status-off">—</span>
+                              )}
                             </td>
                           </tr>
                         );
@@ -601,79 +638,85 @@ export default function InventoryPage() {
                   </table>
                 </div>
 
-                {/* Mobile card list — hidden on desktop */}
-<div className="inv-cards-mobile">
-	                  {section.items.map((item) => {
-	                    const par = getPar(item);
-	                    const onHand = lines.get(item.id) ?? item.currentStock;
-	                    const toOrder = par > 0 ? Math.max(0, par - onHand) : 0;
-	                    const isLow = par > 0 && onHand <= item.minStock && item.minStock > 0;
-	                    const dimmed = par === 0;
-	                    return (
-	                      <div
-	                        key={item.id}
-	                        className="inv-card"
-	                        style={{ opacity: dimmed ? 0.45 : 1, borderBottom: "1px solid #F1F3F5" }}
-	                      >
-	                        <div className="flex items-center justify-between mb-1" style={{ gap: 4 }}>
-	                          <div className="font-medium text-sm" style={{ flex: 1, marginRight: 4, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
-	                          <span className="badge badge-blue" style={{ fontSize: 10, padding: "1px 6px", flexShrink: 0 }}>
-	                            {item.vendor?.name || "—"}
-	                          </span>
-	                        </div>
-	                        <div className="flex items-center justify-between" style={{ gap: 6 }}>
-	                          <div className="flex items-center" style={{ gap: 6 }}>
-	                            <div>
-	                              <label className="text-xs text-gray" style={{ display: "block" }}>On Hand</label>
-<input
+                {/* Mobile card list */}
+                <div className="inv-cards-mobile">
+                  {section.items.map((item) => {
+                    const par = getPar(item);
+                    const onHand = lines.get(item.id) ?? item.currentStock;
+                    const toOrder = par > 0 ? Math.max(0, par - onHand) : 0;
+                    const isLow = par > 0 && onHand <= item.minStock && item.minStock > 0;
+                    const dimmed = par === 0;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`inv-card ${isLow ? "inv-row-low-stock" : ""}`}
+                        style={{ opacity: dimmed ? 0.45 : 1, borderBottom: "1px solid #F1F3F5", padding: "12px 16px" }}
+                      >
+                        <div className="flex items-center justify-between mb-1" style={{ gap: 4 }}>
+                          <div className="inv-item-name" style={{ flex: 1, marginRight: 4, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {item.name}
+                          </div>
+                          {isLow && <span className="inv-status-low">Low</span>}
+                          {toOrder > 0 && !isLow && <span className="inv-status-order">+{toOrder} {item.unit}</span>}
+                          {!isLow && toOrder === 0 && par > 0 && <span className="inv-status-ok">✓</span>}
+                        </div>
+                        <div className="inv-item-subtitle" style={{ marginBottom: 8 }}>
+                          {item.vendor && <span>{item.vendor.name}</span>}
+                          {item.unitCost > 0 && <span>· ${item.unitCost.toFixed(2)}</span>}
+                        </div>
+                        <div className="flex items-center justify-between" style={{ gap: 8 }}>
+                          <div className="flex items-center" style={{ gap: 8 }}>
+                            <div>
+                              <label className="text-xs text-gray" style={{ display: "block" }}>On Hand</label>
+                              <input
+                                ref={(el) => setInputRef(`onhand-${item.id}`, el)}
                                 type="number"
-                                className="form-input"
-                                style={{
-                                  width: 64, padding: "4px 4px", fontSize: 14,
-                                  borderColor: isLow ? "#DC2626" : undefined,
-                                  background: isLow ? "#FEF2F2" : undefined,
-                                }}
-                                min="0" step="0.5" placeholder="0"
+                                className="inv-num-input"
+                                style={{ width: 72, fontSize: 15 }}
+                                min="0"
+                                step="0.5"
+                                inputMode="decimal"
+                                placeholder="0"
                                 value={onHand || ""}
                                 onChange={(e) => updateLine(item.id, e.target.value)}
+                                onKeyDown={(e) => handleEnterKey(e, item.id)}
                               />
                             </div>
                             <div>
                               <label className="text-xs text-gray" style={{ display: "block" }}>Par</label>
                               <input
                                 type="number"
-                                className="form-input"
+                                className="inv-num-input"
                                 style={{
-                                  width: 52, padding: "4px 4px", fontSize: 14,
-                                  color: par === 0 ? "#9CA3AF" : undefined,
+                                  width: 60, fontSize: 15,
+                                  color: par === 0 ? "var(--rc-text-light)" : undefined,
                                 }}
-                                min="0" step="0.5" placeholder="0"
+                                min="0"
+                                step="0.5"
+                                inputMode="decimal"
+                                placeholder="0"
                                 value={par || ""}
                                 onChange={(e) => updatePar(item.id, e.target.value)}
                               />
-	                            </div>
-	                          </div>
-	                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-	                            {toOrder > 0 ? (
-	                              <span className="badge badge-orange" style={{ fontSize: 11 }}>
-	                                +{toOrder} {item.unit}
-	                              </span>
-	                            ) : dimmed ? (
-	                              <span className="text-xs text-gray" style={{ fontStyle: "italic" }}>off</span>
-	                            ) : (
-	                              <span className="text-xs text-gray">✓</span>
-	                            )}
-	                            {item.unitCost > 0 && (
-	                              <div className="text-xs text-gray" style={{ marginTop: 2 }}>
-	                                ${item.unitCost.toFixed(2)}
-	                              </div>
-	                            )}
-	                          </div>
-	                        </div>
-	                      </div>
-	                    );
-	                  })}
-	                </div>
+                            </div>
+                          </div>
+                          {toOrder > 0 && (
+                            <div style={{ textAlign: "right", flexShrink: 0 }}>
+                              <span className="inv-status-order" style={{ fontSize: 11 }}>
+                                +{toOrder} {item.unit}
+                              </span>
+                              {item.unitCost > 0 && (
+                                <div className="text-xs text-gray" style={{ marginTop: 2 }}>
+                                  ≈ ${(toOrder * item.unitCost).toFixed(2)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -685,17 +728,6 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Bottom save button (mobile convenience) */}
-      <div style={{ marginTop: 16, display: "flex", gap: 12, justifyContent: "center" }}>
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={save}
-          disabled={saving}
-        >
-          {saving ? "Saving..." : saved ? "✓ All Saved" : "💾 Save Changes"}
-        </button>
-      </div>
-
       {/* Section Management Modal */}
       {showSectionModal && (
         <div className="modal-backdrop" onClick={() => setShowSectionModal(false)}>
@@ -704,7 +736,6 @@ export default function InventoryPage() {
               <h2>{editingSection ? "Edit Section" : "Manage Sections"}</h2>
             </div>
             <div className="modal-body">
-              {/* Existing sections */}
               <div className="space-y-2" style={{ marginBottom: 16 }}>
                 {sections.map(s => (
                   <div key={s.id} className="list-item">
@@ -717,7 +748,6 @@ export default function InventoryPage() {
                   </div>
                 ))}
               </div>
-              {/* Add/Edit form */}
               <form onSubmit={handleSectionSubmit} className="space-y-3">
                 <div>
                   <label className="form-label">{editingSection ? "Rename" : "New Section Name"}</label>
@@ -742,9 +772,26 @@ export default function InventoryPage() {
         <div className="modal-backdrop" onClick={() => setShowVendorModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
             <div className="modal-header">
-              <h2>{editingVendor ? "Edit Vendor" : "Manage Vendors"}</h2>
+              <h2>{editingVendor ? "Edit Vendor" : "Manage Vendors & Sections"}</h2>
             </div>
             <div className="modal-body">
+              {/* Tabs within settings: Vendors / Sections */}
+              {!editingVendor && !editingSection && (
+                <div className="tabs" style={{ marginBottom: 16 }}>
+                  <button
+                    className={`tab active`}
+                    style={{ cursor: "default" }}
+                  >
+                    Vendors
+                  </button>
+                  <button
+                    className={`tab`}
+                    onClick={() => { setShowVendorModal(false); setShowSectionModal(true); }}
+                  >
+                    Sections
+                  </button>
+                </div>
+              )}
               {/* Existing vendors */}
               {!editingVendor && (
                 <div className="space-y-2" style={{ marginBottom: 16 }}>

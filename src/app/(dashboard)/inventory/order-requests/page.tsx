@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import InventoryNav from "@/components/inventory/InventoryNav";
 
 interface OrderRequest {
   id: number;
@@ -241,7 +241,7 @@ export default function OrderRequestsPage() {
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1>🛒 Order Requests</h1>
+            <h1>Order Requests</h1>
             <p className="text-sm text-gray">
               Request items for order. {statusCounts.PENDING} pending approval.
             </p>
@@ -253,12 +253,11 @@ export default function OrderRequestsPage() {
             >
               {showForm ? "✕ Cancel" : "+ New Request"}
             </button>
-            <Link href="/inventory" className="btn btn-secondary btn-sm">
-              ← Back to Inventory
-            </Link>
           </div>
         </div>
       </div>
+
+      <InventoryNav />
 
       {/* New request form */}
       {showForm && (

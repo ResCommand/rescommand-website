@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
-import { ChevronLeft, TrendingUp, Package, AlertTriangle } from "lucide-react";
+import { TrendingUp, Package, AlertTriangle } from "lucide-react";
+import InventoryNav from "@/components/inventory/InventoryNav";
 
 interface InvItem {
   id: number;
@@ -105,16 +105,15 @@ export default function ValuationPage() {
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h1>💰 Inventory Valuation</h1>
+            <h1>Inventory Valuation</h1>
             <p className="text-sm text-gray">
               Current stock value across {items.length} item{items.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Link href="/inventory" className="btn btn-secondary btn-sm">
-            <ChevronLeft size={14} /> Back to Inventory
-          </Link>
         </div>
       </div>
+
+      <InventoryNav />
 
       {/* Top cards */}
       <div className="grid-3" style={{ marginBottom: 24 }}>

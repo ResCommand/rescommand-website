@@ -59,7 +59,7 @@ export async function GET() {
 // POST /api/users — create new user in this tenant
 export async function POST(request: Request) {
   const { userId, tenantId, role: actingRole } = await getSessionContext();
-  if (actingRole !== "MANAGER" && actingRole !== "OWNER")
+  if (actingRole !== "MANAGER" && actingRole !== "OWNER" && actingRole !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 // PUT /api/users — update user (must be in same tenant)
 export async function PUT(request: Request) {
   const { tenantId, role: actingRole } = await getSessionContext();
-  if (actingRole !== "MANAGER" && actingRole !== "OWNER")
+  if (actingRole !== "MANAGER" && actingRole !== "OWNER" && actingRole !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
@@ -164,7 +164,7 @@ export async function PUT(request: Request) {
 // DELETE /api/users — deactivate user (must be in same tenant)
 export async function DELETE(request: Request) {
   const { userId: sessionUserId, tenantId, role: actingRole } = await getSessionContext();
-  if (actingRole !== "OWNER")
+  if (actingRole !== "OWNER" && actingRole !== "PLATFORM_ADMIN")
     return NextResponse.json({ error: "Only owners can delete users" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);

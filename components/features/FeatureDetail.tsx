@@ -10,9 +10,18 @@ interface FeatureDetailProps {
 }
 
 /** One feature per screen: huge line, problem → solution → benefit, hairline bullets, the app. */
-export function FeatureDetail({ feature, reverse = false }: FeatureDetailProps) {
+export function FeatureDetail({ feature, reverse: reverseProp = false }: FeatureDetailProps) {
+  // Without a screenshot there is no second column to alternate with.
+  const reverse = reverseProp && Boolean(feature.screenshot)
+
   return (
-    <div id={feature.slug} className="grid scroll-mt-24 items-center gap-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-20">
+    <div
+      id={feature.slug}
+      className={cn(
+        'grid scroll-mt-24 items-center gap-14 lg:gap-20',
+        feature.screenshot && 'lg:grid-cols-[minmax(0,1fr)_300px]',
+      )}
+    >
       <div className={cn('flex flex-col items-start gap-6', reverse && 'lg:order-2')}>
         <h2 className="text-huge text-balance">{feature.title}</h2>
 
@@ -44,9 +53,11 @@ export function FeatureDetail({ feature, reverse = false }: FeatureDetailProps) 
         </Button>
       </div>
 
-      <div className={cn(reverse && 'lg:order-1')}>
-        <PhoneFrame screen={feature.screen} />
-      </div>
+      {feature.screenshot && (
+        <div className={cn(reverse && 'lg:order-1')}>
+          <PhoneFrame screen={feature.screen} src={feature.screenshot} />
+        </div>
+      )}
     </div>
   )
 }

@@ -28,6 +28,8 @@ export interface FeatureItem {
   slug: string
   /** App screen to show for this feature (phone-frame screenshot). */
   screen: string
+  /** Screenshot path under /public. The phone frame stays hidden until one is added. */
+  screenshot?: string
   problem: string
   solution: string
   benefit: string

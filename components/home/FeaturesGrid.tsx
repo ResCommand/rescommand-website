@@ -3,6 +3,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Button } from '@/components/ui/Button'
 import { PhoneFrame } from '@/components/ui/PhoneFrame'
 import { FEATURES } from '@/lib/content'
+import { cn } from '@/lib/utils'
 
 /** "One App. Everything You Need." — then one screen per feature: huge line, a sentence, the app. */
 export function FeaturesGrid() {
@@ -16,9 +17,14 @@ export function FeaturesGrid() {
         />
       </Section>
 
-      {FEATURES.map(({ title, short, slug, screen }) => (
+      {FEATURES.map(({ title, short, slug, screen, screenshot }) => (
         <Section key={slug} aria-labelledby={`feature-${slug}`}>
-          <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-20">
+          <div
+            className={cn(
+              'grid items-center gap-14 lg:gap-20',
+              screenshot && 'lg:grid-cols-[minmax(0,1fr)_300px]',
+            )}
+          >
             <div className="flex flex-col items-start gap-5">
               <h3 id={`feature-${slug}`} className="text-huge text-balance">
                 {title}
@@ -28,7 +34,7 @@ export function FeaturesGrid() {
                 Learn more →
               </Button>
             </div>
-            <PhoneFrame screen={screen} />
+            <PhoneFrame screen={screen} src={screenshot} />
           </div>
         </Section>
       ))}

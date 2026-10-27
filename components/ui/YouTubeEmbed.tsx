@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Play } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface YouTubeEmbedProps {
@@ -28,7 +27,7 @@ export function YouTubeEmbed({
 
   if (hasVideo && playing) {
     return (
-      <div className={cn('relative aspect-video w-full overflow-hidden rounded-xl', className)}>
+      <div className={cn('relative aspect-video w-full overflow-hidden rounded-md', className)}>
         <iframe
           className="absolute inset-0 h-full w-full"
           src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
@@ -46,10 +45,8 @@ export function YouTubeEmbed({
       onClick={() => hasVideo && setPlaying(true)}
       aria-label={hasVideo ? `Play ${title}` : `${title} (coming soon)`}
       className={cn(
-        'group relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl border border-accent-sky/20 bg-primary-navy/60 bg-grid transition duration-300 ease-default',
-        hasVideo
-          ? 'cursor-pointer hover:border-accent-sky/50'
-          : 'cursor-default',
+        'group relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-line',
+        hasVideo ? 'cursor-pointer' : 'cursor-default border-dashed',
         className,
       )}
     >
@@ -60,16 +57,19 @@ export function YouTubeEmbed({
           aria-hidden="true"
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover opacity-40"
+          className="object-cover"
         />
       )}
       <span className="relative z-10 flex flex-col items-center gap-3 text-center">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-sky text-primary-navy shadow-sky-md transition duration-300 ease-default group-hover:scale-105 group-hover:bg-accent-bright">
-          <Play className="ml-1 h-7 w-7 fill-current" aria-hidden="true" />
-        </span>
-        <span className="text-body-md font-semibold text-ink">{caption}</span>
-        {!hasVideo && (
-          <span className="text-body-sm text-muted">Video coming soon</span>
+        {hasVideo ? (
+          <span className="flex h-12 items-center rounded bg-signal px-6 text-[15px] font-medium text-white transition-colors group-hover:bg-signal-hover">
+            ▶&nbsp;&nbsp;{caption}
+          </span>
+        ) : (
+          <>
+            <span className="text-small font-medium text-ink">{caption}</span>
+            <span className="text-small text-grey-light">Video coming soon</span>
+          </>
         )}
       </span>
     </button>

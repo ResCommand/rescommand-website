@@ -159,11 +159,11 @@ export default function HelpPage() {
         subtitle="Answers to common questions about ResCommand."
       />
 
-      <Section background="navy">
-        <div className="flex flex-col gap-12">
+      <Section>
+        <div className="flex max-w-3xl flex-col gap-16">
           {HELP.map((group) => (
-            <div key={group.heading} className="flex flex-col gap-5">
-              <h2 className="font-display text-heading-sm font-bold text-ink">{group.heading}</h2>
+            <div key={group.heading} className="flex flex-col gap-4">
+              <h2 className="text-label font-medium uppercase text-grey">{group.heading}</h2>
               <Accordion items={group.items as AccordionItemData[]} allowMultiple />
             </div>
           ))}
@@ -175,7 +175,6 @@ export default function HelpPage() {
         copy="Reach out to our team. We're here to help."
         primaryLabel="Email Support"
         primaryHref={`mailto:${SITE.supportEmail}`}
-        background="deep"
       />
     </>
   )

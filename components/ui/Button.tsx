@@ -3,26 +3,20 @@ import { forwardRef } from 'react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'link'
-type Size = 'sm' | 'md' | 'lg'
+type Variant = 'primary' | 'link'
+type Size = 'sm' | 'md'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-body font-semibold whitespace-nowrap transition duration-300 ease-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-sky focus-visible:ring-offset-2 focus-visible:ring-offset-primary-navy disabled:opacity-50 disabled:pointer-events-none'
+  'inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-paper disabled:opacity-50 disabled:pointer-events-none'
 
 const variants: Record<Variant, string> = {
-  primary:
-    'bg-accent-sky text-primary-navy font-bold hover:bg-accent-bright hover:shadow-sky-md hover:-translate-y-0.5 active:translate-y-0',
-  secondary:
-    'border-2 border-accent-sky bg-primary-panel text-accent-sky hover:bg-primary-deep hover:shadow-sky-md hover:-translate-y-0.5',
-  ghost:
-    'border border-accent-sky text-accent-sky hover:bg-accent-sky/10 hover:text-accent-bright hover:border-accent-bright',
-  link: 'text-accent-sky underline underline-offset-4 hover:text-accent-bright px-0',
+  primary: 'rounded bg-signal text-white hover:bg-signal-hover',
+  link: 'min-h-[44px] text-signal underline-offset-4 hover:text-signal-hover hover:underline',
 }
 
 const sizes: Record<Size, string> = {
-  sm: 'px-4 py-2 text-body-sm',
-  md: 'px-6 py-3 text-body-md',
-  lg: 'px-8 py-4 text-body-lg',
+  sm: 'h-11 px-4 text-small',
+  md: 'h-12 px-6 text-[15px]',
 }
 
 interface CommonProps {
@@ -47,13 +41,14 @@ type ButtonProps = ButtonAsButton | ButtonAsLink
 
 /**
  * Polymorphic button — renders a styled `<button>` or an `<a>`/`next/link`
- * when an `href` is supplied. Variants: primary, secondary, ghost, link.
+ * when an `href` is supplied. `primary` is the one filled blue button a
+ * section may carry; `link` is blue text for everything else clickable.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = 'primary', size = 'md', className, children, ...props },
   ref,
 ) {
-  const classes = cn(base, variants[variant], variant !== 'link' && sizes[size], className)
+  const classes = cn(base, variants[variant], variant === 'primary' && sizes[size], className)
 
   if ('href' in props && props.href !== undefined) {
     const { href, external, ...rest } = props as ButtonAsLink

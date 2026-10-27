@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Young_Serif, Instrument_Sans } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/react'
 import { SITE } from '@/lib/constants'
 import { Header } from '@/components/layout/Header'
@@ -8,18 +8,11 @@ import { GoogleAnalytics } from '@/components/seo/GoogleAnalytics'
 import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd'
 import '@/styles/globals.css'
 
-// Young Serif ships a single weight (400); its natural weight is the display look.
-const youngSerif = Young_Serif({
+// One family, two weights: 800 for the huge lines, 400/500 for everything else.
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-young-serif',
-  display: 'swap',
-})
-
-const instrumentSans = Instrument_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-instrument-sans',
+  weight: ['400', '500', '800'],
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -67,11 +60,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${youngSerif.variable} ${instrumentSans.variable}`}>
-      <body className="min-h-screen bg-primary-navy font-body text-ink antialiased">
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen bg-paper font-sans text-ink antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[999] focus:rounded-md focus:bg-accent-sky focus:px-4 focus:py-2 focus:text-primary-navy"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[999] focus:rounded focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
         >
           Skip to content
         </a>

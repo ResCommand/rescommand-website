@@ -44,36 +44,33 @@ export default function AboutPage() {
       />
 
       {/* Origin story */}
-      <Section background="navy" aria-labelledby="origin-heading">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+      <Section aria-labelledby="origin-heading">
+        <div className="grid items-start gap-14 lg:grid-cols-2 lg:gap-20">
           <div className="flex flex-col gap-5">
-            <h2 id="origin-heading" className="font-display text-heading-md font-bold text-ink sm:text-display-sm">
+            <h2 id="origin-heading" className="mb-3 text-huge text-balance">
               The Origin Story
             </h2>
-            <p className="text-body-md text-muted">
+            <p className="max-w-text text-body text-grey">
               ResCommand wasn&rsquo;t born from a boardroom. It came from Duffers Donuts — a
               scratch-made donut shop in Charleston, South Carolina.
             </p>
-            <p className="text-body-md text-muted">
+            <p className="max-w-text text-body text-grey">
               Catherine Williamson, our head baker, was juggling recipes in notebooks. The team was
               scattered across text messages. Prep schedules were printed yesterday, now outdated. We
               watched the chaos and decided: there has to be a better way.
             </p>
-            <p className="text-body-md text-muted">
+            <p className="max-w-text text-body text-grey">
               We built ResCommand as the operating system our restaurant needed. Every feature
               answered a real question: &ldquo;How do we stop the bleeding here?&rdquo; Not features
               we thought restaurants should want. Features restaurants are already trying to use in
               ten different tools.
             </p>
 
-            <dl className="mt-4 grid grid-cols-2 gap-4">
+            <dl className="mt-6 max-w-text border-b border-line">
               {STATS.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-xl border border-accent-sky/30 bg-primary-panel p-5"
-                >
-                  <dt className="font-display text-display-sm font-bold text-accent-sky">{stat.value}</dt>
-                  <dd className="mt-1 text-body-sm text-muted">{stat.label}</dd>
+                <div key={stat.label} className="flex min-h-[48px] items-center justify-between gap-4 border-t border-line text-[15px]">
+                  <dd className="order-2 text-grey">{stat.label}</dd>
+                  <dt className="order-1 font-medium">{stat.value}</dt>
                 </div>
               ))}
             </dl>
@@ -83,27 +80,27 @@ export default function AboutPage() {
       </Section>
 
       {/* Philosophy */}
-      <Section background="deep" aria-labelledby="philosophy-heading">
+      <Section aria-labelledby="philosophy-heading">
         <SectionHeading title={<span id="philosophy-heading">Why We Do This</span>} />
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <div className="mt-14 grid gap-x-10 md:grid-cols-3">
           {PHILOSOPHY.map((item) => (
-            <div key={item.title} className="flex flex-col gap-3 rounded-xl bg-primary-panel p-8 shadow-md">
-              <h3 className="font-display text-heading-xs font-semibold text-ink">{item.title}</h3>
-              <p className="text-body-md text-muted">{item.copy}</p>
+            <div key={item.title} className="flex flex-col gap-2 border-t border-line py-6">
+              <h3 className="text-body font-medium">{item.title}</h3>
+              <p className="text-[15px] text-grey">{item.copy}</p>
             </div>
           ))}
         </div>
       </Section>
 
       {/* Team placeholder */}
-      <Section background="navy" aria-labelledby="team-heading">
+      <Section aria-labelledby="team-heading">
         <SectionHeading
           title={<span id="team-heading">The Team</span>}
           subtitle="Operators, builders, and a few very serious donut tasters. Full team bios coming soon."
         />
       </Section>
 
-      <CTASection title="Ready to Stop the Chaos?" background="deep" />
+      <CTASection title="Ready to Stop the Chaos?" />
     </>
   )
 }

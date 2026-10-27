@@ -1,7 +1,5 @@
-import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { cn } from '@/lib/utils'
+import { Label } from '@/components/ui/SectionHeading'
 import type { PricingTier } from '@/lib/content'
 
 interface PricingCardProps {
@@ -9,47 +7,38 @@ interface PricingCardProps {
   ctaHref?: string
 }
 
-/** Single pricing plan card. The `featured` tier gets a sky border + badge. */
+/**
+ * One plan in plain ink: the price is the huge line, features sit on hairline
+ * rows. Only the featured tier gets the filled blue button.
+ */
 export function PricingCard({ tier, ctaHref = '/demo' }: PricingCardProps) {
   return (
-    <div
-      className={cn(
-        'relative flex flex-col gap-6 rounded-xl bg-primary-panel p-8 shadow-md',
-        tier.featured ? 'border-2 border-accent-sky shadow-sky-sm' : 'border border-muted/10',
-      )}
-    >
-      {tier.featured && (
-        <div className="absolute -top-3 left-8">
-          <Badge tone="gold">Most popular</Badge>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <h3 className="font-display text-heading-sm font-bold text-ink">{tier.name}</h3>
-        <p className="text-body-sm text-muted">{tier.blurb}</p>
+    <div className="flex flex-col">
+      <div className="flex items-baseline gap-3">
+        <h3 className="text-body font-medium">{tier.name}</h3>
+        {tier.featured && <Label>Most popular</Label>}
       </div>
 
-      <div className="flex items-baseline gap-1">
-        <span className="font-display text-display-sm font-bold text-ink">{tier.price}</span>
-        <span className="text-body-md text-muted">{tier.cadence}</span>
-      </div>
+      <p className="mt-4 flex items-baseline gap-1">
+        <span className="text-huge">{tier.price}</span>
+        <span className="text-small text-grey">{tier.cadence}</span>
+      </p>
+      <p className="mt-3 text-[15px] text-grey">{tier.blurb}</p>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="mt-6 border-b border-line">
         {tier.highlights.map((item) => (
-          <li key={item} className="flex items-start gap-3 text-body-md text-ink">
-            <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-semantic-success" aria-hidden="true" />
+          <li key={item} className="flex min-h-[48px] items-center border-t border-line text-[15px]">
             {item}
           </li>
         ))}
       </ul>
 
-      <Button
-        href={ctaHref}
-        variant={tier.featured ? 'primary' : 'secondary'}
-        className="mt-auto w-full"
-      >
-        {tier.cta}
-      </Button>
+      <div className="mt-6">
+        <Button href={ctaHref} variant={tier.featured ? 'primary' : 'link'}>
+          {tier.cta}
+          {!tier.featured && ' →'}
+        </Button>
+      </div>
     </div>
   )
 }

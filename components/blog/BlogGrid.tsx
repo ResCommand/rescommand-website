@@ -18,7 +18,7 @@ export function BlogGrid({ posts }: { posts: PostMeta[] }) {
   return (
     <div className="flex flex-col gap-10">
       {/* Filter buttons */}
-      <div className="flex flex-wrap gap-3" role="tablist" aria-label="Filter posts by category">
+      <div className="flex flex-wrap gap-x-6 border-b border-line" role="tablist" aria-label="Filter posts by category">
         {BLOG_CATEGORIES.map((category) => {
           const isActive = active === category
           return (
@@ -29,10 +29,8 @@ export function BlogGrid({ posts }: { posts: PostMeta[] }) {
               aria-selected={isActive}
               onClick={() => setActive(category)}
               className={cn(
-                'rounded-full px-4 py-2 text-body-sm font-semibold transition duration-300',
-                isActive
-                  ? 'bg-accent-sky text-primary-navy'
-                  : 'bg-primary-panel text-muted hover:text-accent-sky',
+                '-mb-px min-h-[44px] border-b-2 text-small font-medium transition-colors',
+                isActive ? 'border-signal text-signal' : 'border-transparent text-grey hover:text-ink',
               )}
             >
               {category}
@@ -42,13 +40,13 @@ export function BlogGrid({ posts }: { posts: PostMeta[] }) {
       </div>
 
       {filtered.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((post) => (
             <PostCard key={post.slug} post={post} />
           ))}
         </div>
       ) : (
-        <p className="text-body-md text-muted">No posts in this category yet — check back soon.</p>
+        <p className="text-body text-grey">No posts in this category yet — check back soon.</p>
       )}
     </div>
   )

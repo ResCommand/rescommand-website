@@ -1,4 +1,3 @@
-import { ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ImagePlaceholderProps {
@@ -9,8 +8,8 @@ interface ImagePlaceholderProps {
 }
 
 /**
- * Branded placeholder for image slots that don't yet have real assets.
- * Swap for a `next/image` once photography/screenshots are available.
+ * Labeled hairline box for image slots that don't have real assets yet.
+ * Swap for a `next/image` once photography is available.
  */
 export function ImagePlaceholder({
   label = 'Image placeholder',
@@ -20,15 +19,14 @@ export function ImagePlaceholder({
   return (
     <div
       role="img"
-      aria-label={label}
+      aria-label={`${label} (placeholder)`}
       style={{ aspectRatio: ratio }}
       className={cn(
-        'flex w-full flex-col items-center justify-center gap-3 rounded-xl border border-accent-sky/20 bg-primary-panel bg-grid text-muted shadow-md',
+        'flex w-full items-center justify-center rounded-md border border-dashed border-line px-6 text-center',
         className,
       )}
     >
-      <ImageIcon className="h-10 w-10 text-accent-sky/60" aria-hidden="true" />
-      <span className="px-4 text-center text-body-sm">{label}</span>
+      <span className="text-small text-grey-light">Photo needed: {label}</span>
     </div>
   )
 }

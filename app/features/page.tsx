@@ -21,13 +21,11 @@ export default function FeaturesPage() {
         subtitle="Every feature designed by restaurant operators for restaurant operators."
       />
 
-      <Section background="navy">
-        <div className="flex flex-col gap-20 lg:gap-28">
-          {FEATURES.map((feature, index) => (
-            <FeatureDetail key={feature.slug} feature={feature} reverse={index % 2 === 1} />
-          ))}
-        </div>
-      </Section>
+      {FEATURES.map((feature, index) => (
+        <Section key={feature.slug}>
+          <FeatureDetail feature={feature} reverse={index % 2 === 1} />
+        </Section>
+      ))}
 
       <CTASection
         title="Ready to see it in action?"

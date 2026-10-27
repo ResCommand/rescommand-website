@@ -13,10 +13,10 @@ export function LegalLayout({ title, lastUpdated, children }: LegalLayoutProps) 
   return (
     <>
       <PageHero eyebrow="Legal" title={title} subtitle={`Last updated: ${lastUpdated}`} />
-      <div className="bg-primary-navy py-16">
+      <div className="pb-20 sm:pb-28">
         <Container>
-          <div className="prose-rescommand mx-auto max-w-prose">
-            <p className="text-body-sm text-muted">
+          <div className="prose-rescommand border-t border-line pt-12">
+            <p className="text-small text-grey">
               This is placeholder legal text provided for layout purposes. Replace it with your
               finalized policy, reviewed by qualified counsel, before launch.
             </p>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useId, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface AccordionItemData {
@@ -32,13 +31,13 @@ export function Accordion({ items, className, allowMultiple = false }: Accordion
   }
 
   return (
-    <div className={cn('divide-y divide-muted/15 rounded-xl bg-primary-panel', className)}>
+    <div className={cn('border-b border-line', className)}>
       {items.map((item, index) => {
         const isOpen = open.includes(index)
         const buttonId = `${baseId}-button-${index}`
         const panelId = `${baseId}-panel-${index}`
         return (
-          <div key={index}>
+          <div key={index} className="border-t border-line">
             <h3>
               <button
                 id={buttonId}
@@ -46,16 +45,12 @@ export function Accordion({ items, className, allowMultiple = false }: Accordion
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 onClick={() => toggle(index)}
-                className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-display text-body-lg font-semibold text-ink transition-colors duration-300 hover:text-accent-sky"
+                className="flex min-h-[56px] w-full items-center justify-between gap-4 py-4 text-left text-body font-medium text-ink"
               >
                 <span>{item.question}</span>
-                <ChevronDown
-                  className={cn(
-                    'h-5 w-5 flex-shrink-0 text-accent-sky transition-transform duration-300',
-                    isOpen && 'rotate-180',
-                  )}
-                  aria-hidden="true"
-                />
+                <span className="w-4 flex-shrink-0 text-center text-body text-grey-light" aria-hidden="true">
+                  {isOpen ? '−' : '+'}
+                </span>
               </button>
             </h3>
             <div
@@ -63,7 +58,7 @@ export function Accordion({ items, className, allowMultiple = false }: Accordion
               role="region"
               aria-labelledby={buttonId}
               hidden={!isOpen}
-              className="px-6 pb-6 text-body-md leading-relaxed text-muted"
+              className="max-w-text pb-6 text-[15px] leading-relaxed text-grey"
             >
               {item.answer}
             </div>

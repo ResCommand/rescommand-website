@@ -1,85 +1,32 @@
 /* styles/theme.css */
-/* ResCommand Design Tokens - CSS Custom Properties */
-/* Dark theme, Scramblers-inspired aesthetic */
+/* ResCommand design tokens — ink on paper, one signal color (matches the app) */
 
 :root {
-  /* Colors - Primary (brand "Navy" + derived panels) */
-  --color-navy-primary: #0c1d17;
-  --color-navy-panel: #13271e;
-  --color-navy-deep: #1b3a2d;
+  /* Surfaces */
+  --paper-rgb: 250 250 247; /* #fafaf7 */
+  --paper: rgb(var(--paper-rgb));
 
-  /* Colors - Accent */
-  --color-sky-accent: #6bb3de;
-  --color-sky-bright: #9ad0f0;
-  --color-gold: #c9a05b;
+  /* Text */
+  --ink-rgb: 17 17 17; /* #111111 */
+  --ink: rgb(var(--ink-rgb));
+  --grey: #5c5c57; /* supporting text */
+  --grey-light: #8a8a84; /* metadata, captions */
 
-  /* Colors - Text */
-  --color-text-ink: #eaf2f8; /* brand "Cream" */
-  --color-text-muted: #8da4b8;
-  --color-coal: #141414; /* brand "Ink" */
+  /* Lines */
+  --line: #e4e3dd; /* 1px hairline dividers */
+  --ghost: rgba(17, 17, 17, 0.055); /* faint layered background word */
 
-  /* Colors - Semantic */
-  --color-success: #2d8659;
-  --color-warning: #d97706;
-  --color-error: #dc2626;
+  /* Signal — clickable things only */
+  --signal: #1a56db;
+  --signal-hover: #1645b0;
 
-  /* Typography — resolve to the next/font loaded families */
-  --font-display: var(--font-young-serif), Georgia, serif;
-  --font-body: var(--font-instrument-sans), system-ui, sans-serif;
+  /* Form errors */
+  --danger: #b42318;
 
-  /* Font Sizes */
-  --size-display-lg: 64px;
-  --size-display-md: 56px;
-  --size-display-sm: 48px;
-  --size-heading-lg: 40px;
-  --size-heading-md: 36px;
-  --size-heading-sm: 32px;
-  --size-heading-xs: 28px;
-  --size-body-lg: 18px;
-  --size-body-md: 16px;
-  --size-body-sm: 14px;
-  --size-body-xs: 12px;
+  /* Type */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  /* Line Heights */
-  --line-display: 1.2;
-  --line-heading: 1.3;
-  --line-body: 1.6;
-  --line-compact: 1.5;
-
-  /* Spacing (8px grid) */
-  --spacing-1: 8px;
-  --spacing-2: 16px;
-  --spacing-3: 24px;
-  --spacing-4: 32px;
-  --spacing-5: 40px;
-  --spacing-6: 48px;
-  --spacing-8: 64px;
-
-  /* Border Radius */
-  --radius-sm: 4px;
+  /* Radius */
+  --radius: 6px;
   --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
-
-  /* Shadows */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --shadow-sky-sm: 0 4px 12px rgba(107, 179, 222, 0.15);
-  --shadow-sky-md: 0 8px 24px rgba(107, 179, 222, 0.2);
-
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-default: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Z-Index Scale */
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-fixed: 300;
-  --z-modal-backdrop: 400;
-  --z-modal: 500;
-  --z-popover: 600;
-  --z-tooltip: 700;
 }

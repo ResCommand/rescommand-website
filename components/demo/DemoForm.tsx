@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CheckCircle2, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { FormInput, FormSelect, FormTextarea } from '@/components/ui/FormField'
 import { Button } from '@/components/ui/Button'
 import { trackEvent } from '@/lib/analytics'
@@ -57,10 +57,9 @@ export function DemoForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl bg-primary-panel p-8 text-center shadow-md">
-        <CheckCircle2 className="h-12 w-12 text-semantic-success" aria-hidden="true" />
-        <h2 className="font-display text-heading-sm font-bold text-ink">Request received!</h2>
-        <p className="text-body-md text-muted">
+      <div className="flex flex-col items-start gap-3 border-t border-line pt-6">
+        <h2 className="text-huge">Request received!</h2>
+        <p className="max-w-text text-body text-grey">
           Thanks for reaching out. Our team will email you within one business day to confirm a time
           that works for you.
         </p>
@@ -72,7 +71,7 @@ export function DemoForm() {
     <form
       onSubmit={handleSubmit(onSubmit)}
       noValidate
-      className="flex flex-col gap-5 rounded-xl bg-primary-panel p-6 shadow-md sm:p-8"
+      className="flex flex-col gap-5"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <FormInput
@@ -132,12 +131,12 @@ export function DemoForm() {
       />
 
       {serverError && (
-        <p className="rounded-md bg-semantic-error/10 px-4 py-3 text-body-sm text-semantic-error" role="alert">
+        <p className="border-l border-danger pl-3 text-small text-danger" role="alert">
           {serverError}
         </p>
       )}
 
-      <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
+      <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
@@ -147,7 +146,7 @@ export function DemoForm() {
           'Request My Demo'
         )}
       </Button>
-      <p className="text-center text-body-xs text-muted">
+      <p className="text-small text-grey">
         No pressure, no spam. We&rsquo;ll only use your details to schedule your demo.
       </p>
     </form>

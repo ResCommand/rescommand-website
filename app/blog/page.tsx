@@ -23,7 +23,7 @@ export default function BlogPage() {
         subtitle="Practical guides for restaurant owners and teams."
       />
 
-      <Section background="navy">
+      <Section>
         <BlogGrid posts={posts} />
       </Section>
 

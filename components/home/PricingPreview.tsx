@@ -7,22 +7,29 @@ import { PRICING_TIERS } from '@/lib/content'
 /** Homepage pricing teaser: two tiers + link to the full pricing page. */
 export function PricingPreview() {
   return (
-    <Section background="deep" aria-labelledby="pricing-preview-heading">
+    <Section aria-labelledby="pricing-preview-heading">
       <SectionHeading
         eyebrow="Pricing"
         title={<span id="pricing-preview-heading">Simple, Honest Pricing</span>}
         subtitle="No surprise fees. Pay for what you use."
       />
-      <div className="mx-auto mt-12 grid max-w-3xl gap-6 md:grid-cols-2">
-        {PRICING_TIERS.map((tier) => (
-          <PricingCard key={tier.name} tier={tier} />
-        ))}
-      </div>
-      <div className="mt-10 flex justify-center">
+      <PricingTiers />
+      <div className="mt-6">
         <Button href="/pricing" variant="link">
-          See full pricing
+          See full pricing →
         </Button>
       </div>
     </Section>
+  )
+}
+
+/** The two plans side by side; shared with the pricing page. */
+export function PricingTiers() {
+  return (
+    <div className="mt-14 grid gap-x-16 gap-y-14 md:grid-cols-2 lg:max-w-4xl">
+      {PRICING_TIERS.map((tier) => (
+        <PricingCard key={tier.name} tier={tier} />
+      ))}
+    </div>
   )
 }

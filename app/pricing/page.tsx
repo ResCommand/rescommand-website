@@ -3,11 +3,11 @@ import { PageHero } from '@/components/ui/PageHero'
 import { Section } from '@/components/ui/Section'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { CTASection } from '@/components/ui/CTASection'
-import { PricingCard } from '@/components/pricing/PricingCard'
+import { PricingTiers } from '@/components/home/PricingPreview'
 import { PricingComparison } from '@/components/pricing/PricingComparison'
 import { Accordion } from '@/components/ui/Accordion'
 import { FaqJsonLd } from '@/components/seo/JsonLd'
-import { PRICING_TIERS, PRICING_FAQ } from '@/lib/content'
+import { PRICING_FAQ } from '@/lib/content'
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -27,35 +27,33 @@ export default function PricingPage() {
         subtitle="No setup fees. No contracts. Cancel anytime."
       />
 
-      <Section background="navy">
-        <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
-          {PRICING_TIERS.map((tier) => (
-            <PricingCard key={tier.name} tier={tier} />
-          ))}
+      <Section>
+        <div className="-mt-14">
+          <PricingTiers />
         </div>
       </Section>
 
-      <Section background="deep" aria-labelledby="compare-heading">
+      <Section aria-labelledby="compare-heading">
         <SectionHeading title={<span id="compare-heading">Compare Plans</span>} />
-        <div className="mx-auto mt-10 max-w-3xl">
+        <div className="mt-12 max-w-3xl">
           <PricingComparison />
         </div>
       </Section>
 
-      <Section background="navy" aria-labelledby="pricing-faq-heading">
+      <Section aria-labelledby="pricing-faq-heading">
         <SectionHeading
           title={<span id="pricing-faq-heading">Questions?</span>}
           subtitle={
             <>
               Short answers below. Need more detail?{' '}
-              <a href="/help" className="text-accent-sky hover:text-accent-bright">
+              <a href="/help" className="text-signal hover:text-signal-hover">
                 Visit the Help Center
               </a>
               .
             </>
           }
         />
-        <div className="mx-auto mt-10 max-w-3xl">
+        <div className="mt-12 max-w-3xl">
           <Accordion items={PRICING_FAQ} />
         </div>
       </Section>

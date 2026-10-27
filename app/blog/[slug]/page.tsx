@@ -1,16 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { Container } from '@/components/ui/Container'
-import { Badge } from '@/components/ui/Badge'
 import { Section } from '@/components/ui/Section'
-import { SectionHeading } from '@/components/ui/SectionHeading'
+import { Label, SectionHeading } from '@/components/ui/SectionHeading'
 import { CTASection } from '@/components/ui/CTASection'
 import { PostMeta } from '@/components/blog/PostMeta'
 import { PostCard } from '@/components/blog/PostCard'
-import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { getAllPostSlugs, getPostBySlug, getRelatedPosts } from '@/lib/blogMeta'
 import { SITE } from '@/lib/constants'
@@ -63,31 +60,27 @@ export default function BlogPostPage({ params }: PageProps) {
 
       <article>
         {/* Header */}
-        <header className="border-b border-muted/10 bg-primary-navy">
-          <Container className="py-16 sm:py-20">
-            <div className="mx-auto max-w-prose">
+        <header>
+          <Container className="pb-12 pt-10 sm:pt-16">
+            <div className="flex flex-col items-start">
               <Link
                 href="/blog"
-                className="mb-6 inline-flex items-center gap-1.5 text-body-sm font-semibold text-accent-sky transition-colors hover:text-accent-bright"
+                className="mb-10 inline-flex min-h-[44px] items-center text-small font-medium text-signal hover:text-signal-hover"
               >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Back to blog
+                ← Back to blog
               </Link>
-              <Badge>{post.category}</Badge>
-              <h1 className="mt-4 font-display text-display-sm font-bold leading-tight text-balance">
-                {post.title}
-              </h1>
-              <p className="mt-4 text-body-lg text-muted">{post.excerpt}</p>
+              <Label>{post.category}</Label>
+              <h1 className="mt-5 max-w-4xl text-huge text-balance">{post.title}</h1>
+              <p className="mt-6 max-w-text text-body text-grey">{post.excerpt}</p>
               <PostMeta author={post.author} date={post.date} readTime={post.readTime} className="mt-6" />
             </div>
           </Container>
         </header>
 
         {/* Featured image + body */}
-        <div className="bg-primary-navy">
-          <Container className="py-12">
-            <div className="mx-auto max-w-prose">
-              <ImagePlaceholder label="Featured image" ratio="2/1" className="mb-10" />
+        <div>
+          <Container className="pb-20 sm:pb-28">
+            <div className="border-t border-line pt-12">
               <div className="prose-rescommand">
                 <MDXRemote source={post.content} />
               </div>
@@ -98,9 +91,9 @@ export default function BlogPostPage({ params }: PageProps) {
 
       {/* Related posts */}
       {related.length > 0 && (
-        <Section background="deep" aria-labelledby="related-heading">
-          <SectionHeading title={<span id="related-heading">Keep reading</span>} align="left" />
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Section aria-labelledby="related-heading">
+          <SectionHeading title={<span id="related-heading">Keep reading</span>} />
+          <div className="mt-12 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((rel) => (
               <PostCard key={rel.slug} post={rel} />
             ))}
@@ -111,7 +104,6 @@ export default function BlogPostPage({ params }: PageProps) {
       <CTASection
         title="Ready to try ResCommand?"
         copy="Book a demo and see how it fits your operation."
-        background="navy"
       />
     </>
   )

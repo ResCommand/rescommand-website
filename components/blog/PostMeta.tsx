@@ -1,4 +1,3 @@
-import { CalendarDays, Clock, User } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 interface PostMetaProps {
@@ -10,22 +9,22 @@ interface PostMetaProps {
 
 /** Inline byline row: author · date · read time. */
 export function PostMeta({ author, date, readTime, className }: PostMetaProps) {
+  const parts = [
+    author && <span key="author">{author}</span>,
+    <time key="date" dateTime={date}>
+      {formatDate(date)}
+    </time>,
+    <span key="read">{readTime} min read</span>,
+  ].filter(Boolean)
+
   return (
-    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm text-muted ${className ?? ''}`}>
-      {author && (
-        <span className="inline-flex items-center gap-1.5">
-          <User className="h-4 w-4" aria-hidden="true" />
-          {author}
+    <p className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-grey ${className ?? ''}`}>
+      {parts.map((part, i) => (
+        <span key={i} className="inline-flex items-center gap-3">
+          {i > 0 && <span aria-hidden="true">·</span>}
+          {part}
         </span>
-      )}
-      <span className="inline-flex items-center gap-1.5">
-        <CalendarDays className="h-4 w-4" aria-hidden="true" />
-        <time dateTime={date}>{formatDate(date)}</time>
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Clock className="h-4 w-4" aria-hidden="true" />
-        {readTime} min read
-      </span>
-    </div>
+      ))}
+    </p>
   )
 }

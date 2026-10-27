@@ -10,7 +10,7 @@ export function CalendlyEmbed({ url }: { url: string }) {
   return (
     <>
       <div
-        className="calendly-inline-widget min-h-[680px] w-full overflow-hidden rounded-xl"
+        className="calendly-inline-widget min-h-[680px] w-full overflow-hidden rounded-md border border-line"
         data-url={url}
         aria-label="Calendly scheduling widget"
       />

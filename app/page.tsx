@@ -30,7 +30,6 @@ export default function HomePage() {
         copy="Let's see if ResCommand is right for you."
         secondaryLabel="Explore features first"
         secondaryHref="/features"
-        background="navy"
       />
     </>
   )

@@ -11,17 +11,14 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    /* Young Serif ships a single weight — prevent faux-bold synthesis on
-       display headings that carry bold utility classes. */
-    font-synthesis-weight: none;
   }
 
   body {
-    background-color: var(--color-navy-primary);
-    color: var(--color-text-ink);
-    font-family: var(--font-body);
-    font-size: var(--size-body-md);
-    line-height: var(--line-body);
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -32,52 +29,18 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-display);
-    color: var(--color-text-ink);
+    color: var(--ink);
   }
 
   /* Focus-visible ring for keyboard users */
   :focus-visible {
-    outline: 2px solid var(--color-sky-accent);
+    outline: 2px solid var(--signal);
     outline-offset: 2px;
   }
 
   ::selection {
-    background-color: var(--color-sky-accent);
-    color: var(--color-navy-primary);
-  }
-}
-
-/* ============================================================
-   Animations
-   ============================================================ */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulseSoft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
+    background-color: var(--ink);
+    color: var(--paper);
   }
 }
 
@@ -88,56 +51,43 @@
   .text-balance {
     text-wrap: balance;
   }
-
-  .bg-grid {
-    background-image: radial-gradient(
-      circle at 1px 1px,
-      rgba(107, 179, 222, 0.08) 1px,
-      transparent 0
-    );
-    background-size: 32px 32px;
-  }
 }
 
 /* ============================================================
-   Blog prose overrides — dark theme readability
+   Blog prose — ink on paper
    ============================================================ */
 .prose-rescommand {
-  color: var(--color-text-ink);
-  max-width: 720px;
+  color: var(--ink);
+  max-width: 640px;
 }
 
 .prose-rescommand :where(h2) {
-  font-family: var(--font-display);
-  font-size: var(--size-heading-md);
-  font-weight: 700;
-  line-height: var(--line-heading);
-  margin-top: 2.5rem;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-top: 3rem;
   margin-bottom: 1rem;
-  color: var(--color-text-ink);
 }
 
 .prose-rescommand :where(h3) {
-  font-family: var(--font-display);
-  font-size: var(--size-heading-xs);
-  font-weight: 600;
-  line-height: var(--line-heading);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
   margin-top: 2rem;
-  margin-bottom: 0.75rem;
-  color: var(--color-text-ink);
+  margin-bottom: 0.5rem;
 }
 
 .prose-rescommand :where(p),
 .prose-rescommand :where(li) {
-  font-size: var(--size-body-lg);
-  line-height: 1.8;
-  color: var(--color-text-ink);
+  font-size: 17px;
+  line-height: 1.75;
   margin-bottom: 1.25rem;
 }
 
 .prose-rescommand :where(ul),
 .prose-rescommand :where(ol) {
-  margin: 1.25rem 0 1.5rem 1.5rem;
+  margin: 1.25rem 0 1.5rem 1.25rem;
 }
 
 .prose-rescommand :where(ul) {
@@ -149,54 +99,64 @@
 }
 
 .prose-rescommand :where(a) {
-  color: var(--color-sky-accent);
+  color: var(--signal);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .prose-rescommand :where(a):hover {
-  color: var(--color-sky-bright);
+  color: var(--signal-hover);
 }
 
 .prose-rescommand :where(strong) {
-  color: var(--color-text-ink);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .prose-rescommand :where(blockquote) {
-  border-left: 3px solid var(--color-sky-accent);
+  border-left: 1px solid var(--ink);
   padding-left: 1.25rem;
   margin: 1.5rem 0;
-  color: var(--color-text-muted);
-  font-style: italic;
+  color: var(--grey);
 }
 
 .prose-rescommand :where(code) {
-  font-family: 'Fira Code', 'Courier New', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 0.9em;
-  background-color: var(--color-navy-deep);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  color: var(--color-sky-bright);
+  border: 1px solid var(--line);
+  padding: 1px 5px;
+  border-radius: var(--radius);
 }
 
 .prose-rescommand :where(pre) {
-  background-color: var(--color-navy-deep);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: var(--radius-md);
   overflow-x: auto;
   margin: 1.5rem 0;
 }
 
 .prose-rescommand :where(pre code) {
   padding: 0;
-  background: none;
-  color: var(--color-text-ink);
+  border: 0;
 }
 
 .prose-rescommand :where(hr) {
-  border-color: rgba(141, 164, 184, 0.2);
+  border-color: var(--line);
   margin: 2.5rem 0;
+}
+
+.prose-rescommand :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  margin: 1.5rem 0;
+}
+
+.prose-rescommand :where(th),
+.prose-rescommand :where(td) {
+  border-top: 1px solid var(--line);
+  padding: 10px 8px 10px 0;
+  text-align: left;
 }
 
 /* ============================================================

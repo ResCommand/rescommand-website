@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Container } from './Container'
+import { Label } from './SectionHeading'
 
 interface PageHeroProps {
   eyebrow?: string
@@ -8,22 +9,15 @@ interface PageHeroProps {
   children?: ReactNode
 }
 
-/** Compact inner-page hero band with consistent styling. */
+/** Inner-page hero: tiny label, one huge line, one small supporting line. */
 export function PageHero({ eyebrow, title, subtitle, children }: PageHeroProps) {
   return (
-    <section className="relative overflow-hidden border-b border-muted/10 bg-primary-navy">
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-50" aria-hidden="true" />
-      <Container className="relative py-16 sm:py-20 lg:py-24">
-        <div className="flex max-w-3xl flex-col gap-5">
-          {eyebrow && (
-            <span className="text-body-sm font-semibold uppercase tracking-[0.18em] text-accent-sky">
-              {eyebrow}
-            </span>
-          )}
-          <h1 className="font-display text-display-sm font-bold leading-tight text-balance sm:text-display-md">
-            {title}
-          </h1>
-          {subtitle && <p className="text-body-lg text-muted">{subtitle}</p>}
+    <section>
+      <Container className="pb-20 pt-16 sm:pb-28 sm:pt-24 lg:pt-28">
+        <div className="flex flex-col items-start gap-6">
+          {eyebrow && <Label>{eyebrow}</Label>}
+          <h1 className="max-w-5xl text-hero text-balance">{title}</h1>
+          {subtitle && <p className="max-w-text text-body text-grey">{subtitle}</p>}
           {children}
         </div>
       </Container>

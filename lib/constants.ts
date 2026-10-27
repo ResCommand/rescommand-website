@@ -34,6 +34,7 @@ export const FOOTER_NAV = {
       { label: 'Pricing', href: '/pricing' },
       { label: 'Blog', href: '/blog' },
       { label: 'Demo', href: '/demo' },
+      { label: 'Log in', href: SITE.appUrl },
     ],
   },
   company: {

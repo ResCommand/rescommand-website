@@ -2,46 +2,32 @@
  * Marketing content data — problems, features, pricing, testimonials, FAQs.
  * Kept here so the same source feeds the home, features, pricing, and help pages.
  */
-import {
-  AlertCircle,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Package,
-  TrendingDown,
-  UtensilsCrossed,
-  type LucideIcon,
-} from 'lucide-react'
-
 export interface ProblemItem {
-  icon: LucideIcon
   title: string
   copy: string
 }
 
 export const PROBLEMS: ProblemItem[] = [
   {
-    icon: Clock,
     title: 'Scheduling Chaos',
     copy: 'Spreadsheets, group texts, last-minute no-shows. Your best staff is scattered across five different scheduling apps.',
   },
   {
-    icon: TrendingDown,
     title: 'Food Cost Bleeding',
     copy: "You don't know if your prep is efficient. Par sheets were printed six months ago. Waste is silent — and it adds up.",
   },
   {
-    icon: AlertCircle,
     title: 'Compliance Invisibility',
     copy: "Cleaning logs, SOP adherence, temperature checks — scattered across people's memories instead of a system.",
   },
 ]
 
 export interface FeatureItem {
-  icon: LucideIcon
   title: string
   short: string
   slug: string
+  /** App screen to show for this feature (phone-frame screenshot). */
+  screen: string
   problem: string
   solution: string
   benefit: string
@@ -50,10 +36,10 @@ export interface FeatureItem {
 
 export const FEATURES: FeatureItem[] = [
   {
-    icon: Calendar,
     title: 'Team Scheduling',
     short: 'Mobile-friendly schedule builder. Alerts, shifts, auto-assignments.',
     slug: 'team-scheduling',
+    screen: 'Team schedule — this week',
     problem:
       'Schedules live in spreadsheets and group texts. Changes get lost, shifts go uncovered, and no-shows blindside you.',
     solution:
@@ -67,10 +53,10 @@ export const FEATURES: FeatureItem[] = [
     ],
   },
   {
-    icon: Package,
     title: 'Inventory & Par',
     short: 'Real-time inventory levels vs. par sheets. Know what’s running low.',
     slug: 'inventory-par',
+    screen: 'Inventory — count to par',
     problem:
       "Par sheets are printed and outdated. You only learn you're out of something when a customer orders it.",
     solution:
@@ -84,10 +70,10 @@ export const FEATURES: FeatureItem[] = [
     ],
   },
   {
-    icon: UtensilsCrossed,
     title: 'Recipes, Prep & Yield',
     short: 'Standardized recipes, prep schedules, yield tracking.',
     slug: 'recipes-prep',
+    screen: 'Prep list — today’s batches',
     problem:
       'Recipes live in notebooks and people’s heads. Consistency depends on who showed up that morning.',
     solution:
@@ -101,10 +87,10 @@ export const FEATURES: FeatureItem[] = [
     ],
   },
   {
-    icon: CheckCircle,
     title: 'Compliance & Docs',
     short: 'Digital logs for cleaning, temps, SOPs. Built-in workflows.',
     slug: 'compliance',
+    screen: 'Opening checklist & temp log',
     problem:
       'Cleaning logs and temperature checks are on clipboards — or in someone’s memory. Audits become a scramble.',
     solution:
@@ -124,6 +110,8 @@ export interface Testimonial {
   name: string
   role: string
   initials: string
+  /** Stand-in copy, not a real customer. Hidden on the site until replaced. */
+  placeholder?: boolean
 }
 
 export const TESTIMONIALS: Testimonial[] = [
@@ -140,6 +128,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: 'Sample Owner',
     role: 'Owner-Operator, Multi-Unit Café',
     initials: 'SO',
+    placeholder: true,
   },
   {
     quote:
@@ -147,6 +136,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: 'Sample Manager',
     role: 'General Manager, Neighborhood Bakery',
     initials: 'SM',
+    placeholder: true,
   },
 ]
 

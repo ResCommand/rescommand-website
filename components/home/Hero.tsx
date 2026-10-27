@@ -4,7 +4,6 @@ import { Label } from '@/components/ui/SectionHeading'
 import { PhoneFrame } from '@/components/ui/PhoneFrame'
 
 // Faint oversized phrase behind the headline, like "Run the shift." on the app login.
-// Placeholder pick — alternatives: "Run the floor.", "Prep. Serve. Close."
 const BACKDROP = ['Open to', 'close.']
 
 /** Homepage hero: faint layered phrase, one huge line, one sentence, one blue CTA. */

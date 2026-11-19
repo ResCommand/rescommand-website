@@ -1,17 +1,18 @@
 import { Button } from '@/components/ui/Button'
 import { Label } from '@/components/ui/SectionHeading'
 import type { PricingTier } from '@/lib/content'
+import { signupUrl } from '@/lib/links'
 
 interface PricingCardProps {
   tier: PricingTier
-  ctaHref?: string
 }
 
 /**
  * One plan in plain ink: the price is the huge line, features sit on hairline
- * rows. Only the featured tier gets the filled blue button.
+ * rows. Only the featured tier gets the filled blue button, which opens the
+ * app's sign-up with this plan pre-selected.
  */
-export function PricingCard({ tier, ctaHref = '/demo' }: PricingCardProps) {
+export function PricingCard({ tier }: PricingCardProps) {
   return (
     <div className="flex flex-col">
       <div className="flex items-baseline gap-3">
@@ -34,7 +35,7 @@ export function PricingCard({ tier, ctaHref = '/demo' }: PricingCardProps) {
       </ul>
 
       <div className="mt-6">
-        <Button href={ctaHref} variant={tier.featured ? 'primary' : 'link'}>
+        <Button href={signupUrl(tier.plan)} external variant={tier.featured ? 'primary' : 'link'}>
           {tier.cta}
           {!tier.featured && ' →'}
         </Button>

@@ -25,7 +25,7 @@ const HELP: HelpGroup[] = [
       {
         question: 'How do I sign up?',
         answer:
-          'Start a free 14-day trial from the pricing page, or book a demo and we’ll get you set up. No credit card required to begin.',
+          'Start a free 14-day trial from the pricing page, or book a demo and we’ll get you set up. We ask for a card to start the trial, and you won’t be charged until it ends.',
       },
       {
         question: 'Is there a free trial?',

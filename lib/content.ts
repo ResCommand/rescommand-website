@@ -143,6 +143,7 @@ export const TESTIMONIALS: Testimonial[] = [
 ]
 
 export interface PricingTier {
+  plan: 'core' | 'operator'
   name: string
   price: string
   cadence: string
@@ -160,6 +161,7 @@ export interface PricingFeatureRow {
 
 export const PRICING_TIERS: PricingTier[] = [
   {
+    plan: 'core',
     name: 'Core',
     price: '$99',
     cadence: '/mo',
@@ -173,6 +175,7 @@ export const PRICING_TIERS: PricingTier[] = [
     ],
   },
   {
+    plan: 'operator',
     name: 'Operator',
     price: '$199',
     cadence: '/mo',
@@ -203,7 +206,7 @@ export const PRICING_FAQ = [
   {
     question: "What's included in the free trial?",
     answer:
-      'Full access to every feature in your chosen plan for 14 days. No credit card required, no feature gates — set up your real operation and see if it fits.',
+      'Full access to every feature in your chosen plan for 14 days, no feature gates — set up your real operation and see if it fits. We ask for a card when you start, and you won’t be charged until the trial ends. Cancel before then and you pay nothing.',
   },
   {
     question: 'Can I change plans anytime?',

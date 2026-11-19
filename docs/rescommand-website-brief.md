@@ -329,7 +329,7 @@ Accordion items:
 
 **Final CTA:**
 ```
-Headline:        "Start Today. No Credit Card Required."
+Headline:        "Start Today."
 Copy:            "Try ResCommand free for 14 days."
 Button:          "Start Your Free Trial" (Sky Blue)
 ```

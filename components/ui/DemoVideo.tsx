@@ -1,9 +1,11 @@
 import { YouTubeEmbed } from '@/components/ui/YouTubeEmbed'
 import { cn } from '@/lib/utils'
 
-/** Self-hosted 16:9 product demo. Shown when no YouTube id is configured. */
+/** Landscape demo for md and up. Vertical cut is for phones. */
 const DEMO_SRC = '/videos/rescommand-demo.mp4'
 const DEMO_POSTER = '/videos/rescommand-demo-poster.jpg'
+const DEMO_VERTICAL_SRC = '/videos/rescommand-demo-vertical.mp4'
+const DEMO_VERTICAL_POSTER = '/videos/rescommand-demo-poster-vertical.jpg'
 
 interface DemoVideoProps {
   /**
@@ -17,8 +19,9 @@ interface DemoVideoProps {
 }
 
 /**
- * Product demo player. A configured YouTube id keeps the existing embed;
- * otherwise this is the self-hosted demo — controls, no autoplay.
+ * Product demo player. A configured YouTube id keeps the existing embed.
+ * Otherwise phones get the vertical cut and md+ gets the 16:9 file.
+ * preload="none" so a phone does not fetch the hidden landscape file.
  */
 export function DemoVideo({
   videoId,
@@ -31,12 +34,24 @@ export function DemoVideo({
   }
 
   return (
-    <div className={cn('w-full min-w-0 max-w-full overflow-hidden rounded-md', className)}>
+    <div className={cn('w-full min-w-0 max-w-full', className)}>
       <video
-        className="block aspect-video h-auto w-full min-w-0 max-w-full rounded-md border border-line bg-ink object-cover"
+        className="mx-auto block aspect-[9/16] h-auto w-[min(100%,420px,calc(80svh_*_9_/_16))] max-w-full rounded-md border border-line bg-ink object-cover md:hidden"
         controls
         playsInline
-        preload="metadata"
+        preload="none"
+        poster={DEMO_VERTICAL_POSTER}
+        width={1080}
+        height={1920}
+        aria-label={title}
+      >
+        <source src={DEMO_VERTICAL_SRC} type="video/mp4" />
+      </video>
+      <video
+        className="hidden aspect-video h-auto w-full min-w-0 max-w-full rounded-md border border-line bg-ink object-cover md:block"
+        controls
+        playsInline
+        preload="none"
         poster={DEMO_POSTER}
         width={1920}
         height={1080}

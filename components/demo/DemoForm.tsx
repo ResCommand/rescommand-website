@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react'
 import { FormInput, FormSelect, FormTextarea } from '@/components/ui/FormField'
 import { Button } from '@/components/ui/Button'
 import { trackEvent } from '@/lib/analytics'
+import { signupUrl } from '@/lib/links'
 import {
   demoFormSchema,
   LOCATION_OPTIONS,
@@ -63,6 +64,15 @@ export function DemoForm() {
           Thanks for reaching out. Our team will email you within one business day to confirm a time
           that works for you.
         </p>
+        <p className="max-w-text text-body text-grey">
+          Don&rsquo;t want to wait? Create your account now and start your 14-day free trial. We&rsquo;ll
+          walk through it together on the demo.
+        </p>
+        <div className="mt-2">
+          <Button href={signupUrl()} external>
+            Create your account
+          </Button>
+        </div>
       </div>
     )
   }

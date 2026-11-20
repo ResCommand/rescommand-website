@@ -8,6 +8,7 @@ import { PricingComparison } from '@/components/pricing/PricingComparison'
 import { Accordion } from '@/components/ui/Accordion'
 import { FaqJsonLd } from '@/components/seo/JsonLd'
 import { PRICING_FAQ } from '@/lib/content'
+import { signupUrl } from '@/lib/links'
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
 }
 
 export default function PricingPage() {
+
   return (
     <>
       <FaqJsonLd items={PRICING_FAQ} />
@@ -59,9 +61,10 @@ export default function PricingPage() {
       </Section>
 
       <CTASection
-        title="Start Today. No Credit Card Required."
-        copy="Try ResCommand free for 14 days."
+        title="Start Today."
+        copy="Try ResCommand free for 14 days. Cancel before your trial ends and you won’t be charged."
         primaryLabel="Start Your Free Trial"
+        primaryHref={signupUrl()}
       />
     </>
   )

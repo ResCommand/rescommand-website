@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Container } from '@/components/ui/Container'
 import { Label } from '@/components/ui/SectionHeading'
-import { YouTubeEmbed } from '@/components/ui/YouTubeEmbed'
+import { DemoVideo } from '@/components/ui/DemoVideo'
 import { DemoForm } from '@/components/demo/DemoForm'
 import { CalendlyEmbed } from '@/components/demo/CalendlyEmbed'
 
@@ -36,12 +36,12 @@ export default function DemoPage() {
           </div>
 
           {/* Video intro — 40% */}
-          <aside className="flex flex-col gap-5 lg:col-span-2">
+          <aside className="flex w-full min-w-0 flex-col gap-5 lg:col-span-2">
             <div>
               <h2 className="text-body font-medium">See It in Action First</h2>
               <p className="mt-1 text-[15px] text-grey">2-minute product walkthrough.</p>
             </div>
-            <YouTubeEmbed
+            <DemoVideo
               videoId={walkthroughId}
               title="ResCommand product walkthrough"
               caption="Product Demo Video"

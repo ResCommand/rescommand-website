@@ -1,8 +1,8 @@
 import { Section } from '@/components/ui/Section'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { YouTubeEmbed } from '@/components/ui/YouTubeEmbed'
+import { DemoVideo } from '@/components/ui/DemoVideo'
 
-/** "See ResCommand in Action" — demo video, or a labeled empty frame until one is set. */
+/** "See ResCommand in Action" — YouTube when an id is set, otherwise the self-hosted demo. */
 export function VideoSection() {
   const videoId = process.env.NEXT_PUBLIC_YOUTUBE_DEMO_ID
 
@@ -14,7 +14,7 @@ export function VideoSection() {
         subtitle="This is what your daily reality looks like."
       />
       <div className="mt-12 max-w-4xl">
-        <YouTubeEmbed videoId={videoId} title="ResCommand product demo" caption="Watch the 2-minute demo" />
+        <DemoVideo videoId={videoId} title="ResCommand product demo" caption="Watch the 2-minute demo" />
       </div>
     </Section>
   )

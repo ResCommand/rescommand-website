@@ -58,7 +58,7 @@ All integrations are optional and driven by environment variables (see `.env.exa
 
 - **`NEXT_PUBLIC_GA_ID`** — Google Analytics 4 (no-ops when unset).
 - **`NEXT_PUBLIC_CALENDLY_URL`** — when set, the demo page swaps the custom form for an inline Calendly embed.
-- **`NEXT_PUBLIC_YOUTUBE_DEMO_ID` / `NEXT_PUBLIC_YOUTUBE_WALKTHROUGH_ID`** — YouTube video IDs for the embeds (branded placeholders show until set).
+- **`NEXT_PUBLIC_YOUTUBE_DEMO_ID` / `NEXT_PUBLIC_YOUTUBE_WALKTHROUGH_ID`** — YouTube video IDs for the homepage and `/demo` embeds. When unset, those pages play the self-hosted demo in `public/videos/`.
 - **`RESEND_API_KEY` / `DEMO_NOTIFY_EMAIL`** — wire up booking confirmation + notification emails in `app/api/demo/route.ts` (currently stubbed; the form flow works without them).
 
 ## Blog

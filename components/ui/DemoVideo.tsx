@@ -31,18 +31,15 @@ export function DemoVideo({
   }
 
   return (
-    <div
-      className={cn(
-        'relative aspect-video w-full min-w-0 max-w-full overflow-hidden rounded-md border border-line bg-ink',
-        className,
-      )}
-    >
+    <div className={cn('w-full min-w-0 max-w-full overflow-hidden rounded-md', className)}>
       <video
-        className="absolute inset-0 h-full w-full object-contain"
+        className="block aspect-video h-auto w-full min-w-0 max-w-full rounded-md border border-line bg-ink object-cover"
         controls
         playsInline
         preload="metadata"
         poster={DEMO_POSTER}
+        width={1920}
+        height={1080}
         aria-label={title}
       >
         <source src={DEMO_SRC} type="video/mp4" />

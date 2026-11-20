@@ -25,7 +25,12 @@ const HELP: HelpGroup[] = [
       {
         question: 'How do I sign up?',
         answer:
-          'Start a free 14-day trial from the pricing page, or book a demo and we’ll get you set up. We ask for a card to start the trial, and you won’t be charged until it ends.',
+          'Pick a plan on the pricing page and create your account. We ask for a card to start your 14-day free trial, and you won’t be charged until it ends. Then log in at app.rescommand.com and we’ll walk you through setup. Prefer to see it first? Book a demo.',
+      },
+      {
+        question: 'Is there a phone app?',
+        answer:
+          'Yes, and there’s nothing to download from an app store. Log in at app.rescommand.com on your phone and choose “Add to Home Screen” (Share menu on iPhone, browser menu on Android). ResCommand then opens from your home screen like any other app.',
       },
       {
         question: 'Is there a free trial?',

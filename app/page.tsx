@@ -6,14 +6,21 @@ import { VideoSection } from '@/components/home/VideoSection'
 import { TestimonialSection } from '@/components/home/TestimonialSection'
 import { PricingPreview } from '@/components/home/PricingPreview'
 import { CTASection } from '@/components/ui/CTASection'
+import { SITE } from '@/lib/constants'
 import { pageMetadata } from '@/lib/seo'
 
-export const metadata = pageMetadata({
-  title: 'Restaurant Operations, Handled',
-  description:
-    'ResCommand is one app for restaurant scheduling, inventory, recipes, prep, and compliance, built for small restaurants and priced for them, too.',
-  path: '/',
-})
+const homeTitle = `${SITE.name} | Restaurant Operations, Handled`
+
+export const metadata = {
+  ...pageMetadata({
+    title: homeTitle,
+    description:
+      'ResCommand is one app for restaurant scheduling, inventory, recipes, prep, and compliance, built for small restaurants and priced for them, too.',
+    path: '/',
+  }),
+  // Absolute so the layout template does not append the brand name again.
+  title: { absolute: homeTitle },
+}
 
 export default function HomePage() {
   return (

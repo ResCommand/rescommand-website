@@ -19,7 +19,6 @@ export function OrganizationJsonLd() {
     name: SITE.name,
     url: SITE.url,
     description: SITE.description,
-    sameAs: [SITE.builtBy.url],
     contactPoint: {
       '@type': 'ContactPoint',
       email: SITE.supportEmail,

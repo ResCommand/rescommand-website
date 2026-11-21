@@ -11,6 +11,7 @@ import { PostCard } from '@/components/blog/PostCard'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { getAllPostSlugs, getPostBySlug, getRelatedPosts } from '@/lib/blogMeta'
 import { SITE } from '@/lib/constants'
+import { pageMetadata } from '@/lib/seo'
 
 interface PageProps {
   params: { slug: string }
@@ -23,18 +24,14 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: PageProps): Metadata {
   const post = getPostBySlug(params.slug)
   if (!post) return {}
-  return {
+  return pageMetadata({
     title: post.title,
     description: post.excerpt,
-    alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: {
-      type: 'article',
-      title: post.title,
-      description: post.excerpt,
-      publishedTime: post.date,
-      authors: [post.author],
-    },
-  }
+    path: `/blog/${post.slug}`,
+    type: 'article',
+    publishedTime: post.date,
+    authors: [post.author],
+  })
 }
 
 export default function BlogPostPage({ params }: PageProps) {

@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { Hero } from '@/components/home/Hero'
 import { ProblemSection } from '@/components/home/ProblemSection'
 import { SolutionSection } from '@/components/home/SolutionSection'
@@ -7,13 +6,14 @@ import { VideoSection } from '@/components/home/VideoSection'
 import { TestimonialSection } from '@/components/home/TestimonialSection'
 import { PricingPreview } from '@/components/home/PricingPreview'
 import { CTASection } from '@/components/ui/CTASection'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Restaurant Operations, Handled',
   description:
-    'ResCommand is one app for restaurant scheduling, inventory, recipes, prep, and compliance — built for small restaurants and priced for them, too.',
-  alternates: { canonical: '/' },
-}
+    'ResCommand is one app for restaurant scheduling, inventory, recipes, prep, and compliance, built for small restaurants and priced for them, too.',
+  path: '/',
+})
 
 export default function HomePage() {
   return (

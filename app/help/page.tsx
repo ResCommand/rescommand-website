@@ -1,17 +1,17 @@
-import type { Metadata } from 'next'
 import { PageHero } from '@/components/ui/PageHero'
 import { Section } from '@/components/ui/Section'
 import { CTASection } from '@/components/ui/CTASection'
 import { Accordion, type AccordionItemData } from '@/components/ui/Accordion'
 import { FaqJsonLd } from '@/components/seo/JsonLd'
 import { SITE } from '@/lib/constants'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Help & FAQ',
   description:
-    'Answers to common questions about ResCommand — getting started, pricing & billing, features, integrations, and support.',
-  alternates: { canonical: '/help' },
-}
+    'Answers to common questions about ResCommand, getting started, pricing & billing, features, integrations, and support.',
+  path: '/help',
+})
 
 interface HelpGroup {
   heading: string

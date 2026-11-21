@@ -21,7 +21,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? SITE.url
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${SITE.name} — Restaurant Operations, Handled`,
+    default: `${SITE.name} | Restaurant Operations, Handled`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
@@ -39,15 +39,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: siteUrl,
     siteName: SITE.name,
-    title: `${SITE.name} — Restaurant Operations, Handled`,
+    title: `${SITE.name} | Restaurant Operations, Handled`,
     description: SITE.description,
     images: [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE.name} — Restaurant Operations, Handled`,
+    title: `${SITE.name} | Restaurant Operations, Handled`,
     description: SITE.description,
     images: [SITE.ogImage],
   },

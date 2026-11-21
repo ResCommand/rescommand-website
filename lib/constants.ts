@@ -7,14 +7,14 @@ export const SITE = {
   name: 'ResCommand',
   tagline: 'Everything a restaurant team needs to run like a big operation.',
   description:
-    'ResCommand is one app for restaurant scheduling, inventory, recipes, prep, and compliance — built for small restaurants and priced for them, too.',
+    'ResCommand is one app for restaurant scheduling, inventory, recipes, prep, and compliance, built for small restaurants and priced for them, too.',
   url: 'https://rescommand.com',
   appUrl: 'https://app.rescommand.com',
   supportEmail: 'support@rescommand.com',
-  ogImage: '/images/og-default.svg',
+  ogImage: '/images/og-default.png',
   builtBy: {
-    name: 'Venturio Studios',
-    url: 'https://venturiostudios.com',
+    name: 'Venturio Media',
+    url: 'https://venturiomedia.com',
   },
 } as const
 

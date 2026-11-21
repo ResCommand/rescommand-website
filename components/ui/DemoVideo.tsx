@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 /** Landscape demo for md and up. Vertical cut is for phones. */
 const DEMO_SRC = '/videos/rescommand-demo.mp4'
 const DEMO_POSTER = '/videos/rescommand-demo-poster.jpg'
-const DEMO_VERTICAL_SRC = '/videos/rescommand-demo-vertical.mp4?v=2'
-const DEMO_VERTICAL_POSTER = '/videos/rescommand-demo-poster-vertical.jpg?v=2'
+const DEMO_VERTICAL_SRC = '/videos/rescommand-demo-vertical.mp4?v=3'
+const DEMO_VERTICAL_POSTER = '/videos/rescommand-demo-poster-vertical.jpg?v=3'
 
 interface DemoVideoProps {
   /**
@@ -35,9 +35,9 @@ export function DemoVideo({
 
   return (
     <div className={cn('w-full min-w-0 max-w-full', className)}>
-      <div className="mx-auto w-fit overflow-hidden rounded bg-transparent md:hidden">
+      <div className="mx-auto w-fit border-0 bg-paper shadow-none ring-0 md:hidden">
         <video
-          className="block aspect-[1080/2492] h-auto w-[min(94vw,calc(100vw_-_24px),calc(88svh_*_1080_/_2492))] max-w-none bg-transparent object-contain"
+          className="block aspect-[1080/2492] h-auto w-[min(94vw,calc(100vw_-_24px),calc(88svh_*_1080_/_2492))] max-w-none rounded-none border-0 bg-paper object-contain shadow-none ring-0"
           controls
           playsInline
           preload="none"

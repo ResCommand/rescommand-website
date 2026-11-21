@@ -1,16 +1,16 @@
-import type { Metadata } from 'next'
 import { PageHero } from '@/components/ui/PageHero'
 import { Section } from '@/components/ui/Section'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { CTASection } from '@/components/ui/CTASection'
 import { ImagePlaceholder } from '@/components/ui/ImagePlaceholder'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'About',
   description:
-    'ResCommand came from real restaurant chaos at Duffers Donuts in Charleston. Built by operators, for operators — simple, priced for reality, and built to last.',
-  alternates: { canonical: '/about' },
-}
+    'ResCommand came from real restaurant chaos at Duffers Donuts in Charleston. Built by operators, for operators. Simple, priced for reality, and built to last.',
+  path: '/about',
+})
 
 const STATS = [
   { value: '1', label: 'donut shop' },

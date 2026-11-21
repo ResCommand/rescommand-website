@@ -1,16 +1,16 @@
-import type { Metadata } from 'next'
 import { PageHero } from '@/components/ui/PageHero'
 import { Section } from '@/components/ui/Section'
 import { CTASection } from '@/components/ui/CTASection'
 import { FeatureDetail } from '@/components/features/FeatureDetail'
 import { FEATURES } from '@/lib/content'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Features',
   description:
-    'Scheduling, inventory & par, recipes & prep, and compliance — every ResCommand feature was designed by restaurant operators for restaurant operators.',
-  alternates: { canonical: '/features' },
-}
+    'Scheduling, inventory & par, recipes & prep, and compliance. Every ResCommand feature was designed by restaurant operators for restaurant operators.',
+  path: '/features',
+})
 
 export default function FeaturesPage() {
   return (

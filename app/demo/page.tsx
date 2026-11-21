@@ -1,16 +1,16 @@
-import type { Metadata } from 'next'
 import { Container } from '@/components/ui/Container'
 import { Label } from '@/components/ui/SectionHeading'
 import { DemoVideo } from '@/components/ui/DemoVideo'
 import { DemoForm } from '@/components/demo/DemoForm'
 import { CalendlyEmbed } from '@/components/demo/CalendlyEmbed'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Book a Demo',
   description:
-    "Book a 20-minute ResCommand demo with our team. No pressure — see whether it's the right fit for your restaurant.",
-  alternates: { canonical: '/demo' },
-}
+    "Book a 20-minute ResCommand demo with our team. No pressure. See whether it's the right fit for your restaurant.",
+  path: '/demo',
+})
 
 export default function DemoPage() {
   const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL

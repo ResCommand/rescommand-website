@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
 import { LegalLayout } from '@/components/ui/LegalLayout'
 import { SITE } from '@/lib/constants'
+import { pageMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'The terms that govern your use of the ResCommand website and services.',
-  alternates: { canonical: '/terms' },
+  ...pageMetadata({
+    title: 'Terms of Service',
+    description: 'The terms that govern your use of the ResCommand website and services.',
+    path: '/terms',
+  }),
   robots: { index: true, follow: true },
 }
 

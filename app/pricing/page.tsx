@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import { PageHero } from '@/components/ui/PageHero'
 import { Section } from '@/components/ui/Section'
 import { SectionHeading } from '@/components/ui/SectionHeading'
@@ -8,13 +7,14 @@ import { PricingComparison } from '@/components/pricing/PricingComparison'
 import { Accordion } from '@/components/ui/Accordion'
 import { FaqJsonLd } from '@/components/seo/JsonLd'
 import { PRICING_FAQ } from '@/lib/content'
+import { pageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: 'Pricing',
   description:
     'Pricing that grows with you. No setup fees, no contracts, cancel anytime. Core at $99/mo, Operator at $199/mo. Try ResCommand free for 14 days.',
-  alternates: { canonical: '/pricing' },
-}
+  path: '/pricing',
+})
 
 export default function PricingPage() {
   return (

@@ -51,6 +51,11 @@ export function FeatureDetail({ feature, reverse: reverseProp = false }: Feature
         <Button href="/demo" variant="link">
           See demo →
         </Button>
+        {feature.guide && (
+          <Button href={feature.guide.href} variant="link">
+            {feature.guide.label}
+          </Button>
+        )}
       </div>
 
       {feature.screenshot && (

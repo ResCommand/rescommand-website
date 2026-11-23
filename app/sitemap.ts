@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/pricing',
     '/demo',
     '/blog',
+    '/guides/how-to-build-a-weekly-staff-schedule',
     '/about',
     '/help',
     '/privacy',

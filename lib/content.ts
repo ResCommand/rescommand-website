@@ -34,6 +34,8 @@ export interface FeatureItem {
   solution: string
   benefit: string
   bullets: string[]
+  /** Optional guide linked from this feature on /features. */
+  guide?: { href: string; label: string }
 }
 
 export const FEATURES: FeatureItem[] = [
@@ -53,6 +55,10 @@ export const FEATURES: FeatureItem[] = [
       'Self-service availability picking',
       'Overtime flagging before it costs you',
     ],
+    guide: {
+      href: '/guides/how-to-build-a-weekly-staff-schedule',
+      label: 'How to build a weekly staff schedule',
+    },
   },
   {
     title: 'Inventory & Par',
